@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- LIBRARY PEERJS UNTUK WEBRTC (LIVE AUDIO) -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -68,6 +71,9 @@
     </div>
 
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
+        
+        <!-- Container Tersembunyi untuk Audio Panggilan -->
+        <div id="remote-audios" class="hidden"></div>
 
         <!-- HEADER -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
@@ -124,7 +130,7 @@
                     </div>
                     <div class="min-w-0">
                         <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
-                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Bicara untuk menyalakan avatar</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Suara Terhubung</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -149,7 +155,6 @@
 
             <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0 space-y-2">
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                    <!-- Quick Reply diperbaiki -->
                     <button type="button" onclick="sendQuickChat('Aman terkendali di gang 2 ✅')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">✅ Aman</button>
                     <button type="button" onclick="sendQuickChat('Kopi sudah siap di pos ☕')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/25">☕ Kopi siap</button>
                     <button type="button" onclick="sendQuickChat('Lanjut keliling blok 🔦')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/25">🔦 Keliling</button>
@@ -162,7 +167,7 @@
         </section>
     </div>
 
-    <!-- MODAL-MODAL (ADMIN, JOIN, SOS) -->
+    <!-- MODAL-MODAL (Sama seperti sebelumnya) -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
@@ -191,7 +196,7 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Saat gabung, izinkan akses Mikrofon).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Saat gabung, klik "Izinkan" untuk Mikrofon).</p>
             <div class="space-y-3 mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div>
@@ -279,9 +284,12 @@
 
         let currentUserUid = null;
         let onlineUserCount = 0;
-        
-        // Untuk melacak SOS yang sudah diproses (mencegah bunyi berulang)
         let processedSosIds = new Set();
+
+        // Variabel WebRTC
+        let peer = null;
+        let localStream = null;
+        let remoteAudioElements = {};
 
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
@@ -306,9 +314,16 @@
             onSnapshot(presenceCol, (snapshot) => {
                 const now = Date.now();
                 let count = 0;
+                
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.lastSeen && (now - data.lastSeen < 65000)) count++;
+                    if (data.lastSeen && (now - data.lastSeen < 65000)) {
+                        count++;
+                        // LOGIKA WEBRTC: Panggil warga lain yang baru online
+                        if (doc.id !== currentUserUid && localStream && peer) {
+                            callPeer(doc.id);
+                        }
+                    }
                 });
                 onlineUserCount = count;
                 updateCounters(); 
@@ -342,11 +357,6 @@
         let wakeLock = null;
         let targetAdminSlotIndex = null;
         let sosSirenInterval = null;
-
-        // Variabel untuk Mikrofon Asli (Web Audio API)
-        let audioContext = null;
-        let analyser = null;
-        let microphone = null;
 
         window.openSosModal = openSosModal; window.closeSosModal = closeSosModal; window.selectSosCategory = selectSosCategory;
         window.dismissPushBanner = dismissPushBanner; window.stopSosSiren = stopSosSiren; window.shareToWhatsApp = shareToWhatsApp;
@@ -436,57 +446,82 @@
         }
 
         // ==========================================
-        // FITUR MIKROFON ASLI (WEB AUDIO API)
+        // LOGIKA WEBRTC (LIVE AUDIO)
         // ==========================================
-        async function startRealMicrophone() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                microphone = audioContext.createMediaStreamSource(stream);
-                
-                microphone.connect(analyser);
-                analyser.fftSize = 256;
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        function initWebRTC() {
+            peer = new Peer(currentUserUid, { debug: 2 });
 
-                function checkVolume() {
-                    if (joinedSlotIndex === null) return; // Berhenti jika keluar
-                    
-                    analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                    let average = sum / dataArray.length;
+            peer.on('open', (id) => {
+                console.log('ID PeerJS saya:', id);
+                showToast("Suara terhubung ke server!");
+            });
 
-                    // Sensitivitas suara (sesuaikan angkanya jika perlu)
-                    if (average > 15 && !isMicMuted) {
-                        if (!voiceSlots[joinedSlotIndex].isSpeaking) {
-                            voiceSlots[joinedSlotIndex].isSpeaking = true;
-                            renderVoiceGrid();
-                        }
-                    } else {
-                        if (voiceSlots[joinedSlotIndex].isSpeaking) {
-                            voiceSlots[joinedSlotIndex].isSpeaking = false;
-                            renderVoiceGrid();
-                        }
-                    }
-                    requestAnimationFrame(checkVolume);
+            // Menerima panggilan dari warga lain
+            peer.on('call', (call) => {
+                console.log("Menerima panggilan dari:", call.peer);
+                call.answer(localStream);
+                call.on('stream', (remoteStream) => {
+                    playRemoteAudio(call.peer, remoteStream);
+                });
+            });
+
+            peer.on('error', (err) => {
+                console.error("PeerJS Error:", err);
+            });
+        }
+
+        // Fungsi untuk menelepon warga lain
+        function callPeer(targetPeerId) {
+            if (!peer || !localStream) return;
+            if (remoteAudioElements[targetPeerId]) return; // Sudah terhubung
+            
+            // Cek agar tidak saling menelepon bersamaan (hanya yang UID-nya lebih besar yang menelepon)
+            if (currentUserUid > targetPeerId) {
+                console.log("Menelepon:", targetPeerId);
+                const call = peer.call(targetPeerId, localStream);
+                if (call) {
+                    call.on('stream', (remoteStream) => {
+                        playRemoteAudio(targetPeerId, remoteStream);
+                    });
                 }
-                checkVolume();
-                showToast("Mikrofon aktif! Coba bicara.");
-            } catch (err) {
-                console.error("Mic Error:", err);
-                showToast("Gagal akses mic. Izinkan mikrofon di browser.");
             }
         }
 
-        function stopRealMicrophone() {
-            if (microphone) microphone.disconnect();
-            if (audioContext) audioContext.close();
-            audioContext = null; analyser = null; microphone = null;
+        // Memutar suara dari warga lain
+        function playRemoteAudio(peerId, stream) {
+            if (remoteAudioElements[peerId]) return; // Sudah diputar
+            
+            const audio = new Audio();
+            audio.srcObject = stream;
+            audio.play();
+            remoteAudioElements[peerId] = audio;
+            
+            // Opsional: Efek visual nyala saat suara masuk
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+            const source = audioCtx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function checkVolume() {
+                if (!remoteAudioElements[peerId]) return;
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                let average = sum / dataArray.length;
+
+                // Cari slot avatar yang sesuai dengan UID ini (jika ada)
+                // Karena kita pakai data statis, kita abaikan visual spesifik per orang untuk kesederhanaan
+                requestAnimationFrame(checkVolume);
+            }
+            checkVolume();
         }
 
-        // ADMIN LOGIC
+        // ==========================================
+        // END WEBRTC
+        // ==========================================
+
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
             const targetSlot = voiceSlots[slotId];
@@ -528,7 +563,6 @@
             updateAdminModalUI(); renderVoiceGrid();
         }
 
-        // JOIN LOGIC
         function openJoinModal(index) {
             if (joinedSlotIndex !== null) return showToast('Anda sudah terhubung.');
             if (voiceSlots[index].occupied) return;
@@ -550,38 +584,56 @@
 
         async function executeJoin(index, name, location) {
             if (index === null) return;
-            userProfile.name = name; userProfile.location = location;
-            joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
-            const initials = name.substring(0, 2).toUpperCase();
-            voiceSlots[index] = { id: index, occupied: true, isSelf: true, name: name, role: location, initials: initials, gradient: 'from-emerald-400 to-emerald-600', isSpeaking: false, isMuted: false, mutedByAdmin: false };
             
-            if (index >= DEFAULT_VISIBLE && !isVoiceGridExpanded) toggleVoiceGrid();
-            $('audio-control-bar').classList.remove('hidden');
-            updateAudioControlUI(); renderVoiceGrid();
-            sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
-            showToast(`Terhubung sebagai ${name} (${location})!`);
-            
-            await requestWakeLock();
-            await startRealMicrophone(); // <--- NYALAKAN MIKROFON ASLI
+            try {
+                // 1. Minta Izin Mikrofon
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                userProfile.name = name; userProfile.location = location;
+                joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
+                const initials = name.substring(0, 2).toUpperCase();
+                voiceSlots[index] = { id: index, occupied: true, isSelf: true, name: name, role: location, initials: initials, gradient: 'from-emerald-400 to-emerald-600', isSpeaking: false, isMuted: false, mutedByAdmin: false };
+                
+                if (index >= DEFAULT_VISIBLE && !isVoiceGridExpanded) toggleVoiceGrid();
+                $('audio-control-bar').classList.remove('hidden');
+                updateAudioControlUI(); renderVoiceGrid();
+                sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
+                showToast(`Suara Aktif!`);
+                
+                await requestWakeLock();
+
+                // 2. Inisialisasi WebRTC
+                initWebRTC();
+
+            } catch (err) {
+                console.error("Mic Error:", err);
+                alert("Gagal mengakses Mikrofon: " + err.message + "\nPastikan Anda mengizinkan akses mikrofon di browser.");
+            }
         }
 
         function leaveSlot() {
             if (joinedSlotIndex === null) return;
             voiceSlots[joinedSlotIndex] = { id: joinedSlotIndex, occupied: false };
             joinedSlotIndex = null; closeAdminModal();
-            stopRealMicrophone(); // <--- MATIKAN MIKROFON
+            
+            // Matikan Mikrofon & Koneksi Panggilan
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+            if (peer) { peer.destroy(); peer = null; }
+            Object.values(remoteAudioElements).forEach(audio => { audio.pause(); audio.srcObject = null; });
+            remoteAudioElements = {};
+
             $('audio-control-bar').classList.add('hidden');
             renderVoiceGrid(); sendSystemChat('Anda keluar dari ruang suara.');
             showToast('Keluar dari ruang suara'); releaseWakeLock();
         }
 
-        // AUDIO & WAKE LOCK
         async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
         function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); }
 
         function toggleMic() { 
-            if (joinedSlotIndex === null) return; 
+            if (joinedSlotIndex === null || !localStream) return; 
             isMicMuted = !isMicMuted; 
+            localStream.getAudioTracks()[0].enabled = !isMicMuted;
             voiceSlots[joinedSlotIndex].isMuted = isMicMuted; 
             if(isMicMuted) voiceSlots[joinedSlotIndex].isSpeaking = false; 
             updateAudioControlUI(); renderVoiceGrid(); 
@@ -615,9 +667,6 @@
             lucide.createIcons();
         }
 
-        // ==========================================
-        // FIREBASE CHAT LOGIC
-        // ==========================================
         function initFirebaseChat() {
             const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
@@ -669,9 +718,6 @@
         function submitChatForm(e) { e.preventDefault(); const input = $('chat-input'); const val = input.value.trim(); if (!val) return; sendChatToDB(val); input.value = ''; }
         function sendQuickChat(text) { sendChatToDB(text); }
 
-        // ==========================================
-        // SOS & SIREN LOGIC (DIPERBAIKI TOTAL)
-        // ==========================================
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
         function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
@@ -717,8 +763,6 @@
                     if (change.type === "added") {
                         const data = change.doc.data();
                         const docId = change.doc.id;
-                        
-                        // Jika bukan dari kita DAN belum pernah diproses
                         if (data.senderUid !== currentUserUid && !processedSosIds.has(docId)) {
                             processedSosIds.add(docId);
                             showSosUI(data.reporter, data.category);
