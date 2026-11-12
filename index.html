@@ -137,12 +137,21 @@
                 </div>
             </div>
 
-            <button type="button" onclick="openSosModal()"
-                class="px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-300 hover:text-rose-200 font-bold text-xs tracking-wider flex items-center gap-1.5 border border-rose-500/40 shadow-sm transition-all cursor-pointer shrink-0"
-                aria-label="Kirim Sinyal Darurat SOS">
-                <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>
-                <span>SOS</span>
-            </button>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- TOMBOL SHARE WHATSAPP -->
+                <button type="button" onclick="shareToWhatsApp()"
+                    class="p-1.5 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-slate-700 transition active:scale-95"
+                    title="Bagikan ke WhatsApp">
+                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                </button>
+                <!-- TOMBOL SOS -->
+                <button type="button" onclick="openSosModal()"
+                    class="px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-300 hover:text-rose-200 font-bold text-xs tracking-wider flex items-center gap-1.5 border border-rose-500/40 shadow-sm transition-all cursor-pointer"
+                    aria-label="Kirim Sinyal Darurat SOS">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>
+                    <span>SOS</span>
+                </button>
+            </div>
         </header>
 
         <!-- VOICE CHANNEL: 50 SLOTS (6 DEFAULT) -->
@@ -175,7 +184,7 @@
                 </button>
             </div>
 
-            <!-- Compact Audio Control Bar -->
+            <!-- Compact Audio Control Bar (Ditambah Tombol Admin Mute All) -->
             <div id="audio-control-bar" class="hidden mt-2 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2 min-w-0">
                     <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
@@ -188,6 +197,13 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- TOMBOL ADMIN: MUTE ALL -->
+                    <button type="button" onclick="adminMuteAll()"
+                        class="p-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/40 transition active:scale-95 flex items-center justify-center"
+                        title="Admin: Mute Semua Warga">
+                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    </button>
+
                     <button type="button" id="btn-mute" onclick="toggleMic()"
                         class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition active:scale-95"
                         title="Mute / Unmute Mic">
@@ -202,7 +218,6 @@
                         class="px-2.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/35 text-xs font-semibold flex items-center gap-1 transition active:scale-95"
                         title="Keluar Ruang Suara">
                         <i data-lucide="phone-off" class="w-3.5 h-3.5"></i>
-                        <span>Keluar</span>
                     </button>
                 </div>
             </div>
@@ -248,7 +263,7 @@
         </section>
     </div>
 
-    <!-- JOIN LOCATION MODAL (Hanya Custom Input) -->
+    <!-- JOIN LOCATION MODAL -->
     <div id="join-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center"
          role="dialog" aria-modal="true" aria-labelledby="join-title">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
@@ -264,7 +279,6 @@
                 Ketik di mana posisi Anda sekarang. Nama lokasi akan muncul di bawah avatar Anda.
             </p>
 
-            <!-- Custom Input -->
             <div class="mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -401,8 +415,6 @@
         let isSpeakerOn = true;
         let selectedSosCategory = 'Maling / Pencurian';
         let pendingJoinSlotIndex = null;
-
-        // State untuk Wake Lock (Layar Tetap Menyala)
         let wakeLock = null;
 
         // ============ HELPERS ============
@@ -434,6 +446,13 @@
             lucide.createIcons();
         }
 
+        // ============ FITUR BARU: SHARE KE WHATSAPP ============
+        function shareToWhatsApp() {
+            const text = "Ayo gabung ronda malam RT 03 di *Telulas Gank*! Pantau situasi & ngobrol bareng warga lewat streaming suara. Klik link ini untuk masuk: \n\n" + window.location.href;
+            const waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
+            window.open(waUrl, '_blank');
+        }
+
         // ============ VOICE GRID ============
         function renderVoiceGrid() {
             const grid = $('voice-grid');
@@ -455,11 +474,15 @@
                             ? `<span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>`
                             : `<i data-lucide="volume-2" class="w-2 h-2 text-emerald-400"></i>`);
 
+                    // Tampilkan ikon mahkota jika ini adalah user (simulasi Admin)
+                    const adminBadge = slot.isSelf ? `<i data-lucide="crown" class="w-2.5 h-2.5 text-amber-400 absolute -top-1 left-1/2 -translate-x-1/2 bg-night-900 rounded-full p-0.5"></i>` : '';
+
                     const card = document.createElement('div');
                     card.className = `${cardStyle} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
                     card.innerHTML = `
                         <div class="relative mb-1">
                             ${activeRings}
+                            ${adminBadge}
                             <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-md border border-white/20">
                                 ${slot.initials}
                             </div>
@@ -468,7 +491,7 @@
                             </span>
                         </div>
                         <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">
-                            ${slot.isSelf ? 'Anda' : slot.name}
+                            ${slot.isSelf ? 'Anda (Admin)' : slot.name}
                         </p>
                         <p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">
                             ${slot.role}
@@ -509,7 +532,6 @@
 
             pendingJoinSlotIndex = index;
             $('custom-loc-input').value = '';
-            
             $('join-modal').classList.remove('hidden');
             
             setTimeout(() => {
@@ -542,7 +564,7 @@
 
             voiceSlots[index] = {
                 id: index, occupied: true, isSelf: true,
-                name: 'Anda', role: location, initials: 'ME',
+                name: 'Anda (Admin)', role: location, initials: 'ME',
                 gradient: 'from-emerald-400 to-emerald-600',
                 isSpeaking: true, isMuted: false
             };
@@ -557,10 +579,9 @@
             $('audio-control-bar').classList.remove('hidden');
             updateAudioControlUI();
             renderVoiceGrid();
-            appendSystemChat(`Anda bergabung dari: ${location}.`);
+            appendSystemChat(`Anda (Admin) bergabung dari: ${location}.`);
             showToast(`Terhubung dari ${location}!`);
 
-            // --- FITUR WAKE LOCK: Cegah layar mati saat di ruang suara ---
             await requestWakeLock();
 
             setTimeout(() => {
@@ -580,19 +601,48 @@
             renderVoiceGrid();
             appendSystemChat('Anda keluar dari ruang suara.');
             showToast('Keluar dari ruang suara');
-
-            // --- LEPAS WAKE LOCK ---
             releaseWakeLock();
         }
 
-        // ============ FITUR WAKE LOCK API ============
+        // ============ FITUR BARU: ADMIN MUTE ALL ============
+        function adminMuteAll() {
+            if (joinedSlotIndex === null) return;
+
+            let mutedCount = 0;
+            voiceSlots.forEach(slot => {
+                // Jangan mute diri sendiri
+                if (slot.occupied && !slot.isSelf && !slot.isMuted) {
+                    slot.isMuted = true;
+                    slot.isSpeaking = false;
+                    mutedCount++;
+                }
+            });
+
+            if (mutedCount > 0) {
+                renderVoiceGrid();
+                appendSystemChat('👑 Admin (Anda) membisukan (Mute) seluruh peserta.');
+                showToast(`${mutedCount} peserta dibisukan.`);
+                
+                // Simulasi reaksi warga di chat
+                setTimeout(() => {
+                    appendChatMessage({
+                        sender:'Pak RT 03', tag:'Koordinator',
+                        tagStyle:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+                        message:'Siap Admin, suasana sedang dibisukan untuk kondusifitas.',
+                        time:getCurrentTime(), isSelf:false
+                    });
+                }, 1500);
+            } else {
+                showToast('Semua peserta sudah dalam keadaan Mute.');
+            }
+        }
+
+        // ============ WAKE LOCK API ============
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     console.log('Wake Lock: Layar dijaga tetap menyala.');
-                    
-                    // Handle jika user pindah tab / minimize, lalu balik lagi
                     wakeLock.addEventListener('release', () => {
                         console.log('Wake Lock dilepas (otomatis oleh sistem).');
                     });
@@ -606,7 +656,7 @@
             if (wakeLock !== null) {
                 wakeLock.release().then(() => {
                     wakeLock = null;
-                    console.log('Wake Lock: Layar kembali normal (boleh mati).');
+                    console.log('Wake Lock: Layar kembali normal.');
                 });
             }
         }
@@ -672,8 +722,6 @@
 
         function appendChatMessage({ sender, tag, tagStyle, message, time, isSelf, isEmergency }) {
             const feed = $('chat-feed');
-            
-            // Cek apakah user sedang scroll di paling bawah (toleransi 50px)
             const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 50;
 
             const wrapper = document.createElement('div');
@@ -695,7 +743,7 @@
                 wrapper.innerHTML = `
                     <div class="flex items-center gap-1.5 mb-1 px-1">
                         <span class="text-[10px] text-slate-500">${time}</span>
-                        <span class="text-[11px] font-bold text-emerald-400">Anda</span>
+                        <span class="text-[11px] font-bold text-emerald-400">Anda (Admin)</span>
                     </div>
                     <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs sm:text-sm shadow-md border border-emerald-400/30 leading-relaxed">
                         ${escapeHTML(message)}
@@ -714,7 +762,6 @@
 
             feed.appendChild(wrapper);
             
-            // Hanya scroll ke bawah jika sebelumnya user sudah berada di bawah
             if (isAtBottom) {
                 feed.scrollTop = feed.scrollHeight;
             }
@@ -751,7 +798,7 @@
         function sendQuickChat(text) { sendChat(text); }
 
         function sendChat(text) {
-            appendChatMessage({ sender:'Anda', message:text, time:getCurrentTime(), isSelf:true });
+            appendChatMessage({ sender:'Anda (Admin)', message:text, time:getCurrentTime(), isSelf:true });
 
             setTimeout(() => {
                 const lower = text.toLowerCase();
@@ -777,7 +824,7 @@
             }, 1300);
         }
 
-        // ============ SOS (Pointer Events) ============
+        // ============ SOS ============
         let holdInterval = null;
         let holdProgressVal = 0;
         let lastFocusEl = null;
@@ -956,7 +1003,6 @@
                 if (e.target === $('join-modal')) closeJoinModal();
             });
             
-            // Cek ulang Wake Lock jika pengguna pindah tab lalu balik lagi
             document.addEventListener('visibilitychange', async () => {
                 if (document.visibilityState === 'visible' && joinedSlotIndex !== null) {
                     await requestWakeLock();
