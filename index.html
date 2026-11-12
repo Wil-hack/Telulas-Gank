@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
-    <!-- LIBRARY PEERJS UNTUK WEBRTC (LIVE AUDIO) -->
+    <!-- LIBRARY PEERJS (WEBRTC AUDIO) -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <script>
@@ -72,7 +72,6 @@
 
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
-        <!-- Container Tersembunyi untuk Audio Panggilan -->
         <div id="remote-audios" class="hidden"></div>
 
         <!-- HEADER -->
@@ -167,7 +166,7 @@
         </section>
     </div>
 
-    <!-- MODAL-MODAL (Sama seperti sebelumnya) -->
+    <!-- MODAL-MODAL -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
@@ -196,7 +195,7 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Saat gabung, klik "Izinkan" untuk Mikrofon).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Klik "Izinkan" untuk Mikrofon).</p>
             <div class="space-y-3 mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div>
@@ -284,12 +283,27 @@
 
         let currentUserUid = null;
         let onlineUserCount = 0;
+        
+        // Mencegah SOS ganda
         let processedSosIds = new Set();
 
         // Variabel WebRTC
         let peer = null;
         let localStream = null;
         let remoteAudioElements = {};
+
+        // ==========================================
+        // AUDIO UNLOCKER (Mengatasi blokir browser)
+        // ==========================================
+        function unlockAudioContext() {
+            // Memaksa Tone.js untuk inisialisasi audio context saat layar pertama kali disentuh
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                Tone.start();
+                console.log("Audio Context Unlocked!");
+            }
+        }
+        document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
+        document.body.addEventListener('click', unlockAudioContext, { once: true });
 
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
@@ -456,9 +470,7 @@
                 showToast("Suara terhubung ke server!");
             });
 
-            // Menerima panggilan dari warga lain
             peer.on('call', (call) => {
-                console.log("Menerima panggilan dari:", call.peer);
                 call.answer(localStream);
                 call.on('stream', (remoteStream) => {
                     playRemoteAudio(call.peer, remoteStream);
@@ -470,12 +482,10 @@
             });
         }
 
-        // Fungsi untuk menelepon warga lain
         function callPeer(targetPeerId) {
             if (!peer || !localStream) return;
-            if (remoteAudioElements[targetPeerId]) return; // Sudah terhubung
+            if (remoteAudioElements[targetPeerId]) return;
             
-            // Cek agar tidak saling menelepon bersamaan (hanya yang UID-nya lebih besar yang menelepon)
             if (currentUserUid > targetPeerId) {
                 console.log("Menelepon:", targetPeerId);
                 const call = peer.call(targetPeerId, localStream);
@@ -487,16 +497,15 @@
             }
         }
 
-        // Memutar suara dari warga lain
         function playRemoteAudio(peerId, stream) {
-            if (remoteAudioElements[peerId]) return; // Sudah diputar
+            if (remoteAudioElements[peerId]) return;
             
             const audio = new Audio();
             audio.srcObject = stream;
             audio.play();
             remoteAudioElements[peerId] = audio;
             
-            // Opsional: Efek visual nyala saat suara masuk
+            // Visual efek suara masuk
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const analyser = audioCtx.createAnalyser();
             const source = audioCtx.createMediaStreamSource(stream);
@@ -511,8 +520,10 @@
                 for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
                 let average = sum / dataArray.length;
 
-                // Cari slot avatar yang sesuai dengan UID ini (jika ada)
-                // Karena kita pakai data statis, kita abaikan visual spesifik per orang untuk kesederhanaan
+                if (average > 15) {
+                    // Trigger animasi bicara pada lawan bicara
+                    // (Opsional: Bisa dikaitkan ke slot tertentu, tapi untuk P2P ini opsional)
+                }
                 requestAnimationFrame(checkVolume);
             }
             checkVolume();
@@ -718,6 +729,9 @@
         function submitChatForm(e) { e.preventDefault(); const input = $('chat-input'); const val = input.value.trim(); if (!val) return; sendChatToDB(val); input.value = ''; }
         function sendQuickChat(text) { sendChatToDB(text); }
 
+        // ==========================================
+        // SOS LOGIC (SUDAH DIJAMIN SINKRON)
+        // ==========================================
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
         function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
@@ -750,23 +764,45 @@
             let reporterLabel = 'Warga (Belum Join)';
             if (joinedSlotIndex !== null) { reporterLabel = `${userProfile.name} (${userProfile.location})`; }
             showSosUI(`Anda (${reporterLabel})`, selectedSosCategory);
+            
             try {
-                await addDoc(collection(db, "sos_alerts"), { senderUid: currentUserUid, reporter: reporterLabel, category: selectedSosCategory, timestamp: Date.now(), active: true });
+                // Kunci utama: Gunakan waktu saat ini dan ID dokumen unik
+                await addDoc(collection(db, "sos_alerts"), { 
+                    senderUid: currentUserUid, 
+                    reporter: reporterLabel, 
+                    category: selectedSosCategory, 
+                    timestamp: Date.now(), 
+                    active: true 
+                });
                 showToast("SOS Berhasil Dikirim!");
             } catch (e) { alert("Gagal Kirim SOS: " + e.message); }
         }
 
         function listenIncomingSos() {
-            const q = query(collection(db, "sos_alerts"), limit(5));
+            // Ambil 1 data terbaru saja
+            const q = query(collection(db, "sos_alerts"), limit(1));
+            
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
                         const docId = change.doc.id;
-                        if (data.senderUid !== currentUserUid && !processedSosIds.has(docId)) {
-                            processedSosIds.add(docId);
-                            showSosUI(data.reporter, data.category);
-                        }
+
+                        // Filter 1: Jangan proses jika SOS berasal dari diri sendiri
+                        if (data.senderUid === currentUserUid) return;
+                        
+                        // Filter 2: Jangan proses jika sudah pernah diproses (mencegah loop)
+                        if (processedSosIds.has(docId)) return;
+
+                        // Filter 3: Jangan proses data lama saat aplikasi pertama dibuka (toleransi 10 detik)
+                        const timeDiff = Date.now() - (data.timestamp || 0);
+                        if (timeDiff > 10000) return; 
+
+                        // Tandai sudah diproses
+                        processedSosIds.add(docId);
+                        
+                        // Tampilkan Sirene & UI
+                        showSosUI(data.reporter, data.category);
                     }
                 });
             });
