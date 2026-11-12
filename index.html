@@ -5,28 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telulas Gank - Ronda Nguling RW 13</title>
     
-    <!-- Pustaka Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
-    <!-- Konfigurasi Tailwind -->
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Inter', 'sans-serif'] 
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        night: { 
-                            950:'#050911', 
-                            900:'#0a111e', 
-                            850:'#0f1829', 
-                            800:'#152238' 
-                        }
+                        night: { 950:'#050911', 900:'#0a111e', 850:'#0f1829', 800:'#152238' }
                     },
                     animation: {
                         'banner-slide': 'bannerSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
@@ -46,165 +37,87 @@
             }
         }
     </script>
-
-    <!-- Kustomisasi CSS -->
     <style>
-        /* Scrollbar Custom */
-        ::-webkit-scrollbar { 
-            width: 4px; 
-            height: 4px; 
-        }
-        ::-webkit-scrollbar-track { 
-            background: rgba(10, 17, 30, 0.4); 
-        }
-        ::-webkit-scrollbar-thumb { 
-            background: rgba(16, 185, 129, 0.25); 
-            border-radius: 99px; 
-        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(10, 17, 30, 0.4); }
+        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.25); border-radius: 99px; }
 
-        /* Glassmorphism Styles */
-        .glass-header { 
-            background: rgba(10, 17, 30, 0.85); 
-            backdrop-filter: blur(18px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07); 
-        }
-        .glass-panel { 
-            background: rgba(15, 24, 41, 0.78); 
-            backdrop-filter: blur(16px); 
-            border: 1px solid rgba(255, 255, 255, 0.07); 
-        }
-        .glass-card { 
-            background: linear-gradient(155deg, rgba(30, 41, 59, 0.52) 0%, rgba(15, 23, 42, 0.78) 100%); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255, 255, 255, 0.07); 
-            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4); 
-        }
-        .glass-card-self { 
-            background: linear-gradient(155deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.88) 100%); 
-            border: 1px solid rgba(16, 185, 129, 0.45); 
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); 
-        }
-        .glass-card:active, .glass-card:hover { 
-            border-color: rgba(16, 185, 129, 0.5); 
-            transform: scale(0.98); 
-        }
-        .glass-slot-empty { 
-            background: rgba(15, 23, 42, 0.35); 
-            border: 1.5px dashed rgba(148, 163, 184, 0.22); 
-            transition: all 0.2s; 
-        }
-        .glass-slot-empty:hover { 
-            background: rgba(16, 185, 129, 0.12); 
-            border-color: rgba(16, 185, 129, 0.7); 
-            transform: translateY(-1px); 
-        }
+        .glass-header { background: rgba(10, 17, 30, 0.85); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+        .glass-panel { background: rgba(15, 24, 41, 0.78); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .glass-card { background: linear-gradient(155deg, rgba(30, 41, 59, 0.52) 0%, rgba(15, 23, 42, 0.78) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.07); box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4); }
+        .glass-card-self { background: linear-gradient(155deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.88) 100%); border: 1px solid rgba(16, 185, 129, 0.45); box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
+        .glass-card:active, .glass-card:hover { border-color: rgba(16, 185, 129, 0.5); transform: scale(0.98); }
+        .glass-slot-empty { background: rgba(15, 23, 42, 0.35); border: 1.5px dashed rgba(148, 163, 184, 0.22); transition: all 0.2s; }
+        .glass-slot-empty:hover { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.7); transform: translateY(-1px); }
 
-        /* Animasi Gelombang Suara */
-        @keyframes speakingWave { 
-            0% { transform: scale(0.95); opacity: 0.85; } 
-            75% { transform: scale(1.3); opacity: 0; } 
-            100% { transform: scale(1.3); opacity: 0; } 
-        }
-        .speaking-ring { 
-            position: absolute; 
-            inset: -3px; 
-            border-radius: 9999px; 
-            border: 2px solid #10b981; 
-            animation: speakingWave 1.45s infinite; 
-        }
-        .speaking-ring-delay { 
-            position: absolute; 
-            inset: -3px; 
-            border-radius: 9999px; 
-            border: 1.5px solid #34d399; 
-            animation: speakingWave 1.45s 0.5s infinite; 
-        }
+        @keyframes speakingWave { 0% { transform: scale(0.95); opacity: 0.85; } 75% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
+        .speaking-ring { position: absolute; inset: -3px; border-radius: 9999px; border: 2px solid #10b981; animation: speakingWave 1.45s infinite; }
+        .speaking-ring-delay { position: absolute; inset: -3px; border-radius: 9999px; border: 1.5px solid #34d399; animation: speakingWave 1.45s 0.5s infinite; }
 
-        /* Utility */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
         .focus-ring:focus-visible { outline: 2px solid #10b981; }
     </style>
 </head>
-
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
-    <!-- Efek Latar Belakang -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
         <div class="absolute top-1/4 -right-28 w-72 h-72 bg-rose-900/10 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-28 left-1/3 w-96 h-96 bg-teal-900/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Aplikasi Utama -->
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
 
         <!-- HEADER -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
-                <!-- Logo -->
                 <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </div>
-                
-                <!-- Judul -->
                 <div class="min-w-0 flex items-center gap-2">
                     <h1 class="font-extrabold text-lg text-white truncate">Telulas Gank</h1>
                     <span class="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[9px] font-bold border border-rose-500/30 flex items-center gap-1 shrink-0">
-                        <span class="relative flex h-1.5 w-1.5">
-                            <span class="animate-ping absolute h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
-                        </span>
+                        <span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute h-full w-full rounded-full bg-rose-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span></span>
                         LIVE
                     </span>
                 </div>
             </div>
-
-            <!-- Tombol Aksi Kanan -->
             <div class="flex items-center gap-1.5 shrink-0">
                 <button type="button" onclick="shareToWhatsApp()" class="p-1.5 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 border border-slate-700 transition active:scale-95">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
                 </button>
                 <button type="button" onclick="openSosModal()" class="px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-300 font-bold text-xs tracking-wider flex items-center gap-1.5 border border-rose-500/40 shadow-sm transition-all cursor-pointer">
-                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>
-                    <span>SOS</span>
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i><span>SOS</span>
                 </button>
             </div>
         </header>
 
         <!-- VOICE CHANNEL -->
         <section class="px-3.5 pt-3 pb-2.5 shrink-0 bg-gradient-to-b from-night-900/70 to-transparent border-b border-slate-800/70">
-            <!-- Info Header Suara -->
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2 min-w-0">
                     <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
                     <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide">Nguling RW 13</span>
                     <span id="voice-counter" class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-bold border border-emerald-500/25 shrink-0">0/50</span>
-                    
-                    <!-- Elemen ini wajib ada agar tidak error null -->
                     <span id="admin-hint" class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 ml-1"></span>
                 </div>
                 <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="online-count-text">0 Warga Online</span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="online-count-text">0 Warga Online</span>
                 </span>
             </div>
 
-            <!-- Grid Slot Suara -->
             <div class="voice-scroll max-h-[225px] overflow-y-auto pr-1 -mr-1">
                 <div id="voice-grid" class="grid grid-cols-3 gap-2 pb-1 transition-all duration-300"></div>
             </div>
 
-            <!-- Tombol Expand Grid -->
             <div class="mt-2 text-center">
                 <button id="btn-toggle-grid" onclick="toggleVoiceGrid()" type="button" class="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 transition-all flex items-center justify-center gap-1 mx-auto w-max">
-                    <i data-lucide="chevron-down" class="w-3 h-3"></i>
-                    <span id="toggle-text">Lihat Semua 50 Slot</span>
+                    <i data-lucide="chevron-down" class="w-3 h-3"></i><span id="toggle-text">Lihat Semua 50 Slot</span>
                 </button>
             </div>
 
-            <!-- Panel Kontrol Suara (Self) -->
             <div id="audio-control-bar" class="hidden mt-2 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2 min-w-0">
                     <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
@@ -216,22 +129,15 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95">
-                        <i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
-                    </button>
-                    <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95">
-                        <i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>
-                    </button>
-                    <button type="button" onclick="leaveSlot()" class="px-2.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/35 text-xs font-semibold active:scale-95">
-                        <i data-lucide="phone-off" class="w-3.5 h-3.5"></i>
-                    </button>
+                    <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
+                    <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
+                    <button type="button" onclick="leaveSlot()" class="px-2.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/35 text-xs font-semibold active:scale-95"><i data-lucide="phone-off" class="w-3.5 h-3.5"></i></button>
                 </div>
             </div>
         </section>
 
-        <!-- CHAT SECTION -->
+        <!-- CHAT -->
         <section class="flex-1 flex flex-col min-h-0 bg-night-950/50">
-            <!-- Header Chat -->
             <div class="px-3.5 py-2 flex items-center justify-between border-b border-slate-800/60 shrink-0">
                 <div class="flex items-center gap-1.5">
                     <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -240,36 +146,28 @@
                 <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Real-time</span>
             </div>
 
-            <!-- Feed Chat -->
             <div id="chat-feed" class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 scroll-smooth"></div>
 
-            <!-- Input Chat -->
             <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0 space-y-2">
-                <!-- Quick Replies -->
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                     <button type="button" onclick="sendQuickChat('Aman terkendali ✅')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">✅ Aman</button>
                     <button type="button" onclick="sendQuickChat('Kopi sudah siap ☕')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/25">☕ Kopi siap</button>
                     <button type="button" onclick="sendQuickChat('Lanjut keliling 🔦')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/25">🔦 Keliling</button>
                 </div>
-                <!-- Form Input -->
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
                     <input type="text" id="chat-input" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-3.5 py-2.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
-                    <button type="submit" class="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg active:scale-95 shrink-0 flex items-center justify-center">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
+                    <button type="submit" class="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg active:scale-95 shrink-0 flex items-center justify-center"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </section>
     </div>
 
-    <!-- MODAL ADMIN CONTROL -->
+    <!-- ADMIN MODAL -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
             <div class="flex items-center justify-center gap-2 mb-1.5">
-                <div class="w-8 h-8 rounded-full bg-purple-500/15 border border-purple-500/35 flex items-center justify-center">
-                    <i data-lucide="shield-check" class="w-4 h-4 text-purple-400"></i>
-                </div>
+                <div class="w-8 h-8 rounded-full bg-purple-500/15 border border-purple-500/35 flex items-center justify-center"><i data-lucide="shield-check" class="w-4 h-4 text-purple-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Kontrol Admin</h3>
             </div>
             <div class="bg-slate-800/50 rounded-2xl p-3 flex items-center justify-center gap-3 mb-5 mt-4 border border-slate-700">
@@ -286,25 +184,29 @@
         </div>
     </div>
 
-    <!-- MODAL JOIN LOCATION -->
+    <!-- JOIN MODAL (DENGAN NAMA & LOKASI) -->
     <div id="join-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
             <div class="flex items-center justify-center gap-2 mb-1.5">
-                <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
-                </div>
-                <h3 class="text-base font-extrabold text-white tracking-tight">Lokasi Ronda</h3>
+                <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
+                <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-5">Ketik di mana posisi Anda sekarang.</p>
-            <div class="mb-5">
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi agar warga lain tahu siapa Anda.</p>
+            
+            <div class="space-y-3 mb-5">
+                <!-- Input Nama -->
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-lucide="navigation" class="w-5 h-5 text-slate-500"></i>
-                    </div>
-                    <input type="text" id="custom-loc-input" placeholder="Cth: RT 01, RT 02..." autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div>
+                    <input type="text" id="user-name-input" placeholder="Nama Anda (Cth: Wildan)" autocomplete="off" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
+                </div>
+                <!-- Input Lokasi -->
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="map-pin" class="w-5 h-5 text-slate-500"></i></div>
+                    <input type="text" id="custom-loc-input" placeholder="Lokasi Anda (Cth: RT 01)" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
                 </div>
             </div>
+
             <div class="flex gap-2">
                 <button type="button" onclick="closeJoinModal()" class="flex-1 py-3 rounded-2xl bg-slate-800/70 text-xs font-bold text-slate-400">Batal</button>
                 <button type="button" onclick="confirmJoin()" class="flex-[2] py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-lg">Gabung Suara</button>
@@ -312,31 +214,21 @@
         </div>
     </div>
 
-    <!-- MODAL SOS -->
+    <!-- SOS MODAL -->
     <div id="sos-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 text-center relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
             <div class="flex items-center justify-center gap-2 mb-1.5">
-                <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center">
-                    <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
-                </div>
+                <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Kirim Sinyal Darurat SOS</h3>
             </div>
             <p class="text-xs text-slate-400 mb-4">Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">Nguling RW 13</strong>.</p>
             
             <div class="grid grid-cols-2 gap-2 mt-4 text-left">
-                <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition">
-                    <span>🚨</span><span>Maling</span>
-                </button>
-                <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
-                    <span>🔥</span><span>Kebakaran</span>
-                </button>
-                <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
-                    <span>🚑</span><span>Medis</span>
-                </button>
-                <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
-                    <span>🌊</span><span>Bencana</span>
-                </button>
+                <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition"><span>🚨</span><span>Maling</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🔥</span><span>Kebakaran</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🚑</span><span>Medis</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🌊</span><span>Bencana</span></button>
             </div>
             
             <div class="mt-5">
@@ -351,14 +243,12 @@
         </div>
     </div>
 
-    <!-- BANNER NOTIFIKASI SOS -->
+    <!-- PUSH BANNER SOS -->
     <div id="push-notification-preview" class="hidden fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-[410px] z-50 animate-banner-slide">
         <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/70 shadow-lg p-3.5">
             <div class="flex items-start justify-between gap-2.5">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center shrink-0">
-                        <i data-lucide="bell-ring" class="w-4 h-4 text-white"></i>
-                    </div>
+                    <div class="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center shrink-0"><i data-lucide="bell-ring" class="w-4 h-4 text-white"></i></div>
                     <div>
                         <div class="flex items-center gap-1.5">
                             <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">TELULAS GANK • DARURAT</span>
@@ -368,31 +258,25 @@
                         <p class="text-[11px] text-slate-300 mt-0.5">Oleh <strong id="push-reporter-text">Warga</strong>.</p>
                     </div>
                 </div>
-                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 text-white text-[10px] font-bold transition flex justify-center gap-1">
-                <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene
-            </button>
+            <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 text-white text-[10px] font-bold transition flex justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button>
         </div>
     </div>
 
     <!-- TOAST -->
     <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
         <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span>
         </div>
     </div>
 
-    <!-- JAVASCRIPT & FIREBASE LOGIC -->
+    <!-- SCRIPT FIREBASE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
             authDomain: "telulas-dd5c8.firebaseapp.com",
@@ -409,7 +293,6 @@
         let currentUserUid = null;
         let onlineUserCount = 0;
 
-        // Login Anonim
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
@@ -450,8 +333,10 @@
         const MAX_SLOTS = 50;
         const DEFAULT_VISIBLE = 6;
         let isVoiceGridExpanded = false;
+        
+        // Data user yang sedang login
+        let userProfile = { name: 'Warga', location: 'Ronda' }; 
 
-        // Data Warga (Simulasi UI)
         const initialOccupants = [
             { name:'Pak RT 01',  role:'Pos Kamling', initials:'R1', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
             { name:'Mas Dimas',  role:'RT 01',       initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
@@ -475,31 +360,13 @@
         let targetAdminSlotIndex = null;
         let sosSirenInterval = null;
 
-        // ==========================================
-        // EXPOSE FUNCTIONS TO WINDOW (Untuk HTML onClick)
-        // ==========================================
-        window.openSosModal = openSosModal; 
-        window.closeSosModal = closeSosModal; 
-        window.selectSosCategory = selectSosCategory;
-        window.dismissPushBanner = dismissPushBanner; 
-        window.stopSosSiren = stopSosSiren; 
-        window.shareToWhatsApp = shareToWhatsApp;
-        window.toggleVoiceGrid = toggleVoiceGrid; 
-        window.toggleMic = toggleMic; 
-        window.toggleSpeaker = toggleSpeaker;
-        window.leaveSlot = leaveSlot; 
-        window.openAdminModal = openAdminModal; 
-        window.closeAdminModal = closeAdminModal;
-        window.toggleTargetMute = toggleTargetMute; 
-        window.openJoinModal = openJoinModal; 
-        window.closeJoinModal = closeJoinModal;
-        window.confirmJoin = confirmJoin; 
-        window.submitChatForm = submitChatForm; 
-        window.sendQuickChat = sendQuickChat;
+        window.openSosModal = openSosModal; window.closeSosModal = closeSosModal; window.selectSosCategory = selectSosCategory;
+        window.dismissPushBanner = dismissPushBanner; window.stopSosSiren = stopSosSiren; window.shareToWhatsApp = shareToWhatsApp;
+        window.toggleVoiceGrid = toggleVoiceGrid; window.toggleMic = toggleMic; window.toggleSpeaker = toggleSpeaker;
+        window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
+        window.toggleTargetMute = toggleTargetMute; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
+        window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm; window.sendQuickChat = sendQuickChat;
 
-        // ==========================================
-        // HELPER FUNCTIONS
-        // ==========================================
         const $ = id => document.getElementById(id);
         const countJoined = () => voiceSlots.filter(s => s.occupied).length;
 
@@ -524,8 +391,7 @@
                 btnIcon.setAttribute('data-lucide', 'chevron-down');
                 btnText.textContent = `Lihat Semua ${MAX_SLOTS} Slot`;
             }
-            renderVoiceGrid(); 
-            lucide.createIcons();
+            renderVoiceGrid(); lucide.createIcons();
         }
 
         function shareToWhatsApp() {
@@ -557,41 +423,26 @@
                     card.className = `${cardStyle} ${cursorClass} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
                     card.innerHTML = `
                         <div class="relative mb-1 mt-1">
-                            ${activeRings} 
-                            ${adminBadge}
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-md border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">
-                                ${slot.initials}
-                            </div>
-                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10">
-                                ${statusBadge}
-                            </span>
+                            ${activeRings} ${adminBadge}
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-md border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${slot.initials}</div>
+                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10">${statusBadge}</span>
                         </div>
-                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">
-                            ${slot.isSelf ? 'Anda' : slot.name}
-                        </p>
-                        ${roleText}
-                    `;
+                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">${slot.isSelf ? 'Anda' : slot.name}</p>
+                        ${roleText}`;
                     
                     if (isClickable) card.onclick = () => openAdminModal(slot.id);
                     grid.appendChild(card);
                 } else {
                     const emptyBtn = document.createElement('button');
-                    emptyBtn.type = 'button'; 
-                    emptyBtn.onclick = () => openJoinModal(slot.id);
+                    emptyBtn.type = 'button'; emptyBtn.onclick = () => openJoinModal(slot.id);
                     emptyBtn.className = 'glass-slot-empty rounded-2xl p-2 flex flex-col items-center justify-center min-h-[85px] group cursor-pointer focus:outline-none';
-                    emptyBtn.innerHTML = `
-                        <div class="w-7 h-7 rounded-full bg-emerald-500/15 group-hover:bg-emerald-500 border border-emerald-500/40 flex items-center justify-center mb-1">
-                            <i data-lucide="plus" class="w-3.5 h-3.5 text-emerald-400 group-hover:text-white"></i>
-                        </div>
-                        <span class="text-[10px] font-bold text-slate-300 group-hover:text-emerald-300">Gabung</span>
-                    `;
+                    emptyBtn.innerHTML = `<div class="w-7 h-7 rounded-full bg-emerald-500/15 group-hover:bg-emerald-500 border border-emerald-500/40 flex items-center justify-center mb-1"><i data-lucide="plus" class="w-3.5 h-3.5 text-emerald-400 group-hover:text-white"></i></div><span class="text-[10px] font-bold text-slate-300 group-hover:text-emerald-300">Gabung</span>`;
                     grid.appendChild(emptyBtn);
                 }
             });
 
             lucide.createIcons();
             updateCounters();
-            
             if (joinedSlotIndex !== null) {
                 $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> <span class="text-purple-300">Mode Admin</span>`;
             } else {
@@ -601,33 +452,26 @@
         }
 
         // ==========================================
-        // ADMIN MODAL LOGIC (MUTE ALL / PER ORANG)
+        // ADMIN MODAL LOGIC
         // ==========================================
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
             const targetSlot = voiceSlots[slotId];
             if (!targetSlot.occupied) return;
-            
             targetAdminSlotIndex = slotId;
             $('admin-target-avatar').textContent = targetSlot.initials;
             $('admin-target-avatar').className = `w-10 h-10 rounded-full bg-gradient-to-br ${targetSlot.gradient} flex items-center justify-center text-white font-bold text-xs shadow-inner`;
             $('admin-target-name').textContent = targetSlot.name;
-            
             updateAdminModalUI();
             $('admin-modal').classList.remove('hidden');
         }
 
-        function closeAdminModal() { 
-            $('admin-modal').classList.add('hidden'); 
-            targetAdminSlotIndex = null; 
-        }
+        function closeAdminModal() { $('admin-modal').classList.add('hidden'); targetAdminSlotIndex = null; }
 
         function updateAdminModalUI() {
             const targetSlot = voiceSlots[targetAdminSlotIndex];
             if (!targetSlot) return;
-            const btn = $('admin-toggle-btn'); 
-            const statusTxt = $('admin-target-status');
-            
+            const btn = $('admin-toggle-btn'); const statusTxt = $('admin-target-status');
             if (targetSlot.isMuted) {
                 statusTxt.innerHTML = targetSlot.mutedByAdmin ? `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin` : 'Sedang Dibisukan (Mandiri)';
                 statusTxt.className = targetSlot.mutedByAdmin ? 'text-[11px] text-purple-400 font-bold' : 'text-[11px] text-rose-400 font-semibold';
@@ -646,154 +490,124 @@
             if (targetAdminSlotIndex === null) return;
             const targetSlot = voiceSlots[targetAdminSlotIndex];
             targetSlot.isMuted = !targetSlot.isMuted;
-            
-            if (targetSlot.isMuted) {
-                targetSlot.isSpeaking = false; 
-                targetSlot.mutedByAdmin = true; 
-                showToast(`${targetSlot.name} dibisukan oleh Admin.`);
-            } else {
-                targetSlot.mutedByAdmin = false; 
-                showToast(`Suara ${targetSlot.name} diaktifkan kembali.`);
-            }
-            updateAdminModalUI(); 
-            renderVoiceGrid();
+            if (targetSlot.isMuted) { targetSlot.isSpeaking = false; targetSlot.mutedByAdmin = true; showToast(`${targetSlot.name} dibisukan oleh Admin.`); }
+            else { targetSlot.mutedByAdmin = false; showToast(`Suara ${targetSlot.name} diaktifkan kembali.`); }
+            updateAdminModalUI(); renderVoiceGrid();
         }
 
         // ==========================================
-        // JOIN CHANNEL LOGIC
+        // JOIN CHANNEL LOGIC (NAMA & LOKASI)
         // ==========================================
         function openJoinModal(index) {
             if (joinedSlotIndex !== null) return showToast('Anda sudah terhubung.');
             if (voiceSlots[index].occupied) return;
             if (countJoined() >= MAX_SLOTS) return showToast('Ruang suara penuh.');
-            
             pendingJoinSlotIndex = index; 
+            $('user-name-input').value = '';
             $('custom-loc-input').value = '';
             $('join-modal').classList.remove('hidden');
-            setTimeout(() => $('custom-loc-input').focus(), 300);
+            setTimeout(() => $('user-name-input').focus(), 300);
         }
 
-        function closeJoinModal() { 
-            $('join-modal').classList.add('hidden'); 
-            $('custom-loc-input').blur(); 
-            pendingJoinSlotIndex = null; 
-        }
+        function closeJoinModal() { $('join-modal').classList.add('hidden'); $('custom-loc-input').blur(); pendingJoinSlotIndex = null; }
 
         function confirmJoin() {
-            const customVal = $('custom-loc-input').value.trim();
-            const finalLoc = customVal || 'Ronda Keliling'; 
+            const nameVal = $('user-name-input').value.trim();
+            const locVal = $('custom-loc-input').value.trim();
+            const finalName = nameVal || 'Warga';
+            const finalLoc = locVal || 'Ronda Keliling'; 
+            
             const index = pendingJoinSlotIndex; 
             closeJoinModal(); 
-            executeJoin(index, finalLoc);
+            executeJoin(index, finalName, finalLoc);
         }
 
-        async function executeJoin(index, location) {
+        async function executeJoin(index, name, location) {
             if (index === null) return;
+            
+            userProfile.name = name;
+            userProfile.location = location;
             
             joinedSlotIndex = index; 
             isMicMuted = false; 
             isSpeakerOn = true;
+            
+            // Inisial untuk Avatar
+            const initials = name.substring(0, 2).toUpperCase();
+
             voiceSlots[index] = { 
                 id: index, occupied: true, isSelf: true, 
-                name: 'Anda', role: location, initials: 'ME', 
+                name: name, role: location, initials: initials, 
                 gradient: 'from-emerald-400 to-emerald-600', 
                 isSpeaking: true, isMuted: false, mutedByAdmin: false 
             };
 
             if (index >= DEFAULT_VISIBLE && !isVoiceGridExpanded) toggleVoiceGrid();
-            
             $('audio-control-bar').classList.remove('hidden');
-            updateAudioControlUI(); 
-            renderVoiceGrid();
-            sendSystemChat(`👑 Anda bergabung dari: ${location}.`);
-            showToast(`Terhubung dari ${location}!`);
+            updateAudioControlUI(); renderVoiceGrid();
+            
+            sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
+            showToast(`Terhubung sebagai ${name} (${location})!`);
             
             await requestWakeLock();
             
             setTimeout(() => {
-                if (joinedSlotIndex === index && !isMicMuted && voiceSlots[index]) { 
-                    voiceSlots[index].isSpeaking = false; 
-                    renderVoiceGrid(); 
-                }
+                if (joinedSlotIndex === index && !isMicMuted && voiceSlots[index]) { voiceSlots[index].isSpeaking = false; renderVoiceGrid(); }
             }, 4000);
         }
 
         function leaveSlot() {
             if (joinedSlotIndex === null) return;
             voiceSlots[joinedSlotIndex] = { id: joinedSlotIndex, occupied: false };
-            joinedSlotIndex = null; 
-            closeAdminModal();
+            joinedSlotIndex = null; closeAdminModal();
             $('audio-control-bar').classList.add('hidden');
-            renderVoiceGrid(); 
-            sendSystemChat('Anda keluar dari ruang suara.');
-            showToast('Keluar dari ruang suara'); 
-            releaseWakeLock();
+            renderVoiceGrid(); sendSystemChat('Anda keluar dari ruang suara.');
+            showToast('Keluar dari ruang suara'); releaseWakeLock();
         }
 
         // ==========================================
-        // AUDIO CONTROLS (MIC & SPEAKER)
+        // AUDIO CONTROLS
         // ==========================================
-        async function requestWakeLock() { 
-            try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} 
-        }
-        function releaseWakeLock() { 
-            if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); 
-        }
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+        function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); }
 
         function toggleMic() {
             if (joinedSlotIndex === null) return;
             isMicMuted = !isMicMuted;
-            voiceSlots[joinedSlotIndex].isMuted = isMicMuted; 
-            voiceSlots[joinedSlotIndex].isSpeaking = !isMicMuted;
-            updateAudioControlUI(); 
-            renderVoiceGrid(); 
-            showToast(isMicMuted ? 'Mikrofon dimatikan' : 'Mikrofon diaktifkan');
+            voiceSlots[joinedSlotIndex].isMuted = isMicMuted; voiceSlots[joinedSlotIndex].isSpeaking = !isMicMuted;
+            updateAudioControlUI(); renderVoiceGrid(); showToast(isMicMuted ? 'Mikrofon dimatikan' : 'Mikrofon diaktifkan');
         }
 
-        function toggleSpeaker() { 
-            isSpeakerOn = !isSpeakerOn; 
-            updateAudioControlUI(); 
-            showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); 
-        }
+        function toggleSpeaker() { isSpeakerOn = !isSpeakerOn; updateAudioControlUI(); showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); }
 
         function updateAudioControlUI() {
-            const btnMute = $('btn-mute'); 
-            const btnSpeaker = $('btn-speaker');
-            const micLabel = $('mic-status-label'); 
-            const spkLabel = $('speaker-status-label');
-            const badgeIcon = $('mic-badge-icon'); 
-            const badgeBg = $('mic-badge-bg');
+            const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
+            const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
+            const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
 
             if (isMicMuted) {
                 btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
-                micLabel.textContent = 'Mic Mute'; 
-                micLabel.className = 'text-xs font-bold text-rose-300 truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic-off'); 
-                badgeIcon.className = 'w-3.5 h-3.5 text-rose-400';
+                micLabel.textContent = 'Mic Mute'; micLabel.className = 'text-xs font-bold text-rose-300 truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic-off'); badgeIcon.className = 'w-3.5 h-3.5 text-rose-400';
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
             } else {
                 btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
-                micLabel.textContent = 'Mic Aktif'; 
-                micLabel.className = 'text-xs font-bold text-white truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic'); 
-                badgeIcon.className = 'w-3.5 h-3.5 text-emerald-400';
+                micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.className = 'w-3.5 h-3.5 text-emerald-400';
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
             }
-            
             if (isSpeakerOn) {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
-                spkLabel.textContent = 'Speaker: Aktif'; 
-                spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
+                spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
             } else {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 text-slate-400"></i>`;
-                spkLabel.textContent = 'Speaker: Off'; 
-                spkLabel.className = 'text-[10px] text-slate-400 truncate';
+                spkLabel.textContent = 'Speaker: Off'; spkLabel.className = 'text-[10px] text-slate-400 truncate';
             }
             lucide.createIcons();
         }
 
         // ==========================================
-        // FIREBASE CHAT LOGIC
+        // FIREBASE CHAT LOGIC (DENGAN ALERT ERROR)
         // ==========================================
         function initFirebaseChat() {
             const q = query(collection(db, "chats"), orderBy("timestamp", "asc"), limit(50));
@@ -805,58 +619,37 @@
                 if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                 lucide.createIcons();
             }, (error) => { 
-                alert("Gagal Memuat Chat: " + error.message); 
+                // JIKA GAGAL MEMUAT CHAT, MUNCULKAN ALASANNYA
+                alert("Gagal Memuat Chat: " + error.message + "\n\nPastikan Firestore Rules di Firebase sudah diset ke 'allow read, write: if true;' dan ditekan PUBLISH."); 
             });
         }
 
         function renderMessageBubble(data, isAtBottom) {
-            const feed = $('chat-feed'); 
-            const wrapper = document.createElement('div');
+            const feed = $('chat-feed'); const wrapper = document.createElement('div');
             const isSelf = (data.senderUid === currentUserUid);
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
 
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
-                wrapper.innerHTML = `
-                    <div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1">
-                                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS
-                            </span>
-                            <span class="text-[10px] text-rose-300/70">${data.time}</span>
-                        </div>
-                        <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
-                        <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1">
-                            <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene
-                        </button>
-                    </div>`;
+                wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
+                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${data.time}</span></div>
+                    <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
+                    <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
             } else if (isSelf) {
-                wrapper.innerHTML = `
-                    <div class="flex items-center gap-1.5 mb-1 px-1">
-                        <span class="text-[10px] text-slate-500">${data.time}</span>
-                        <span class="text-[11px] font-bold text-emerald-400">Anda</span>
-                    </div>
-                    <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-md border border-emerald-400/30 leading-relaxed">
-                        ${escapeHTML(data.message)}
-                    </div>`;
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${data.time}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
+                    <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-md border border-emerald-400/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
             } else {
-                wrapper.innerHTML = `
-                    <div class="flex items-center gap-1.5 mb-1 px-1">
-                        <span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender)}</span>
-                        <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span>
-                        <span class="text-[10px] text-slate-500">${data.time}</span>
-                    </div>
-                    <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">
-                        ${escapeHTML(data.message)}
-                    </div>`;
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender)}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${data.time}</span></div>
+                    <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
             }
             feed.appendChild(wrapper);
         }
 
         async function sendChatToDB(text, isEmergency = false) {
             if (!text) return;
-            if (!currentUserUid) return alert("Tunggu, sedang menghubungkan ke server...");
-            const senderName = joinedSlotIndex !== null ? 'Anda (Admin)' : 'Anda';
+            if (!currentUserUid) return alert("Gagal: Anda belum terhubung ke Firebase. Tunggu sebentar atau refresh halaman.");
+            
+            const senderName = joinedSlotIndex !== null ? userProfile.name : 'Warga';
             
             try {
                 await addDoc(collection(db, "chats"), {
@@ -865,47 +658,25 @@
                     message: text, 
                     timestamp: Date.now(), 
                     time: getCurrentTime(), 
-                    tag: 'Warga', 
+                    tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
                     isEmergency: isEmergency
                 });
             } catch (e) { 
-                alert("Gagal Kirim Pesan: " + e.message); 
+                // TAMPILKAN ERROR ASLI JIKA GAGAL KIRIM
+                alert("GAGAL KIRIM PESAN: " + e.message + "\n\nPenyebab umum:\n1. Firestore Rules belum di-Publish.\n2. Koneksi internet terputus.");
             }
         }
 
         function sendSystemChat(text) { sendChatToDB(text, false); }
-        
-        function submitChatForm(e) {
-            e.preventDefault();
-            const input = $('chat-input'); 
-            const val = input.value.trim(); 
-            if (!val) return;
-            sendChatToDB(val); 
-            input.value = '';
-        }
-
+        function submitChatForm(e) { e.preventDefault(); const input = $('chat-input'); const val = input.value.trim(); if (!val) return; sendChatToDB(val); input.value = ''; }
         function sendQuickChat(text) { sendChatToDB(text); }
 
         // ==========================================
-        // SOS & SIREN LOGIC
+        // SOS & SIREN LOGIC (DENGAN IDENTITAS JELAS)
         // ==========================================
-        let holdInterval = null; 
-        let holdProgressVal = 0; 
-        let lastFocusEl = null;
-        
-        function openSosModal() { 
-            lastFocusEl = document.activeElement; 
-            $('sos-modal').classList.remove('hidden'); 
-            resetHoldProgress(); 
-            setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); 
-        }
-        
-        function closeSosModal() { 
-            cancelHoldSos(); 
-            $('sos-modal').classList.add('hidden'); 
-            if (lastFocusEl) lastFocusEl.focus(); 
-        }
-        
+        let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
+        function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
+        function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
         function selectSosCategory(btn, category) {
             selectedSosCategory = category;
             document.querySelectorAll('.sos-cat-btn').forEach(el => { el.className = 'sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition'; });
@@ -915,12 +686,10 @@
         function startHoldSos(e) {
             if (e) e.preventDefault();
             resetHoldProgress();
-            const progressEl = $('hold-progress'); 
-            const labelEl = $('hold-btn-label');
+            const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label');
             labelEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...`;
             lucide.createIcons();
-            const duration = 1500; 
-            const step = 30;
+            const duration = 1500; const step = 30;
             holdInterval = setInterval(() => {
                 holdProgressVal += (step / duration) * 100;
                 progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`;
@@ -928,44 +697,19 @@
             }, step);
         }
 
-        function cancelHoldSos() {
-            clearInterval(holdInterval);
-            resetHoldProgress();
-        }
-
+        function cancelHoldSos() { clearInterval(holdInterval); resetHoldProgress(); }
         function resetHoldProgress() {
             holdProgressVal = 0;
-            const progressEl = $('hold-progress'); 
-            const labelEl = $('hold-btn-label');
+            const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label');
             if (progressEl) progressEl.style.width = '0%';
             if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik`; lucide.createIcons(); }
         }
 
         async function playSirenTone() {
-            try { 
-                if (typeof Tone !== 'undefined') { 
-                    await Tone.start(); 
-                    const synth = new Tone.Synth().toDestination(); 
-                    const now = Tone.now(); 
-                    synth.triggerAttackRelease("A5", "16n", now); 
-                    synth.triggerAttackRelease("E5", "16n", now + 0.2); 
-                } 
-            } catch (err) {}
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {}
         }
-        
-        function startSosSiren() { 
-            if (sosSirenInterval) clearInterval(sosSirenInterval); 
-            playSirenTone(); 
-            sosSirenInterval = setInterval(() => playSirenTone(), 1000); 
-        }
-        
-        function stopSosSiren() { 
-            if (sosSirenInterval) { 
-                clearInterval(sosSirenInterval); 
-                sosSirenInterval = null; 
-                showToast('Sirene SOS dihentikan.'); 
-            } 
-        }
+        function startSosSiren() { if (sosSirenInterval) clearInterval(sosSirenInterval); playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }
+        function stopSosSiren() { if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; showToast('Sirene SOS dihentikan.'); } }
 
         function showSosUI(reporter, category) {
             $('push-category-text').textContent = category; 
@@ -973,34 +717,27 @@
             $('push-notification-preview').classList.remove('hidden');
             startSosSiren();
             
-            const feed = $('chat-feed'); 
-            const wrapper = document.createElement('div'); 
-            wrapper.className = 'w-full my-1';
-            wrapper.innerHTML = `
-                <div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-[10px] font-extrabold uppercase text-rose-400 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> PERINGATAN SOS
-                        </span>
-                        <span class="text-[10px] text-rose-300/70">${getCurrentTime()}</span>
-                    </div>
-                    <p class="text-xs font-semibold text-white">DARURAT (${escapeHTML(category)}) oleh ${escapeHTML(reporter)}. Segera merapat!</p>
-                    <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1">
-                        <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene
-                    </button>
-                </div>`;
-            feed.appendChild(wrapper); 
-            feed.scrollTop = feed.scrollHeight; 
-            lucide.createIcons();
+            const feed = $('chat-feed'); const wrapper = document.createElement('div'); wrapper.className = 'w-full my-1';
+            wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
+                <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> PERINGATAN SOS</span><span class="text-[10px] text-rose-300/70">${getCurrentTime()}</span></div>
+                <p class="text-xs font-semibold text-white">DARURAT (${escapeHTML(category)}) oleh ${escapeHTML(reporter)}. Segera merapat!</p>
+                <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
+            feed.appendChild(wrapper); feed.scrollTop = feed.scrollHeight; lucide.createIcons();
         }
 
         async function triggerEmergencyAlert() {
             closeSosModal();
-            let reporterLabel = 'Anda (Warga)';
-            if (joinedSlotIndex !== null) reporterLabel = `Anda (${voiceSlots[joinedSlotIndex].role})`;
             
-            showSosUI(reporterLabel, selectedSosCategory);
+            // Tentukan siapa nama pelapornya
+            let reporterLabel = 'Warga (Belum Join)';
+            if (joinedSlotIndex !== null) {
+                reporterLabel = `${userProfile.name} (${userProfile.location})`;
+            }
+
+            // 1. Tampilkan di HP Sendiri
+            showSosUI(`Anda (${reporterLabel})`, selectedSosCategory);
             
+            // 2. Kirim ke Database untuk HP lain
             try {
                 await addDoc(collection(db, "sos_alerts"), { 
                     senderUid: currentUserUid, 
@@ -1011,7 +748,7 @@
                 });
                 showToast("SOS Berhasil Dikirim!");
             } catch (e) { 
-                alert("Gagal Kirim SOS: " + e.message); 
+                alert("Gagal Kirim SOS: " + e.message + "\nPastikan Rules Database Firebase sudah di-Publish."); 
             }
         }
 
@@ -1021,81 +758,52 @@
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
-                        if (data.senderUid !== currentUserUid) showSosUI(data.reporter, data.category);
+                        // Hanya tampilkan jika pengirimnya bukan diri sendiri
+                        if (data.senderUid !== currentUserUid) {
+                            showSosUI(data.reporter, data.category);
+                        }
                     }
                 });
             });
         }
 
-        function dismissPushBanner() { 
-            $('push-notification-preview').classList.add('hidden'); 
-            stopSosSiren(); 
-        }
+        function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
 
         // ==========================================
-        // SIMULASI UI (EFEK SUARA WARGA)
+        // SIMULASI & UTILS
         // ==========================================
         function startAmbientVoiceSimulation() {
             setInterval(() => {
                 const slotsToRender = isVoiceGridExpanded ? voiceSlots : voiceSlots.slice(0, DEFAULT_VISIBLE);
                 const candidates = slotsToRender.filter(s => s.occupied && !s.isSelf && !s.isMuted).map(s => s.id);
                 if (candidates.length === 0) return;
-                
                 const speakerIdx = candidates[Math.floor(Math.random() * candidates.length)];
                 let changed = false;
-                
                 voiceSlots.forEach(slot => {
                     if (slot.occupied && !slot.isSelf && !slot.isMuted) {
                         const shouldSpeak = (slot.id === speakerIdx);
-                        if (slot.isSpeaking !== shouldSpeak) { 
-                            slot.isSpeaking = shouldSpeak; 
-                            changed = true; 
-                        }
+                        if (slot.isSpeaking !== shouldSpeak) { slot.isSpeaking = shouldSpeak; changed = true; }
                     }
                 });
                 if (changed) renderVoiceGrid();
             }, 3000);
         }
 
-        // ==========================================
-        // UTILS (TOAST, TIME, ESCAPE)
-        // ==========================================
         let toastTimer;
         function showToast(message) {
-            const toast = $('toast'); 
-            $('toast-msg').textContent = message;
-            toast.classList.remove('opacity-0', 'translate-y-2'); 
-            toast.classList.add('opacity-100', 'translate-y-0');
+            const toast = $('toast'); $('toast-msg').textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { 
-                toast.classList.remove('opacity-100', 'translate-y-0'); 
-                toast.classList.add('opacity-0', 'translate-y-2'); 
-            }, 2400);
+            toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400);
         }
 
-        function getCurrentTime() { 
-            const d = new Date(); 
-            return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); 
-        }
-        
-        function escapeHTML(str) { 
-            if (!str) return ''; 
-            return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); 
-        }
+        function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+        function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
-        // ==========================================
-        // EVENT LISTENERS (INIT)
-        // ==========================================
         window.addEventListener('load', () => {
-            renderVoiceGrid(); 
-            startAmbientVoiceSimulation(); 
-            initFirebaseChat(); 
-            listenIncomingSos(); 
-            lucide.createIcons();
+            renderVoiceGrid(); startAmbientVoiceSimulation(); initFirebaseChat(); listenIncomingSos(); lucide.createIcons();
 
             const holdBtn = $('hold-sos-btn');
-            
-            // Tombol SOS Support Layar Sentuh & PC
             holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
             holdBtn.addEventListener('touchend', cancelHoldSos);
             holdBtn.addEventListener('touchcancel', cancelHoldSos);
@@ -1103,7 +811,6 @@
             holdBtn.addEventListener('mouseup', cancelHoldSos);
             holdBtn.addEventListener('mouseleave', cancelHoldSos);
 
-            // Tutup Modal via ESC
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') {
                     if (!$('sos-modal').classList.contains('hidden')) closeSosModal();
@@ -1112,15 +819,11 @@
                 }
             });
 
-            // Tutup Modal via Klik Background
             $('sos-modal').addEventListener('click', e => { if (e.target === $('sos-modal')) closeSosModal(); });
             $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
             $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
             
-            // Kembalikan Wake Lock jika aplikasi dibuka kembali
-            document.addEventListener('visibilitychange', async () => { 
-                if (document.visibilityState === 'visible' && joinedSlotIndex !== null) await requestWakeLock(); 
-            });
+            document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && joinedSlotIndex !== null) await requestWakeLock(); });
         });
     </script>
 </body>
