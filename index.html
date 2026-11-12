@@ -429,6 +429,7 @@
         let currentUserUid = null;
         let onlineUserCount = 0;
 
+        // Login Anonim agar aman
         signInAnonymously(auth).then((userCredential) => {
             console.log("Berhasil login anonim ke Firebase");
             currentUserUid = userCredential.user.uid;
@@ -436,7 +437,8 @@
             listenToOnlineUsers(); 
         }).catch((error) => {
             console.error("Gagal login Firebase:", error);
-            showToast("Gagal terhubung ke server. Cek koneksi.");
+            // MENAMPILKAN ALASAN ASLI JIKA GAGAL LOGIN
+            alert("Error Login: " + error.message + "\nPastikan Anonymous Auth di-Enable dan Domain sudah didaftarkan.");
         });
 
         // ============ PRESENCE SYSTEM ============
@@ -901,7 +903,11 @@
         function renderMessageBubble(data, isAtBottom) {
             const feed = $('chat-feed');
             const wrapper = document.createElement('div');
-            wrapper.className = `flex flex-col ${data.isSelf ? 'items-end' : 'items-start'}`;
+            
+            // PERBAIKAN: Cek apakah pesan ini milik kita atau orang lain berdasarkan UID
+            const isSelf = (data.senderUid === currentUserUid);
+            
+            wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
 
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
@@ -918,7 +924,7 @@
                             <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene Darurat
                         </button>
                     </div>`;
-            } else if (data.isSelf) {
+            } else if (isSelf) {
                 wrapper.innerHTML = `
                     <div class="flex items-center gap-1.5 mb-1 px-1">
                         <span class="text-[10px] text-slate-500">${data.time}</span>
@@ -943,24 +949,25 @@
 
         async function sendChatToDB(text, isEmergency = false) {
             if (!text) return;
-            
-            const isSelf = !isEmergency; 
+            if (!currentUserUid) return showToast("Tunggu, menghubungkan...");
+
             const senderName = joinedSlotIndex !== null ? 'Anda (Admin)' : 'Anda';
             
             try {
                 await addDoc(collection(db, "chats"), {
+                    senderUid: currentUserUid, // Simpan UID untuk cek isSelf
                     sender: senderName,
                     message: text,
                     timestamp: serverTimestamp(),
                     time: getCurrentTime(),
-                    isSelf: true, 
                     tag: 'Warga',
                     tagStyle: 'text-slate-400 bg-slate-500/10 border-slate-500/25',
                     isEmergency: isEmergency
                 });
             } catch (e) {
                 console.error("Gagal kirim chat:", e);
-                showToast("Gagal mengirim pesan.");
+                // ALERT ERROR ASLI
+                alert("Gagal Kirim Pesan: " + e.message + "\n\nPastikan Rules Database di Firebase sudah di-Publish.");
             }
         }
 
@@ -1072,7 +1079,7 @@
             }
         }
 
-        // --- FUNGSI MENAMPILKAN UI SOS (DIPANGGIL OLEH PENGIRIM & PENERIMA) ---
+        // --- FUNGSI MENAMPILKAN UI SOS ---
         function showSosUI(reporter, category) {
             $('push-category-text').textContent = category;
             $('push-reporter-text').textContent = reporter;
@@ -1116,6 +1123,7 @@
             // 2. SIMPAN KE DATABASE
             try {
                 await addDoc(collection(db, "sos_alerts"), {
+                    senderUid: currentUserUid, // Simpan UID
                     reporter: reporterLabel,
                     category: selectedSosCategory,
                     timestamp: serverTimestamp(),
@@ -1124,7 +1132,8 @@
                 showToast("SOS Berhasil Dikirim!");
             } catch (e) {
                 console.error("Gagal kirim SOS:", e);
-                showToast("Gagal kirim ke server. Cek internet.");
+                // ALERT ERROR ASLI
+                alert("Gagal Kirim SOS: " + e.message + "\n\nPastikan Rules Database di Firebase sudah di-Publish.");
             }
         }
 
@@ -1137,8 +1146,8 @@
                     if (change.type === "added") {
                         const data = change.doc.data();
                         
-                        // Jika pelapornya BUKAN kita
-                        if (!data.reporter.includes('Anda')) {
+                        // Jika pelapornya BUKAN kita (berdasarkan UID)
+                        if (data.senderUid !== currentUserUid) {
                             showSosUI(data.reporter, data.category);
                         }
                     }
