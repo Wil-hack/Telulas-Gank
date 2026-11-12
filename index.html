@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telulas Gank - Sistem Ronda</title>
+    <title>Telulas Gank - Sistem Ronda & Darurat</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -209,8 +209,8 @@
         }
 
         .chat-msg {
-            margin-bottom: 6px;
-            line-height: 1.3;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
 
         .chat-input-area {
@@ -348,7 +348,7 @@
                     <div class="chat-msg"><b>Mas Dimas:</b> Aman terkendali di blok utara komandan!</div>
                 </div>
                 <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="Ketik pesan singkat...">
+                    <input type="text" id="chatInput" placeholder="Ketik pesan singkat..." onkeypress="handleKeyPress(event)">
                     <button type="button" onclick="sendChat()">Kirim</button>
                 </div>
             </div>
@@ -375,9 +375,9 @@
     </div>
 
     <script>
-        // Fungsi Tambah Kanal Suara
+        // Fungsi Tambah Kanal Suara Dinamis
         function addChannel() {
-            const name = prompt("Masukkan nama kanal baru:");
+            const name = prompt("Masukkan nama kanal baru (misal: Blok B / Pos Timur):");
             if (name && name.trim() !== "") {
                 const grid = document.getElementById('voiceGrid');
                 const newCard = document.createElement('div');
@@ -389,20 +389,27 @@
                     <span class="channel-name">${name.trim()}</span>
                     <span class="channel-status">Siaga</span>
                 `;
+                // Sisipkan sebelum kotak tombol tambah (+)
                 grid.insertBefore(newCard, grid.lastElementChild);
             }
         }
 
-        // Fungsi Chat
+        // Fungsi Kirim Chat Teks
         function sendChat() {
             const input = document.getElementById('chatInput');
             const val = input.value.trim();
             if(!val) return;
             
             const box = document.getElementById('chatBox');
-            box.innerHTML += `<div class="chat-msg"><b>Anda:</b> ${val}</div>`;
+            box.innerHTML += `<div class="chat-msg"><b>Anda:</b> ${escapeHTML(val)}</div>`;
             input.value = '';
             box.scrollTop = box.scrollHeight;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendChat();
+            }
         }
 
         // Logika Modal SOS & Tahan 1.5 Detik
@@ -436,6 +443,13 @@
             progress.style.transition = 'width 0.2s ease-out';
             progress.style.width = '0%';
             text.textContent = 'Tahan 1.5 Detik untuk Kirim SOS';
+        }
+
+        // Keamanan XSS Sederhana
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
         }
     </script>
 </body>
