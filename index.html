@@ -161,7 +161,7 @@
                 </span>
             </div>
 
-            <!-- Scrollable Voice Grid (3 Columns for 50 capacity) -->
+            <!-- Scrollable Voice Grid -->
             <div class="voice-scroll max-h-[225px] overflow-y-auto pr-1 -mr-1">
                 <div id="voice-grid" class="grid grid-cols-3 gap-2 pb-1 transition-all duration-300"></div>
             </div>
@@ -233,9 +233,6 @@
                     <button type="button" onclick="sendQuickChat('Lanjut keliling blok belakang 🔦')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/25 transition active:scale-95">
                         🔦 Keliling blok
                     </button>
-                    <button type="button" onclick="sendQuickChat('Pantau dari rumah Pak 👋')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition active:scale-95">
-                        👋 Pantau dari rumah
-                    </button>
                 </div>
 
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
@@ -249,6 +246,47 @@
                 </form>
             </div>
         </section>
+    </div>
+
+    <!-- JOIN LOCATION MODAL (Hanya Custom Input) -->
+    <div id="join-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center"
+         role="dialog" aria-modal="true" aria-labelledby="join-title">
+        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
+            <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+            
+            <div class="flex items-center justify-center gap-2 mb-1.5">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+                <h3 id="join-title" class="text-base font-extrabold text-white tracking-tight">Lokasi Ronda</h3>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed text-center mb-5">
+                Ketik di mana posisi Anda sekarang. Nama lokasi akan muncul di bawah avatar Anda.
+            </p>
+
+            <!-- Custom Input -->
+            <div class="mb-5">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="navigation" class="w-5 h-5 text-slate-500"></i>
+                    </div>
+                    <input type="text" id="custom-loc-input" placeholder="Cth: Gang 3, Depan Musholla, Blok A" autocomplete="off"
+                        onkeypress="if(event.key === 'Enter') confirmJoin()"
+                        class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/40 transition shadow-inner">
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="closeJoinModal()"
+                    class="flex-1 py-3 rounded-2xl bg-slate-800/70 hover:bg-slate-800 text-xs font-bold text-slate-400 hover:text-slate-200 transition focus-ring">
+                    Batal
+                </button>
+                <button type="button" onclick="confirmJoin()"
+                    class="flex-[2] py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 border border-emerald-400/40 transition focus-ring">
+                    Gabung Suara
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- SOS MODAL -->
@@ -331,11 +369,11 @@
     <script>
         // ============ STATE ============
         const MAX_SLOTS = 50;
-        const DEFAULT_VISIBLE = 6; // Hanya tampilkan 6 slot di awal
+        const DEFAULT_VISIBLE = 6;
         let isVoiceGridExpanded = false;
 
         const initialOccupants = [
-            { name:'Pak RT 03',  role:'Ketua RT',       initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false },
+            { name:'Pak RT 03',  role:'Pos Utama',      initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false },
             { name:'Mas Dimas',  role:'Patroli Gang 2', initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false },
             { name:'Pak Hendra', role:'Pos Gerbang',    initials:'PH', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true  },
             { name:'Bu Sari',    role:'Blok B-04',      initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false },
@@ -344,7 +382,6 @@
             { name:'Bu Rina',    role:'Blok D-02',      initials:'BR', gradient:'from-pink-500 to-rose-700',    isSpeaking:false, isMuted:false },
         ];
 
-        // Inisialisasi 50 Slot (7 terisi, sisanya kosong)
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
             const occ = initialOccupants[i];
             return occ
@@ -363,6 +400,7 @@
         let isMicMuted = false;
         let isSpeakerOn = true;
         let selectedSosCategory = 'Maling / Pencurian';
+        let pendingJoinSlotIndex = null;
 
         // ============ HELPERS ============
         const $ = id => document.getElementById(id);
@@ -398,7 +436,6 @@
             const grid = $('voice-grid');
             grid.innerHTML = '';
 
-            // Logika: Tampilkan 6 pertama, ATAU semua jika di-expand
             const slotsToRender = isVoiceGridExpanded 
                 ? voiceSlots 
                 : voiceSlots.slice(0, DEFAULT_VISIBLE);
@@ -431,14 +468,14 @@
                             ${slot.isSelf ? 'Anda' : slot.name}
                         </p>
                         <p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">
-                            ${slot.isSelf ? 'Blok A-12' : slot.role}
+                            ${slot.role}
                         </p>
                     `;
                     grid.appendChild(card);
                 } else {
                     const emptyBtn = document.createElement('button');
                     emptyBtn.type = 'button';
-                    emptyBtn.onclick = () => joinSlot(slot.id);
+                    emptyBtn.onclick = () => openJoinModal(slot.id);
                     emptyBtn.className = 'glass-slot-empty rounded-2xl p-2 flex flex-col items-center justify-center min-h-[85px] group cursor-pointer focus:outline-none';
                     emptyBtn.setAttribute('aria-label', `Gabung ke slot ${slot.id + 1}`);
                     emptyBtn.innerHTML = `
@@ -455,8 +492,8 @@
             updateCounters();
         }
 
-        // ============ JOIN / LEAVE ============
-        function joinSlot(index) {
+        // ============ JOIN MODAL LOGIC (HANYA CUSTOM INPUT) ============
+        function openJoinModal(index) {
             if (joinedSlotIndex !== null) {
                 showToast('Anda sudah terhubung di ruang suara.');
                 return;
@@ -467,18 +504,48 @@
                 return;
             }
 
+            pendingJoinSlotIndex = index;
+            $('custom-loc-input').value = '';
+            
+            $('join-modal').classList.remove('hidden');
+            
+            // Auto-focus ke input agar langsung bisa ngetik (Keyboard HP langsung muncul)
+            setTimeout(() => {
+                $('custom-loc-input').focus();
+            }, 300);
+        }
+
+        function closeJoinModal() {
+            $('join-modal').classList.add('hidden');
+            $('custom-loc-input').blur();
+            pendingJoinSlotIndex = null;
+        }
+
+        function confirmJoin() {
+            const customVal = $('custom-loc-input').value.trim();
+            // Jika kosong, otomatis isi 'Ronda Keliling'
+            const finalLoc = customVal || 'Ronda Keliling'; 
+
+            const index = pendingJoinSlotIndex;
+            closeJoinModal();
+            executeJoin(index, finalLoc);
+        }
+
+        // ============ EXECUTE JOIN ============
+        function executeJoin(index, location) {
+            if (index === null) return;
+
             joinedSlotIndex = index;
             isMicMuted = false;
             isSpeakerOn = true;
 
             voiceSlots[index] = {
                 id: index, occupied: true, isSelf: true,
-                name: 'Anda', role: 'Blok A-12', initials: 'ME',
+                name: 'Anda', role: location, initials: 'ME',
                 gradient: 'from-emerald-400 to-emerald-600',
                 isSpeaking: true, isMuted: false
             };
 
-            // Jika user join dari slot tersembunyi, paksa buka grid
             if (index >= DEFAULT_VISIBLE && !isVoiceGridExpanded) {
                 isVoiceGridExpanded = true;
                 $('btn-toggle-grid').querySelector('svg').setAttribute('data-lucide', 'chevron-up');
@@ -489,10 +556,9 @@
             $('audio-control-bar').classList.remove('hidden');
             updateAudioControlUI();
             renderVoiceGrid();
-            appendSystemChat('Anda bergabung ke ruang suara ronda.');
-            showToast('Terhubung! Mikrofon aktif.');
+            appendSystemChat(`Anda bergabung dari: ${location}.`);
+            showToast(`Terhubung dari ${location}!`);
 
-            // Matikan animasi speaking setelah 4 detik (simulasi jeda ngomong)
             setTimeout(() => {
                 if (joinedSlotIndex === index && !isMicMuted && voiceSlots[index]) {
                     voiceSlots[index].isSpeaking = false;
@@ -562,7 +628,6 @@
                 spkLabel.textContent = 'Speaker: Off';
                 spkLabel.className = 'text-[10px] text-slate-400 truncate';
             }
-
             lucide.createIcons();
         }
 
@@ -769,9 +834,7 @@
         // ============ AMBIENT SIMULATION ============
         function startAmbientVoiceSimulation() {
             setInterval(() => {
-                // Hanya ambil sampel dari slot yang sedang dirender (biar performa ringan)
                 const slotsToRender = isVoiceGridExpanded ? voiceSlots : voiceSlots.slice(0, DEFAULT_VISIBLE);
-                
                 const candidates = slotsToRender
                     .filter(s => s.occupied && !s.isSelf && !s.isMuted)
                     .map(s => s.id);
@@ -832,11 +895,18 @@
             holdBtn.addEventListener('pointerleave', cancelHoldSos);
 
             document.addEventListener('keydown', e => {
-                if (e.key === 'Escape' && !$('sos-modal').classList.contains('hidden')) closeSosModal();
+                if (e.key === 'Escape') {
+                    if (!$('sos-modal').classList.contains('hidden')) closeSosModal();
+                    if (!$('join-modal').classList.contains('hidden')) closeJoinModal();
+                }
             });
 
             $('sos-modal').addEventListener('click', e => {
                 if (e.target === $('sos-modal')) closeSosModal();
+            });
+
+            $('join-modal').addEventListener('click', e => {
+                if (e.target === $('join-modal')) closeJoinModal();
             });
         });
     </script>
