@@ -402,6 +402,9 @@
         let selectedSosCategory = 'Maling / Pencurian';
         let pendingJoinSlotIndex = null;
 
+        // State untuk Wake Lock (Layar Tetap Menyala)
+        let wakeLock = null;
+
         // ============ HELPERS ============
         const $ = id => document.getElementById(id);
         const countJoined = () => voiceSlots.filter(s => s.occupied).length;
@@ -492,7 +495,7 @@
             updateCounters();
         }
 
-        // ============ JOIN MODAL LOGIC (HANYA CUSTOM INPUT) ============
+        // ============ JOIN MODAL LOGIC ============
         function openJoinModal(index) {
             if (joinedSlotIndex !== null) {
                 showToast('Anda sudah terhubung di ruang suara.');
@@ -509,7 +512,6 @@
             
             $('join-modal').classList.remove('hidden');
             
-            // Auto-focus ke input agar langsung bisa ngetik (Keyboard HP langsung muncul)
             setTimeout(() => {
                 $('custom-loc-input').focus();
             }, 300);
@@ -523,7 +525,6 @@
 
         function confirmJoin() {
             const customVal = $('custom-loc-input').value.trim();
-            // Jika kosong, otomatis isi 'Ronda Keliling'
             const finalLoc = customVal || 'Ronda Keliling'; 
 
             const index = pendingJoinSlotIndex;
@@ -531,8 +532,8 @@
             executeJoin(index, finalLoc);
         }
 
-        // ============ EXECUTE JOIN ============
-        function executeJoin(index, location) {
+        // ============ EXECUTE JOIN & WAKE LOCK ============
+        async function executeJoin(index, location) {
             if (index === null) return;
 
             joinedSlotIndex = index;
@@ -559,6 +560,9 @@
             appendSystemChat(`Anda bergabung dari: ${location}.`);
             showToast(`Terhubung dari ${location}!`);
 
+            // --- FITUR WAKE LOCK: Cegah layar mati saat di ruang suara ---
+            await requestWakeLock();
+
             setTimeout(() => {
                 if (joinedSlotIndex === index && !isMicMuted && voiceSlots[index]) {
                     voiceSlots[index].isSpeaking = false;
@@ -576,6 +580,35 @@
             renderVoiceGrid();
             appendSystemChat('Anda keluar dari ruang suara.');
             showToast('Keluar dari ruang suara');
+
+            // --- LEPAS WAKE LOCK ---
+            releaseWakeLock();
+        }
+
+        // ============ FITUR WAKE LOCK API ============
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock: Layar dijaga tetap menyala.');
+                    
+                    // Handle jika user pindah tab / minimize, lalu balik lagi
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock dilepas (otomatis oleh sistem).');
+                    });
+                }
+            } catch (err) {
+                console.warn(`Wake Lock Error: ${err.name}, ${err.message}`);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Wake Lock: Layar kembali normal (boleh mati).');
+                });
+            }
         }
 
         // ============ MIC / SPEAKER ============
@@ -631,7 +664,7 @@
             lucide.createIcons();
         }
 
-        // ============ CHAT ============
+        // ============ CHAT & SMART AUTO-SCROLL ============
         function renderChats() {
             $('chat-feed').innerHTML = '';
             initialChats.forEach(appendChatMessage);
@@ -639,6 +672,10 @@
 
         function appendChatMessage({ sender, tag, tagStyle, message, time, isSelf, isEmergency }) {
             const feed = $('chat-feed');
+            
+            // Cek apakah user sedang scroll di paling bawah (toleransi 50px)
+            const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 50;
+
             const wrapper = document.createElement('div');
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
 
@@ -676,12 +713,19 @@
             }
 
             feed.appendChild(wrapper);
-            feed.scrollTop = feed.scrollHeight;
+            
+            // Hanya scroll ke bawah jika sebelumnya user sudah berada di bawah
+            if (isAtBottom) {
+                feed.scrollTop = feed.scrollHeight;
+            }
+            
             lucide.createIcons();
         }
 
         function appendSystemChat(text) {
             const feed = $('chat-feed');
+            const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 50;
+
             const div = document.createElement('div');
             div.className = 'flex justify-center';
             div.innerHTML = `
@@ -689,7 +733,10 @@
                     ${escapeHTML(text)}
                 </span>`;
             feed.appendChild(div);
-            feed.scrollTop = feed.scrollHeight;
+            
+            if (isAtBottom) {
+                feed.scrollTop = feed.scrollHeight;
+            }
         }
 
         function submitChatForm(e) {
@@ -907,6 +954,13 @@
 
             $('join-modal').addEventListener('click', e => {
                 if (e.target === $('join-modal')) closeJoinModal();
+            });
+            
+            // Cek ulang Wake Lock jika pengguna pindah tab lalu balik lagi
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible' && joinedSlotIndex !== null) {
+                    await requestWakeLock();
+                }
             });
         });
     </script>
