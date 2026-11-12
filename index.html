@@ -403,7 +403,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Tombol Hentikan Sirene di Banner -->
             <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm">
                 <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene
             </button>
@@ -424,14 +423,14 @@
         const DEFAULT_VISIBLE = 6;
         let isVoiceGridExpanded = false;
 
+        // Menambahkan Wildan di slot ke-4
         const initialOccupants = [
             { name:'Pak RT 03',  role:'Pos Utama',      initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
             { name:'Mas Dimas',  role:'Patroli Gang 2', initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Pak Hendra', role:'Pos Gerbang',    initials:'PH', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
+            { name:'Wildan',     role:'Gang 4',         initials:'WL', gradient:'from-indigo-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Bu Sari',    role:'Blok B-04',      initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Mas Yudi',   role:'Blok C-11',      initials:'MY', gradient:'from-cyan-500 to-blue-700',    isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Pak Tono',   role:'Blok A-08',      initials:'PT', gradient:'from-lime-500 to-green-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Bu Rina',    role:'Blok D-02',      initials:'BR', gradient:'from-pink-500 to-rose-700',    isSpeaking:false, isMuted:false, mutedByAdmin:false },
         ];
 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
@@ -444,6 +443,8 @@
         const initialChats = [
             { sender:'Pak RT 03', tag:'Koordinator', tagStyle:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
               message:'Selamat malam warga. Ruang suara Telulas Gank sudah aktif. Silakan gabung streaming ronda.', time:'23:05', isSelf:false },
+            { sender:'Wildan', tag:'Gang 4', tagStyle:'text-indigo-400 bg-indigo-500/10 border-indigo-500/25',
+              message:'Hadir Pak, saya ronda di Gang 4. Situasi agak gelap di sini.', time:'23:06', isSelf:false },
             { sender:'Mas Dimas', tag:'Patroli', tagStyle:'text-sky-400 bg-sky-500/10 border-sky-500/25',
               message:'Aman terkendali di gang 2, gerbang samping sudah dikunci.', time:'23:08', isSelf:false },
         ];
@@ -455,8 +456,6 @@
         let pendingJoinSlotIndex = null;
         let wakeLock = null;
         let targetAdminSlotIndex = null;
-
-        // State untuk Sirene Berulang
         let sosSirenInterval = null;
 
         // ============ HELPERS ============
@@ -833,7 +832,6 @@
                             <span class="text-[10px] text-rose-300/70">${time}</span>
                         </div>
                         <p class="text-xs font-semibold text-white">${escapeHTML(message)}</p>
-                        <!-- Tombol Matikan Sirene di Chat -->
                         <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white text-[10px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm">
                             <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene Darurat
                         </button>
@@ -985,30 +983,26 @@
             }
         }
 
-        // Fungsi Memainkan Nada Sirene
         async function playSirenTone() {
             try {
                 if (typeof Tone !== 'undefined') {
                     await Tone.start();
                     const synth = new Tone.Synth().toDestination();
                     const now = Tone.now();
-                    // Nada high-low-high
                     synth.triggerAttackRelease("A5", "16n", now);
                     synth.triggerAttackRelease("E5", "16n", now + 0.2);
                 }
             } catch (err) { /* diabaikan */ }
         }
 
-        // Fungsi Mulai Sirene Berulang
         function startSosSiren() {
             if (sosSirenInterval) clearInterval(sosSirenInterval);
-            playSirenTone(); // Mainkan seketika
+            playSirenTone(); 
             sosSirenInterval = setInterval(() => {
                 playSirenTone();
-            }, 1000); // Loop setiap 1 detik
+            }, 1000); 
         }
 
-        // Fungsi Hentikan Sirene
         function stopSosSiren() {
             if (sosSirenInterval) {
                 clearInterval(sosSirenInterval);
@@ -1017,45 +1011,61 @@
             }
         }
 
-        async function triggerEmergencyAlert() {
+        // --- FUNGSI UTAMA UNTUK MEMICU SOS (BISA DARI DIRI SENDIRI ATAU SIMULASI) ---
+        async function triggerEmergencyAlert(customReporter = null, customCategory = null) {
             closeSosModal();
             
-            // Dapatkan nama pelapor
+            // Tentukan siapa pelapornya
             let reporterLabel = 'Anda (Warga)';
-            if (joinedSlotIndex !== null) {
+            if (customReporter) {
+                reporterLabel = customReporter;
+            } else if (joinedSlotIndex !== null) {
                 const mySlot = voiceSlots[joinedSlotIndex];
                 reporterLabel = `Anda (${mySlot.role})`;
             }
 
+            const category = customCategory || selectedSosCategory;
+
             // Tampilkan banner
-            $('push-category-text').textContent = selectedSosCategory;
+            $('push-category-text').textContent = category;
             $('push-reporter-text').textContent = reporterLabel;
             $('push-notification-preview').classList.remove('hidden');
 
             // Log Darurat di Chat
             appendChatMessage({
                 isEmergency: true,
-                message: `DARURAT (${selectedSosCategory}) dilaporkan oleh ${reporterLabel}. Warga dimohon segera merapat!`,
+                message: `DARURAT (${category}) dilaporkan oleh ${reporterLabel}. Warga dimohon segera merapat!`,
                 time: getCurrentTime()
             });
 
             // Mainkan Sirene Berulang
             startSosSiren();
-
-            // Simulasi respon warga
-            setTimeout(() => {
-                appendChatMessage({
-                    sender:'Pak RT 03', tag:'Koordinator',
-                    tagStyle:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-                    message:'Notifikasi SOS diterima! Tim ronda & warga segera meluncur ke titik lokasi sekarang!',
-                    time:getCurrentTime(), isSelf:false
-                });
-            }, 1700);
         }
 
         function dismissPushBanner() {
             $('push-notification-preview').classList.add('hidden');
-            stopSosSiren(); // Hentikan sirene jika banner ditutup
+            stopSosSiren();
+        }
+
+        // ============ SIMULASI SOS MASUK DARI USER LAIN ============
+        function simulateIncomingSos() {
+            // Simulasi: Wildan mengirim SOS setelah 8 detik
+            setTimeout(() => {
+                // Cek jika pengguna sedang tidak sibuk (misal: tidak sedang di modal SOS)
+                if ($('sos-modal').classList.contains('hidden')) {
+                    triggerEmergencyAlert('Wildan (Gang 4)', 'Maling / Pencurian');
+                    
+                    // Opsional: Otomatis munculkan chat respon dari Pak RT
+                    setTimeout(() => {
+                        appendChatMessage({
+                            sender:'Pak RT 03', tag:'Koordinator',
+                            tagStyle:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+                            message:'Notifikasi SOS dari Wildan diterima! Tim ronda & warga segera meluncur ke Gang 4!',
+                            time:getCurrentTime(), isSelf:false
+                        });
+                    }, 2000);
+                }
+            }, 8000); // 8000 ms = 8 detik setelah halaman dimuat
         }
 
         // ============ AMBIENT SIMULATION ============
@@ -1113,6 +1123,7 @@
             renderVoiceGrid();
             renderChats();
             startAmbientVoiceSimulation();
+            simulateIncomingSos(); // <-- Jalankan simulasi SOS masuk
             lucide.createIcons();
 
             const holdBtn = $('hold-sos-btn');
