@@ -211,116 +211,945 @@
         .chat-input-area button {
             padding: 8px 14px;
             border-radius: 8px;
-            border: none;
+            border: none;```html
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RondaKita - Pos Keamanan RT 03</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tone.js untuk efek suara peringatan SOS sintetis tanpa file eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        night: {
+                            950: '#050911',
+                            900: '#0a111e',
+                            850: '#0f1829',
+                            800: '#152238',
+                        }
+                    },
+                    animation: {
+                        'banner-slide': 'bannerSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'sheet-up': 'sheetUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        bannerSlide: {
+                            '0%': { transform: 'translate(-50%, -120%)', opacity: '0' },
+                            '100%': { transform: 'translate(-50%, 0)', opacity: '1' },
+                        },
+                        sheetUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0.4' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Kustomisasi Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(10, 17, 30, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.25);
+            border-radius: 99px;
+        }
+
+        /* Glassmorphism Panels & Cards */
+        .glass-header {
+            background: rgba(10, 17, 30, 0.8);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .glass-panel {
+            background: rgba(15, 24, 41, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .glass-card {
+            background: linear-gradient(155deg, rgba(30, 41, 59, 0.52) 0%, rgba(15, 23, 42, 0.78) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
+        }
+        .glass-card-self {
+            background: linear-gradient(155deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.88) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+        .glass-slot-empty {
+            background: rgba(15, 23, 42, 0.35);
+            border: 1.5px dashed rgba(148, 163, 184, 0.25);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-slot-empty:hover, .glass-slot-empty:active {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.7);
+            transform: translateY(-2px);
+        }
+
+        /* Gelombang Suara & Cincin Berbicara */
+        @keyframes speakingWave {
+            0% { transform: scale(0.95); opacity: 0.85; }
+            75% { transform: scale(1.26); opacity: 0; }
+            100% { transform: scale(1.26); opacity: 0; }
+        }
+        .speaking-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 9999px;
+            border: 2px solid #10b981;
+            animation: speakingWave 1.45s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+        }
+        .speaking-ring-delay {
+            position: absolute;
+            inset: -4px;
+            border-radius: 9999px;
+            border: 1.5px solid #34d399;
+            animation: speakingWave 1.45s cubic-bezier(0.24, 0, 0.38, 1) 0.5s infinite;
+        }
+
+        .eq-bar {
+            width: 3px;
+            border-radius: 99px;
+            background: #10b981;
+            animation: eqAnim 0.75s ease-in-out infinite alternate;
+        }
+        .eq-bar:nth-child(1) { height: 5px; animation-delay: 0.1s; }
+        .eq-bar:nth-child(2) { height: 12px; animation-delay: 0.3s; }
+        .eq-bar:nth-child(3) { height: 7px; animation-delay: 0.0s; }
+        .eq-bar:nth-child(4) { height: 14px; animation-delay: 0.35s; }
+        .eq-bar:nth-child(5) { height: 6px; animation-delay: 0.2s; }
+
+        @keyframes eqAnim {
+            0% { height: 3px; opacity: 0.45; }
+            100% { height: 13px; opacity: 1; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-night-950 text-slate-100 font-sans antialiased selection:bg-emerald-500/30 flex justify-center min-h-screen overflow-hidden">
+
+    <!-- Efek Cahaya Ambient Latar Belakang -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/4 -right-28 w-72 h-72 bg-rose-900/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-28 left-1/3 w-96 h-96 bg-teal-900/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Container Utama Mobile-First -->
+    <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
+
+        <!-- 1. TOP HEADER (Dengan Tombol SOS Ramping & Simpel) -->
+        <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
+            <!-- Identitas Aplikasi & Status Live -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/30 shrink-0">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+                </div>
+                <div class="min-w-0">
+                    <h1 class="font-extrabold text-base tracking-tight text-white leading-tight truncate">RondaKita</h1>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="relative flex h-2 w-2 shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <p id="header-status-text" class="text-[11px] font-medium text-emerald-400 truncate">Pos Ronda RT 03 • 4 Warga Online</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol SOS Ramping (Slim Pill Shape, Muted Crimson Accent) -->
+            <button
+                type="button"
+                onclick="openSosModal()"
+                class="px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 active:scale-95 text-rose-300 hover:text-rose-200 font-bold text-xs tracking-wider flex items-center gap-1.5 border border-rose-500/40 shadow-sm transition-all cursor-pointer shrink-0"
+                aria-label="Kirim Sinyal Darurat SOS"
+            >
+                <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>
+                <span>SOS</span>
+            </button>
+        </header>
+
+        <!-- 2. TOP HALF: SALURAN SUARA (VOICE CHANNELS GRID) -->
+        <section class="px-3.5 pt-3 pb-2.5 shrink-0 bg-gradient-to-b from-night-900/70 to-transparent border-b border-slate-800/70">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Saluran Suara</h2>
+                </div>
+                <span id="voice-hint" class="text-[11px] text-slate-400">Ketuk <strong class="text-emerald-400">+ Tambah</strong> untuk bicara</span>
+            </div>
+
+            <!-- Grid 6 Slot Peserta Suara (3 Kolom x 2 Baris) -->
+            <div id="voice-grid" class="grid grid-cols-3 gap-2">
+                <!-- Dirender dinamis oleh JavaScript -->
+            </div>
+
+            <!-- Compact Audio Control Bar (Muncul saat user bergabung ke saluran suara) -->
+            <div id="audio-control-bar" class="hidden mt-2.5 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                        <i id="mic-badge-icon" data-lucide="mic" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Speaker: Aktif</p>
+                    </div>
+                </div>
+
+                <!-- Tombol Kontrol Mute/Unmute Mic, Speaker Toggle, dan Keluar -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button
+                        type="button"
+                        id="btn-mute"
+                        onclick="toggleMic()"
+                        class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition active:scale-95"
+                        title="Mute / Unmute Mic"
+                    >
+                        <i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
+                    </button>
+                    <button
+                        type="button"
+                        id="btn-speaker"
+                        onclick="toggleSpeaker()"
+                        class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition active:scale-95"
+                        title="Toggle Speaker"
+                    >
+                        <i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>
+                    </button>
+                    <button
+                        type="button"
+                        onclick="leaveSlot()"
+                        class="px-2.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/35 text-xs font-semibold flex items-center gap-1 transition active:scale-95"
+                        title="Keluar Saluran Suara"
+                    >
+                        <i data-lucide="phone-off" class="w-3.5 h-3.5"></i>
+                        <span>Keluar</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. BOTTOM HALF: OBROLAN WARGA (LIVE TEXT CHAT) -->
+        <section class="flex-1 flex flex-col min-h-0 bg-night-950/50">
+            <!-- Sub-Header Chat -->
+            <div class="px-3.5 py-2 flex items-center justify-between border-b border-slate-800/60 shrink-0">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-xs font-semibold text-slate-300">Obrolan Warga</span>
+                </div>
+                <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Real-time
+                </span>
+            </div>
+
+            <!-- Feed Komentar Scrollable -->
+            <div id="chat-feed" class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 scroll-smooth">
+                <!-- Pesan dirender via JS -->
+            </div>
+
+            <!-- Area Quick-Reply Chips & Input Text -->
+            <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0 space-y-2">
+                <!-- Quick-Reply Chips -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                    <button type="button" onclick="sendQuickChat('Aman terkendali di gang 2 ✅')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/25 transition active:scale-95">
+                        ✅ Aman terkendali
+                    </button>
+                    <button type="button" onclick="sendQuickChat('Kopi sudah siap di pos ☕')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/25 transition active:scale-95">
+                        ☕ Kopi siap di pos
+                    </button>
+                    <button type="button" onclick="sendQuickChat('Lanjut keliling blok belakang 🔦')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/25 transition active:scale-95">
+                        🔦 Keliling blok
+                    </button>
+                    <button type="button" onclick="sendQuickChat('Pantau dari rumah Pak 👋')" class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition active:scale-95">
+                        👋 Pantau dari rumah
+                    </button>
+                </div>
+
+                <!-- Input Bar -->
+                <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
+                    <input
+                        type="text"
+                        id="chat-input"
+                        placeholder="Kirim laporan situasi atau sapa warga..."
+                        autocomplete="off"
+                        class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-3.5 py-2.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/40 transition"
+                    >
+                    <button
+                        type="submit"
+                        class="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25 transition active:scale-95 shrink-0 flex items-center justify-center"
+                        aria-label="Kirim Pesan"
+                    >
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- BOTTOM-SHEET MODAL KONFIRMASI SOS (TAHAN 1.5 DETIK)            -->
+        <!-- ============================================================== -->
+        <div id="sos-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
+            <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 text-center relative overflow-hidden animate-sheet-up">
+                <!-- Drag Handle Visual -->
+                <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+
+                <div class="flex items-center justify-center gap-2 mb-1.5">
+                    <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i>
+                    </div>
+                    <h3 class="text-base font-extrabold text-white tracking-tight">Kirim Sinyal Darurat SOS</h3>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+                    Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">RT 03</strong> meskipun aplikasi ditutup.
+                </p>
+
+                <!-- Pilih Kategori Darurat -->
+                <div class="grid grid-cols-2 gap-2 mt-4 text-left">
+                    <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition">
+                        <span>🚨</span>
+                        <span>Maling / Pencurian</span>
+                    </button>
+                    <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
+                        <span>🔥</span>
+                        <span>Kebakaran</span>
+                    </button>
+                    <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
+                        <span>🚑</span>
+                        <span>Medis</span>
+                    </button>
+                    <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition">
+                        <span>🌊</span>
+                        <span>Bencana</span>
+                    </button>
+                </div>
+
+                <!-- Tombol Tahan 1.5 Detik untuk Kirim -->
+                <div class="mt-5">
+                    <button
+                        type="button"
+                        id="hold-sos-btn"
+                        onmousedown="startHoldSos()"
+                        onmouseup="cancelHoldSos()"
+                        onmouseleave="cancelHoldSos()"
+                        ontouchstart="startHoldSos(event)"
+                        ontouchend="cancelHoldSos()"
+                        class="relative w-full py-3.5 rounded-2xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs tracking-wide overflow-hidden select-none shadow-lg shadow-rose-600/25 border border-rose-400/40 active:scale-[0.99] transition cursor-pointer"
+                    >
+                        <!-- Progress Bar Fill -->
+                        <div id="hold-progress" class="absolute inset-y-0 left-0 bg-red-950/75 w-0 transition-none pointer-events-none"></div>
+                        <span id="hold-btn-label" class="relative z-10 flex items-center justify-center gap-2">
+                            <i data-lucide="fingerprint" class="w-4 h-4"></i>
+                            Tahan 1.5 Detik untuk Kirim
+                        </span>
+                    </button>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="closeSosModal()"
+                    class="mt-2.5 w-full py-2.5 rounded-2xl bg-slate-800/70 hover:bg-slate-800 text-xs font-semibold text-slate-400 hover:text-slate-200 transition"
+                >
+                    Batal
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- SIMULASI PWA PUSH NOTIFICATION BANNER (SLIDE DOWN DARI ATAS)   -->
+        <!-- ============================================================== -->
+        <div id="push-notification-preview" class="hidden fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-[410px] z-50 animate-banner-slide">
+            <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/70 shadow-[0_12px_36px_rgba(225,29,72,0.45)] p-3.5">
+                <div class="flex items-start justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="bell-ring" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                                    RONDAKITA • DARURAT RT 03
+                                </span>
+                                <span class="text-[10px] text-slate-500">Baru saja</span>
+                            </div>
+                            <h4 class="text-xs font-extrabold text-white mt-1">SOS: <span id="push-category-text" class="text-rose-400">Maling / Pencurian</span></h4>
+                            <p class="text-[11px] text-slate-300 mt-0.5">Dilaporkan oleh <strong>Anda (Blok A-12)</strong>. Ketuk untuk pantau lokasi.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifikasi Ringan -->
+        <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
+            <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl backdrop-blur-md flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- STATE SLOT SALURAN SUARA (6 SLOT) ---
+        const voiceSlots = [
+            {
+                id: 0,
+                occupied: true,
+                name: 'Pak RT 03',
+                role: 'Ketua RT',
+                initials: 'RT',
+                gradient: 'from-emerald-500 to-teal-700',
+                isSpeaking: true,
+                isMuted: false,
+                isSelf: false
+            },
+            {
+                id: 1,
+                occupied: true,
+                name: 'Mas Dimas',
+                role: 'Patroli Gang 2',
+                initials: 'MD',
+                gradient: 'from-sky-500 to-indigo-700',
+                isSpeaking: false,
+                isMuted: false,
+                isSelf: false
+            },
+            {
+                id: 2,
+                occupied: true,
+                name: 'Pak Hendra',
+                role: 'Pos Gerbang',
+                initials: 'PH',
+                gradient: 'from-amber-500 to-orange-700',
+                isSpeaking: false,
+                isMuted: true,
+                isSelf: false
+            },
+            { id: 3, occupied: false },
+            { id: 4, occupied: false },
+            { id: 5, occupied: false }
+        ];
+
+        // --- DATA AWAL OBROLAN WARGA ---
+        const initialChats = [
+            {
+                sender: 'Pak RT 03',
+                tag: 'Koordinator',
+                tagStyle: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+                message: 'Selamat malam warga RT 03. Saluran ronda sudah aktif, silakan ketuk + di atas kalau mau gabung bicara.',
+                time: '23:05',
+                isSelf: false
+            },
+            {
+                sender: 'Mas Dimas',
+                tag: 'Patroli',
+                tagStyle: 'text-sky-400 bg-sky-500/10 border-sky-500/25',
+                message: 'Aman terkendali di gang 2, lampu jalan menyala semua dan gerbang samping sudah dikunci.',
+                time: '23:08',
+                isSelf: false
+            },
+            {
+                sender: 'Pak Hendra',
+                tag: 'Pos Utama',
+                tagStyle: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
+                message: 'Kopi sudah siap di pos, merapat yang giliran jaga malam ini!',
+                time: '23:11',
+                isSelf: false
+            }
+        ];
+
+        let joinedSlotIndex = null;
+        let isMicMuted = false;
+        let isSpeakerOn = true;
+        let selectedSosCategory = 'Maling / Pencurian';
+        let onlineCount = 4;
+
+        // --- RENDER GRID SALURAN SUARA ---
+        function renderVoiceGrid() {
+            const grid = document.getElementById('voice-grid');
+            grid.innerHTML = '';
+
+            voiceSlots.forEach(slot => {
+                if (slot.occupied) {
+                    const cardStyle = slot.isSelf ? 'glass-card-self' : 'glass-card';
+                    const activeRings = (slot.isSpeaking && !slot.isMuted)
+                        ? `<div class="speaking-ring"></div><div class="speaking-ring-delay"></div>`
+                        : '';
+
+                    const statusFooter = (slot.isSpeaking && !slot.isMuted)
+                        ? `<div class="flex items-end justify-center gap-[2px] h-3.5 mt-1">
+                               <span class="eq-bar"></span>
+                               <span class="eq-bar"></span>
+                               <span class="eq-bar"></span>
+                               <span class="eq-bar"></span>
+                               <span class="eq-bar"></span>
+                           </div>`
+                        : `<div class="h-3.5 mt-1 flex items-center justify-center">
+                               ${slot.isMuted
+                                   ? '<span class="inline-flex items-center gap-0.5 text-[9px] font-semibold text-rose-400 bg-rose-500/15 px-1.5 py-0.2 rounded border border-rose-500/30"><i data-lucide="mic-off" class="w-2.5 h-2.5"></i> Mute</span>'
+                                   : '<span class="text-[9px] text-slate-400">Mendengarkan</span>'}
+                           </div>`;
+
+                    const card = document.createElement('div');
+                    card.className = `${cardStyle} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
+                    card.innerHTML = `
+                        <div class="relative mb-1">
+                            ${activeRings}
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-xs shadow-md border border-white/20">
+                                ${slot.initials}
+                            </div>
+                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${slot.isMuted ? 'bg-rose-500' : 'bg-emerald-500'} border-2 border-night-900 flex items-center justify-center">
+                                <i data-lucide="${slot.isMuted ? 'mic-off' : 'volume-2'}" class="w-2 h-2 text-white"></i>
+                            </span>
+                        </div>
+                        <p class="text-[11px] font-bold text-white truncate max-w-full text-center">
+                            ${slot.isSelf ? 'Anda' : slot.name}
+                        </p>
+                        <p class="text-[9px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full">
+                            ${slot.isSelf ? 'Blok A-12' : slot.role}
+                        </p>
+                        ${statusFooter}
+                    `;
+                    grid.appendChild(card);
+                } else {
+                    // Slot Kosong dengan Tombol '+' (Tambah)
+                    const emptyBtn = document.createElement('button');
+                    emptyBtn.type = 'button';
+                    emptyBtn.onclick = () => joinSlot(slot.id);
+                    emptyBtn.className = 'glass-slot-empty rounded-2xl p-2 flex flex-col items-center justify-center min-h-[102px] group cursor-pointer focus:outline-none';
+                    emptyBtn.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/15 group-hover:bg-emerald-500 border border-emerald-500/40 flex items-center justify-center transition-all duration-200 mb-1">
+                            <i data-lucide="plus" class="w-4 h-4 text-emerald-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-200 group-hover:text-emerald-300 transition-colors">Tambah</span>
+                        <span class="text-[9px] text-slate-500">Gabung</span>
+                    `;
+                    grid.appendChild(emptyBtn);
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- AKSI BERGABUNG & KONTROL AUDIO ---
+        function joinSlot(index) {
+            if (joinedSlotIndex !== null) {
+                showToast('Anda sudah terhubung di saluran suara.');
+                return;
+            }
+
+            joinedSlotIndex = index;
+            isMicMuted = false;
+            isSpeakerOn = true;
+            onlineCount = 5;
+            document.getElementById('header-status-text').textContent = `Pos Ronda RT 03 • ${onlineCount} Warga Online`;
+
+            voiceSlots[index] = {
+                id: index,
+                occupied: true,
+                name: 'Anda',
+                role: 'Blok A-12',
+                initials: 'ME',
+                gradient: 'from-emerald-400 to-emerald-600',
+                isSpeaking: true,
+                isMuted: false,
+                isSelf: true
+            };
+
+            document.getElementById('audio-control-bar').classList.remove('hidden');
+            document.getElementById('voice-hint').innerHTML = `<span class="text-emerald-400 font-semibold">● Terhubung</span>`;
+            updateAudioControlUI();
+            renderVoiceGrid();
+
+            appendSystemChat('Anda bergabung ke saluran suara ronda.');
+            showToast('Terhubung! Mikrofon aktif.');
+        }
+
+        function leaveSlot() {
+            if (joinedSlotIndex === null) return;
+
+            const prev = joinedSlotIndex;
+            voiceSlots[prev] = { id: prev, occupied: false };
+            joinedSlotIndex = null;
+            onlineCount = 4;
+            document.getElementById('header-status-text').textContent = `Pos Ronda RT 03 • ${onlineCount} Warga Online`;
+
+            document.getElementById('audio-control-bar').classList.add('hidden');
+            document.getElementById('voice-hint').innerHTML = `Ketuk <strong class="text-emerald-400">+ Tambah</strong> untuk bicara`;
+            renderVoiceGrid();
+
+            appendSystemChat('Anda keluar dari saluran suara.');
+            showToast('Keluar dari saluran suara');
+        }
+
+        function toggleMic() {
+            if (joinedSlotIndex === null) return;
+            isMicMuted = !isMicMuted;
+            voiceSlots[joinedSlotIndex].isMuted = isMicMuted;
+            voiceSlots[joinedSlotIndex].isSpeaking = !isMicMuted;
+
+            updateAudioControlUI();
+            renderVoiceGrid();
+            showToast(isMicMuted ? 'Mikrofon dimatikan (Mute)' : 'Mikrofon diaktifkan');
+        }
+
+        function toggleSpeaker() {
+            isSpeakerOn = !isSpeakerOn;
+            updateAudioControlUI();
+            showToast(isSpeakerOn ? 'Speaker Pos Aktif' : 'Speaker Pos Dibisukan');
+        }
+
+        function updateAudioControlUI() {
+            const btnMute = document.getElementById('btn-mute');
+            const btnSpeaker = document.getElementById('btn-speaker');
+            const micLabel = document.getElementById('mic-status-label');
+            const spkLabel = document.getElementById('speaker-status-label');
+            const badgeIcon = document.getElementById('mic-badge-icon');
+            const badgeBg = document.getElementById('mic-badge-bg');
+
+            if (isMicMuted) {
+                btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
+                micLabel.textContent = 'Mic Mute';
+                micLabel.className = 'text-xs font-bold text-rose-300 truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic-off');
+                badgeIcon.className = 'w-3.5 h-3.5 text-rose-400';
+                badgeBg.className = 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
+            } else {
+                btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
+                micLabel.textContent = 'Mic Aktif';
+                micLabel.className = 'text-xs font-bold text-white truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic');
+                badgeIcon.className = 'w-3.5 h-3.5 text-emerald-400';
+                badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
+            }
+
+            if (isSpeakerOn) {
+                btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
+                spkLabel.textContent = 'Speaker: Aktif';
+                spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
+            } else {
+                btnSpeaker.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 text-slate-400"></i>`;
+                spkLabel.textContent = 'Speaker: Off';
+                spkLabel.className = 'text-[10px] text-slate-400 truncate';
+            }
+
+            lucide.createIcons();
+        }
+
+        // --- FUNGSI OBROLAN WARGA (CHAT) ---
+        function renderChats() {
+            const feed = document.getElementById('chat-feed');
+            feed.innerHTML = '';
+            initialChats.forEach(item => appendChatMessage(item));
+        }
+
+        function appendChatMessage({ sender, tag, tagStyle, message, time, isSelf, isEmergency }) {
+            const feed = document.getElementById('chat-feed');
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
+
+            if (isEmergency) {
+                wrapper.className = 'w-full my-1';
+                wrapper.innerHTML = `
+                    <div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> PERINGATAN DARURAT SOS
+                            </span>
+                            <span class="text-[10px] text-rose-300/70">${time}</span>
+                        </div>
+                        <p class="text-xs font-semibold text-white">${escapeHTML(message)}</p>
+                    </div>
+                `;
+            } else if (isSelf) {
+                wrapper.innerHTML = `
+                    <div class="flex items-center gap-1.5 mb-1 px-1">
+                        <span class="text-[10px] text-slate-500">${time}</span>
+                        <span class="text-[11px] font-bold text-emerald-400">Anda</span>
+                    </div>
+                    <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs sm:text-sm shadow-md border border-emerald-400/30 leading-relaxed">
+                        ${escapeHTML(message)}
+                    </div>
+                `;
+            } else {
+                wrapper.innerHTML = `
+                    <div class="flex items-center gap-1.5 mb-1 px-1">
+                        <span class="text-[11px] font-bold text-slate-200">${escapeHTML(sender)}</span>
+                        <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border ${tagStyle}">${escapeHTML(tag)}</span>
+                        <span class="text-[10px] text-slate-500">${time}</span>
+                    </div>
+                    <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs sm:text-sm leading-relaxed">
+                        ${escapeHTML(message)}
+                    </div>
+                `;
+            }
+
+            feed.appendChild(wrapper);
+            feed.scrollTop = feed.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function appendSystemChat(text) {
+            const feed = document.getElementById('chat-feed');
+            const div = document.createElement('div');
+            div.className = 'flex justify-center';
+            div.innerHTML = `
+                <span class="px-3 py-1 rounded-full text-[10px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">
+                    ${escapeHTML(text)}
+                </span>
+            `;
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function submitChatForm(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const val = input.value.trim();
+            if (!val) return;
+            sendChat(val);
+            input.value = '';
+        }
+
+        function sendQuickChat(text) {
+            sendChat(text);
+        }
+
+        function sendChat(text) {
+            const time = getCurrentTime();
+            appendChatMessage({
+                sender: 'Anda',
+                message: text,
+                time: time,
+                isSelf: true
+            });
+
+            // Simulasi balasan warga ronda
+            setTimeout(() => {
+                const lower = text.toLowerCase();
+                let replySender = 'Pak RT 03';
+                let replyTag = 'Koordinator';
+                let replyStyle = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25';
+                let replyText = 'Siap, terima kasih infonya! Tetap pantau terus ya.';
+
+                if (lower.includes('kopi')) {
+                    replySender = 'Pak Hendra';
+                    replyTag = 'Pos Utama';
+                    replyStyle = 'text-amber-400 bg-amber-500/10 border-amber-500/25';
+                    replyText = 'Mantap betul, meluncur ke pos sekarang!';
+                } else if (lower.includes('gang 2') || lower.includes('aman')) {
+                    replySender = 'Mas Dimas';
+                    replyTag = 'Patroli';
+                    replyStyle = 'text-sky-400 bg-sky-500/10 border-sky-500/25';
+                    replyText = 'Sip, lanjut geser ke arah Gang 3 sebelah mushola.';
+                }
+
+                appendChatMessage({
+                    sender: replySender,
+                    tag: replyTag,
+                    tagStyle: replyStyle,
+                    message: replyText,
+                    time: getCurrentTime(),
+                    isSelf: false
+                });
+            }, 1300);
+        }
+
+        // --- LOGIKA BOTTOM-SHEET SOS (TAHAN 1.5 DETIK) ---
+        let holdInterval = null;
+        let holdProgressVal = 0;
+
+        function openSosModal() {
+            document.getElementById('sos-modal').classList.remove('hidden');
+            resetHoldProgress();
+        }
+
+        function closeSosModal() {
+            cancelHoldSos();
+            document.getElementById('sos-modal').classList.add('hidden');
+        }
+
+        function selectSosCategory(btn, category) {
+            selectedSosCategory = category;
+            document.querySelectorAll('.sos-cat-btn').forEach(el => {
+                el.className = 'sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition';
+            });
+            btn.className = 'sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition';
+        }
+
+        function startHoldSos(e) {
+            if (e) e.preventDefault();
+            resetHoldProgress();
+
+            const progressEl = document.getElementById('hold-progress');
+            const labelEl = document.getElementById('hold-btn-label');
+            labelEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim Sinyal...`;
+            lucide.createIcons();
+
+            const duration = 1500; // 1.5 detik
+            const step = 30;
+            holdInterval = setInterval(() => {
+                holdProgressVal += (step / duration) * 100;
+                progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`;
+
+                if (holdProgressVal >= 100) {
+                    clearInterval(holdInterval);
+                    triggerEmergencyAlert();
+                }
+            }, step);
+        }
+
+        function cancelHoldSos() {
+            clearInterval(holdInterval);
+            resetHoldProgress();
+        }
+
+        function resetHoldProgress() {
+            holdProgressVal = 0;
+            const progressEl = document.getElementById('hold-progress');
+            const labelEl = document.getElementById('hold-btn-label');
+            if (progressEl) progressEl.style.width = '0%';
+            if (labelEl) {
+                labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik untuk Kirim`;
+                lucide.createIcons();
+            }
+        }
+
+        function triggerEmergencyAlert() {
+            closeSosModal();
+
+            // Mainkan nada peringatan lembut dengan Tone.js jika diizinkan browser
+            try {
+                if (typeof Tone !== 'undefined') {
+                    Tone.start();
+                    const synth = new Tone.Synth().toDestination();
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("A5", "16n", now);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.14);
+                    synth.triggerAttackRelease("A5", "8n", now + 0.28);
+                }
+            } catch (err) {
+                // Abaikan jika audio context diblokir
+            }
+
+            // Tampilkan Simulasi Push Notification Banner dari atas
+            const banner = document.getElementById('push-notification-preview');
+            document.getElementById('push-category-text').textContent = selectedSosCategory;
+            banner.classList.remove('hidden');
+
+            // Masukkan Log Darurat ke Obrolan Warga
+            appendChatMessage({
+                isEmergency: true,
+                message: `DARURAT (${selectedSosCategory}) dilaporkan oleh Anda (Blok A-12). Warga dimohon segera merapat!`,
+                time: getCurrentTime()
+            });
+
+            // Simulasi respon cepat dari Pak RT di chat
+            setTimeout(() => {
+                appendChatMessage({
+                    sender: 'Pak RT 03',
+                    tag: 'Koordinator',
+                    tagStyle: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+                    message: 'Notifikasi SOS diterima! Tim ronda & warga Blok A segera meluncur ke titik lokasi sekarang!',
+                    time: getCurrentTime(),
+                    isSelf: false
+                });
+            }, 1700);
+        }
+
+        function dismissPushBanner() {
+            document.getElementById('push-notification-preview').classList.add('hidden');
+        }
+
+        // --- SIMULASI AKTIVITAS SUARA WARGA LAIN ---
+        function startAmbientVoiceSimulation() {
+            setInterval(() => {
+                const candidates = [0, 1];
+                const speakerIdx = candidates[Math.floor(Math.random() * candidates.length)];
+
+                voiceSlots.forEach((slot, idx) => {
+                    if (slot.occupied && !slot.isSelf && !slot.isMuted) {
+                        slot.isSpeaking = (idx === speakerIdx);
+                    }
+                });
+                renderVoiceGrid();
+            }, 3000);
+        }
+
+        // --- UTILITAS ---
+        let toastTimer;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 2400);
+        }
+
+        function getCurrentTime() {
+            const d = new Date();
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
+        // --- INIT ---
+        window.onload = function () {
+            renderVoiceGrid();
+            renderChats();
+            startAmbientVoiceSimulation();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
+```
             background: #3b82f6;
             color: white;
             font-weight: bold;
             cursor: pointer;
             font-size: 0.9rem;
         }
-    </style>
-</head>
-<body>
-
-    <header>
-        TELULAS GANK
-        <span class="header-sub">Sistem Komunikasi & Siaga Warga</span>
-    </header>
-
-    <div class="container">
-        <!-- Tombol SOS Slim Pill -->
-        <div class="sos-container">
-            <button class="sos-btn" id="sosBtn">
-                <div class="sos-progress" id="sosProgress"></div>
-                <span class="sos-text">DARURAT (SOS)</span>
-            </button>
-            <span class="sos-hint">Tahan 1,5 detik untuk kirim sinyal</span>
-        </div>
-
-        <!-- Panel Grid Kanal Suara -->
-        <div class="panel">
-            <h3 style="margin: 0; font-size: 0.95rem;">Kanal Suara Warga</h3>
-            <div class="voice-grid" id="voiceGrid">
-                <!-- Slot Kanal Aktif 1 -->
-                <div class="channel-card">
-                    <span class="channel-name">Ronda Blok A</span>
-                    <span class="channel-status">5/10 Anggota</span>
-                </div>
-                <!-- Slot Kanal Aktif 2 -->
-                <div class="channel-card">
-                    <span class="channel-name">Patroli Timur</span>
-                    <span class="channel-status">3/10 Anggota</span>
-                </div>
-                <!-- Tombol Tambah Kanal Baru -->
-                <div class="channel-card add-new" id="addChannelBtn">
-                    <span class="add-icon">+</span>
-                    <span class="channel-name" style="color: var(--accent-green);">Tambah Kanal</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel Obrolan Teks -->
-        <div class="panel chat-panel">
-            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 0.95rem;">Obrolan Telulas Gank</h3>
-            <div class="chat-box" id="chatBox">
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">
-                    <b style="color: #38bdf8;">Sistem:</b> Selamat datang di aplikasi ronda Telulas Gank.
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" placeholder="Ketik pesan singkat...">
-                <button id="sendBtn">Kirim</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Logika Tombol SOS
-        const sosBtn = document.getElementById('sosBtn');
-        const sosProgress = document.getElementById('sosProgress');
-        let sosTimer;
-
-        function startSos(e) {
-            if (e.cancelable) e.preventDefault();
-            sosProgress.style.transition = 'width 1.5s linear';
-            sosProgress.style.width = '100%';
-            
-            sosTimer = setTimeout(() => {
-                alert('SINYAL DARURAT TELULAS GANK TERKIRIM KE SEMUA ANGGOTA!');
-                resetSos();
-            }, 1500);
-        }
-
-        function resetSos() {
-            clearTimeout(sosTimer);
-            sosProgress.style.transition = 'width 0.2s ease-out';
-            sosProgress.style.width = '0%';
-        }
-
-        sosBtn.addEventListener('mousedown', startSos);
-        sosBtn.addEventListener('touchstart', startSos, { passive: false });
-        
-        sosBtn.addEventListener('mouseup', resetSos);
-        sosBtn.addEventListener('mouseleave', resetSos);
-        sosBtn.addEventListener('touchend', resetSos);
-
-        // Simulasi Tambah Kanal
-        const addChannelBtn = document.getElementById('addChannelBtn');
-        const voiceGrid = document.getElementById('voiceGrid');
-
-        addChannelBtn.addEventListener('click', () => {
-            const channelName = prompt("Masukkan nama kanal baru:");
-            if (channelName && channelName.trim() !== "") {
-                const newCard = document.createElement('div');
-                newCard.className = 'channel-card';
-                newCard.innerHTML = `
-                    <span class="channel-name">${channelName.trim()}</span>
-                    <span class="channel-status">1/10 Anggota</span>
-                `;
-                voiceGrid.insertBefore(newCard, addChannelBtn);
-            }
-        });
-    </script>
-
-</body>
-</html>
