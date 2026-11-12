@@ -65,7 +65,6 @@
             border: 1px solid rgba(16, 185, 129, 0.45);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
         }
-        /* Card Hover effect for Admin action */
         .glass-card:active, .glass-card:hover {
             border-color: rgba(16, 185, 129, 0.5);
             transform: scale(0.98);
@@ -259,7 +258,7 @@
         </section>
     </div>
 
-    <!-- ADMIN CONTROL MODAL (MUTE/UNMUTE PESERTA) -->
+    <!-- ADMIN CONTROL MODAL -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center"
          role="dialog" aria-modal="true" aria-labelledby="admin-title">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
@@ -282,11 +281,9 @@
                 </div>
             </div>
 
-            <!-- Tombol Toggle Mute/Unmute -->
             <div class="mb-2">
                 <button type="button" id="admin-toggle-btn" onclick="toggleTargetMute()"
                     class="w-full py-3.5 rounded-2xl font-bold text-xs tracking-wide flex items-center justify-center gap-2 transition active:scale-[0.99] shadow-lg border">
-                    <!-- Isi dinamis via JS -->
                 </button>
             </div>
 
@@ -381,7 +378,7 @@
         </div>
     </div>
 
-    <!-- PUSH BANNER & TOAST -->
+    <!-- PUSH BANNER -->
     <div id="push-notification-preview" class="hidden fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-[410px] z-50 animate-banner-slide">
         <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/70 shadow-[0_12px_36px_rgba(225,29,72,0.45)] p-3.5">
             <div class="flex items-start justify-between gap-2.5">
@@ -397,16 +394,23 @@
                             <span class="text-[10px] text-slate-500">Baru saja</span>
                         </div>
                         <h4 class="text-xs font-extrabold text-white mt-1">SOS: <span id="push-category-text" class="text-rose-400">Maling / Pencurian</span></h4>
-                        <p class="text-[11px] text-slate-300 mt-0.5">Dilaporkan oleh <strong>Anda (Blok A-12)</strong>.</p>
+                        <p class="text-[11px] text-slate-300 mt-0.5">Dilaporkan oleh <strong id="push-reporter-text">Anda (Warga)</strong>.</p>
                     </div>
                 </div>
-                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
+                <div class="flex flex-col gap-1 items-end">
+                    <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
+            <!-- Tombol Hentikan Sirene di Banner -->
+            <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold transition flex items-center justify-center gap-1 shadow-sm">
+                <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene
+            </button>
         </div>
     </div>
 
+    <!-- TOAST -->
     <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
         <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl backdrop-blur-md flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -423,7 +427,6 @@
         const initialOccupants = [
             { name:'Pak RT 03',  role:'Pos Utama',      initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
             { name:'Mas Dimas',  role:'Patroli Gang 2', initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            // Simulasi: Pak Hendra dibisukan oleh admin
             { name:'Pak Hendra', role:'Pos Gerbang',    initials:'PH', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
             { name:'Bu Sari',    role:'Blok B-04',      initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Mas Yudi',   role:'Blok C-11',      initials:'MY', gradient:'from-cyan-500 to-blue-700',    isSpeaking:false, isMuted:false, mutedByAdmin:false },
@@ -452,6 +455,9 @@
         let pendingJoinSlotIndex = null;
         let wakeLock = null;
         let targetAdminSlotIndex = null;
+
+        // State untuk Sirene Berulang
+        let sosSirenInterval = null;
 
         // ============ HELPERS ============
         const $ = id => document.getElementById(id);
@@ -499,10 +505,8 @@
 
             slotsToRender.forEach(slot => {
                 if (slot.occupied) {
-                    // Cek tipe mute: Mute Mandiri (merah) vs Mute Admin (ungu)
                     const isAdminMuted = slot.isMuted && slot.mutedByAdmin;
                     
-                    // Ganti border kartu jika dibisukan admin
                     const cardStyle = slot.isSelf 
                         ? 'glass-card-self' 
                         : (isAdminMuted ? 'glass-card border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'glass-card');
@@ -511,7 +515,6 @@
                         ? `<div class="speaking-ring"></div><div class="speaking-ring-delay"></div>`
                         : '';
                     
-                    // Logika Ikon Status (Mute Sendiri vs Mute Admin)
                     const statusBadgeBg = isAdminMuted ? 'bg-purple-500' : (slot.isMuted ? 'bg-rose-500' : 'bg-emerald-500');
                     const statusBadge = isAdminMuted
                         ? `<i data-lucide="shield-alert" class="w-2 h-2 text-white"></i>`
@@ -526,7 +529,6 @@
                     const isClickable = (joinedSlotIndex !== null && !slot.isSelf);
                     const cursorClass = isClickable ? 'cursor-pointer' : '';
 
-                    // Tambahkan label kecil di bawah nama jika dibisukan admin
                     const roleText = isAdminMuted 
                         ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>`
                         : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${slot.role}</p>`;
@@ -611,7 +613,6 @@
             const statusTxt = $('admin-target-status');
 
             if (targetSlot.isMuted) {
-                // Jika dibisukan oleh Admin, tampilkan teks khusus warna ungu
                 if (targetSlot.mutedByAdmin) {
                     statusTxt.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin`;
                     statusTxt.className = 'text-[11px] text-purple-400 font-bold';
@@ -640,11 +641,11 @@
             
             if (targetSlot.isMuted) {
                 targetSlot.isSpeaking = false;
-                targetSlot.mutedByAdmin = true; // Tandai dibisukan admin
+                targetSlot.mutedByAdmin = true; 
                 showToast(`${targetSlot.name} dibisukan oleh Admin.`);
                 appendSystemChat(`👑 Admin membisukan suara ${targetSlot.name}.`);
             } else {
-                targetSlot.mutedByAdmin = false; // Hapus tanda
+                targetSlot.mutedByAdmin = false; 
                 showToast(`Suara ${targetSlot.name} diaktifkan kembali.`);
                 appendSystemChat(`👑 Admin mengaktifkan kembali suara ${targetSlot.name}.`);
             }
@@ -755,7 +756,7 @@
             }
         }
 
-        // ============ MIC / SPEAKER (SELF) ============
+        // ============ MIC / SPEAKER ============
         function toggleMic() {
             if (joinedSlotIndex === null) return;
             isMicMuted = !isMicMuted;
@@ -832,6 +833,10 @@
                             <span class="text-[10px] text-rose-300/70">${time}</span>
                         </div>
                         <p class="text-xs font-semibold text-white">${escapeHTML(message)}</p>
+                        <!-- Tombol Matikan Sirene di Chat -->
+                        <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white text-[10px] font-bold rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm">
+                            <i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene Darurat
+                        </button>
                     </div>`;
             } else if (isSelf) {
                 wrapper.innerHTML = `
@@ -855,11 +860,7 @@
             }
 
             feed.appendChild(wrapper);
-            
-            if (isAtBottom) {
-                feed.scrollTop = feed.scrollHeight;
-            }
-            
+            if (isAtBottom) feed.scrollTop = feed.scrollHeight;
             lucide.createIcons();
         }
 
@@ -870,7 +871,6 @@
             const div = document.createElement('div');
             div.className = 'flex justify-center my-1';
             
-            // Bedakan warna log sistem jika itu aksi Admin (mengandung kata 'Admin')
             const isAdminAction = text.includes('Admin');
             const bgClass = isAdminAction ? 'bg-purple-950/60 border-purple-500/40 text-purple-300' : 'bg-slate-800/80 border-slate-700/60 text-slate-400';
             
@@ -879,10 +879,7 @@
                     ${escapeHTML(text)}
                 </span>`;
             feed.appendChild(div);
-            
-            if (isAtBottom) {
-                feed.scrollTop = feed.scrollHeight;
-            }
+            if (isAtBottom) feed.scrollTop = feed.scrollHeight;
         }
 
         function submitChatForm(e) {
@@ -923,7 +920,7 @@
             }, 1300);
         }
 
-        // ============ SOS ============
+        // ============ SOS & SIREN LOGIC ============
         let holdInterval = null;
         let holdProgressVal = 0;
         let lastFocusEl = null;
@@ -988,33 +985,69 @@
             }
         }
 
-        async function triggerEmergencyAlert() {
-            closeSosModal();
+        // Fungsi Memainkan Nada Sirene
+        async function playSirenTone() {
             try {
                 if (typeof Tone !== 'undefined') {
                     await Tone.start();
                     const synth = new Tone.Synth().toDestination();
                     const now = Tone.now();
+                    // Nada high-low-high
                     synth.triggerAttackRelease("A5", "16n", now);
-                    synth.triggerAttackRelease("E5", "16n", now + 0.14);
-                    synth.triggerAttackRelease("A5", "8n", now + 0.28);
+                    synth.triggerAttackRelease("E5", "16n", now + 0.2);
                 }
-            } catch (err) { /* audio blocked */ }
+            } catch (err) { /* diabaikan */ }
+        }
 
+        // Fungsi Mulai Sirene Berulang
+        function startSosSiren() {
+            if (sosSirenInterval) clearInterval(sosSirenInterval);
+            playSirenTone(); // Mainkan seketika
+            sosSirenInterval = setInterval(() => {
+                playSirenTone();
+            }, 1000); // Loop setiap 1 detik
+        }
+
+        // Fungsi Hentikan Sirene
+        function stopSosSiren() {
+            if (sosSirenInterval) {
+                clearInterval(sosSirenInterval);
+                sosSirenInterval = null;
+                showToast('Sirene SOS dihentikan.');
+            }
+        }
+
+        async function triggerEmergencyAlert() {
+            closeSosModal();
+            
+            // Dapatkan nama pelapor
+            let reporterLabel = 'Anda (Warga)';
+            if (joinedSlotIndex !== null) {
+                const mySlot = voiceSlots[joinedSlotIndex];
+                reporterLabel = `Anda (${mySlot.role})`;
+            }
+
+            // Tampilkan banner
             $('push-category-text').textContent = selectedSosCategory;
+            $('push-reporter-text').textContent = reporterLabel;
             $('push-notification-preview').classList.remove('hidden');
 
+            // Log Darurat di Chat
             appendChatMessage({
                 isEmergency: true,
-                message: `DARURAT (${selectedSosCategory}) dilaporkan oleh Anda (Blok A-12). Warga dimohon segera merapat!`,
+                message: `DARURAT (${selectedSosCategory}) dilaporkan oleh ${reporterLabel}. Warga dimohon segera merapat!`,
                 time: getCurrentTime()
             });
 
+            // Mainkan Sirene Berulang
+            startSosSiren();
+
+            // Simulasi respon warga
             setTimeout(() => {
                 appendChatMessage({
                     sender:'Pak RT 03', tag:'Koordinator',
                     tagStyle:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-                    message:'Notifikasi SOS diterima! Tim ronda & warga Blok A segera meluncur ke titik lokasi sekarang!',
+                    message:'Notifikasi SOS diterima! Tim ronda & warga segera meluncur ke titik lokasi sekarang!',
                     time:getCurrentTime(), isSelf:false
                 });
             }, 1700);
@@ -1022,6 +1055,7 @@
 
         function dismissPushBanner() {
             $('push-notification-preview').classList.add('hidden');
+            stopSosSiren(); // Hentikan sirene jika banner ditutup
         }
 
         // ============ AMBIENT SIMULATION ============
