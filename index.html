@@ -9,8 +9,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     
-    <!-- LIBRARY PEERJS (WEBRTC AUDIO) -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- LIBRARY AGORA RTC (UNTUK SUARA MASSAL) -->
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
 
     <script>
         tailwind.config = {
@@ -72,8 +72,6 @@
 
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
-        <div id="remote-audios" class="hidden"></div>
-
         <!-- HEADER -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -129,7 +127,7 @@
                     </div>
                     <div class="min-w-0">
                         <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
-                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Suara Terhubung</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Suara Agora Terhubung</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
@@ -268,6 +266,7 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, limit, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
             authDomain: "telulas-dd5c8.firebaseapp.com",
@@ -277,26 +276,24 @@
             appId: "1:619593885912:web:27d14bea00aab6fd574fad"
         };
 
+        // ========================================================
+        // KONFIGURASI AGORA (SUDAH DIMASUKKAN)
+        // ========================================================
+        const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
+        const AGORA_CHANNEL = "telulas-gank-rw13"; 
+        let agoraClient = null;
+        let localAudioTrack = null;
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         let currentUserUid = null;
         let onlineUserCount = 0;
-        
-        // Mencegah SOS ganda
         let processedSosIds = new Set();
 
-        // Variabel WebRTC
-        let peer = null;
-        let localStream = null;
-        let remoteAudioElements = {};
-
-        // ==========================================
-        // AUDIO UNLOCKER (Mengatasi blokir browser)
-        // ==========================================
+        // Audio Unlocker (Mencegah browser memblokir suara SOS)
         function unlockAudioContext() {
-            // Memaksa Tone.js untuk inisialisasi audio context saat layar pertama kali disentuh
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 Tone.start();
                 console.log("Audio Context Unlocked!");
@@ -328,16 +325,9 @@
             onSnapshot(presenceCol, (snapshot) => {
                 const now = Date.now();
                 let count = 0;
-                
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.lastSeen && (now - data.lastSeen < 65000)) {
-                        count++;
-                        // LOGIKA WEBRTC: Panggil warga lain yang baru online
-                        if (doc.id !== currentUserUid && localStream && peer) {
-                            callPeer(doc.id);
-                        }
-                    }
+                    if (data.lastSeen && (now - data.lastSeen < 65000)) count++;
                 });
                 onlineUserCount = count;
                 updateCounters(); 
@@ -459,80 +449,6 @@
             lucide.createIcons();
         }
 
-        // ==========================================
-        // LOGIKA WEBRTC (LIVE AUDIO)
-        // ==========================================
-        function initWebRTC() {
-            peer = new Peer(currentUserUid, { debug: 2 });
-
-            peer.on('open', (id) => {
-                console.log('ID PeerJS saya:', id);
-                showToast("Suara terhubung ke server!");
-            });
-
-            peer.on('call', (call) => {
-                call.answer(localStream);
-                call.on('stream', (remoteStream) => {
-                    playRemoteAudio(call.peer, remoteStream);
-                });
-            });
-
-            peer.on('error', (err) => {
-                console.error("PeerJS Error:", err);
-            });
-        }
-
-        function callPeer(targetPeerId) {
-            if (!peer || !localStream) return;
-            if (remoteAudioElements[targetPeerId]) return;
-            
-            if (currentUserUid > targetPeerId) {
-                console.log("Menelepon:", targetPeerId);
-                const call = peer.call(targetPeerId, localStream);
-                if (call) {
-                    call.on('stream', (remoteStream) => {
-                        playRemoteAudio(targetPeerId, remoteStream);
-                    });
-                }
-            }
-        }
-
-        function playRemoteAudio(peerId, stream) {
-            if (remoteAudioElements[peerId]) return;
-            
-            const audio = new Audio();
-            audio.srcObject = stream;
-            audio.play();
-            remoteAudioElements[peerId] = audio;
-            
-            // Visual efek suara masuk
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const analyser = audioCtx.createAnalyser();
-            const source = audioCtx.createMediaStreamSource(stream);
-            source.connect(analyser);
-            analyser.fftSize = 256;
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-            function checkVolume() {
-                if (!remoteAudioElements[peerId]) return;
-                analyser.getByteFrequencyData(dataArray);
-                let sum = 0;
-                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                let average = sum / dataArray.length;
-
-                if (average > 15) {
-                    // Trigger animasi bicara pada lawan bicara
-                    // (Opsional: Bisa dikaitkan ke slot tertentu, tapi untuk P2P ini opsional)
-                }
-                requestAnimationFrame(checkVolume);
-            }
-            checkVolume();
-        }
-
-        // ==========================================
-        // END WEBRTC
-        // ==========================================
-
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
             const targetSlot = voiceSlots[slotId];
@@ -593,13 +509,37 @@
             const index = pendingJoinSlotIndex; closeJoinModal(); executeJoin(index, finalName, finalLoc);
         }
 
+        // ==========================================
+        // LOGIKA AGORA (LIVE AUDIO MASSAL)
+        // ==========================================
         async function executeJoin(index, name, location) {
             if (index === null) return;
             
+            if (AGORA_APP_ID === "MASUKKAN_APP_ID_AGORA_ANDA_DISINI") {
+                return alert("Anda belum memasukkan App ID Agora.");
+            }
+
             try {
-                // 1. Minta Izin Mikrofon
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                // Inisialisasi Klien Agora
+                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 
+                // Gabung ke Channel
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, null, currentUserUid);
+                
+                // Buat Track Mikrofon
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                
+                // Publikasikan suara ke warga lain
+                await agoraClient.publish([localAudioTrack]);
+
+                // Dengarkan suara warga lain
+                agoraClient.on("user-published", async (user, mediaType) => {
+                    await agoraClient.subscribe(user, mediaType);
+                    if (mediaType === "audio") {
+                        user.audioTrack.play();
+                    }
+                });
+
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
                 const initials = name.substring(0, 2).toUpperCase();
@@ -609,29 +549,25 @@
                 $('audio-control-bar').classList.remove('hidden');
                 updateAudioControlUI(); renderVoiceGrid();
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
-                showToast(`Suara Aktif!`);
+                showToast(`Suara Agora Terhubung!`);
                 
                 await requestWakeLock();
 
-                // 2. Inisialisasi WebRTC
-                initWebRTC();
-
             } catch (err) {
-                console.error("Mic Error:", err);
-                alert("Gagal mengakses Mikrofon: " + err.message + "\nPastikan Anda mengizinkan akses mikrofon di browser.");
+                console.error("Agora Error:", err);
+                alert("Gagal terhubung ke Agora: " + err.message);
             }
         }
 
-        function leaveSlot() {
+        async function leaveSlot() {
             if (joinedSlotIndex === null) return;
+            
+            // Keluar dari Agora
+            if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
+            if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
+
             voiceSlots[joinedSlotIndex] = { id: joinedSlotIndex, occupied: false };
             joinedSlotIndex = null; closeAdminModal();
-            
-            // Matikan Mikrofon & Koneksi Panggilan
-            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
-            if (peer) { peer.destroy(); peer = null; }
-            Object.values(remoteAudioElements).forEach(audio => { audio.pause(); audio.srcObject = null; });
-            remoteAudioElements = {};
 
             $('audio-control-bar').classList.add('hidden');
             renderVoiceGrid(); sendSystemChat('Anda keluar dari ruang suara.');
@@ -642,16 +578,22 @@
         function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); }
 
         function toggleMic() { 
-            if (joinedSlotIndex === null || !localStream) return; 
+            if (joinedSlotIndex === null || !localAudioTrack) return; 
             isMicMuted = !isMicMuted; 
-            localStream.getAudioTracks()[0].enabled = !isMicMuted;
+            localAudioTrack.setEnabled(!isMicMuted); // Fungsi mute Agora
             voiceSlots[joinedSlotIndex].isMuted = isMicMuted; 
             if(isMicMuted) voiceSlots[joinedSlotIndex].isSpeaking = false; 
             updateAudioControlUI(); renderVoiceGrid(); 
             showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan'); 
         }
         
-        function toggleSpeaker() { isSpeakerOn = !isSpeakerOn; updateAudioControlUI(); showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); }
+        function toggleSpeaker() { 
+            isSpeakerOn = !isSpeakerOn; 
+            // Karena Agora memutar audio langsung, kita perlu logika global
+            const allAudios = document.querySelectorAll('audio'); 
+            allAudios.forEach(a => { a.muted = !isSpeakerOn; });
+            updateAudioControlUI(); showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); 
+        }
 
         function updateAudioControlUI() {
             const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
@@ -729,9 +671,6 @@
         function submitChatForm(e) { e.preventDefault(); const input = $('chat-input'); const val = input.value.trim(); if (!val) return; sendChatToDB(val); input.value = ''; }
         function sendQuickChat(text) { sendChatToDB(text); }
 
-        // ==========================================
-        // SOS LOGIC (SUDAH DIJAMIN SINKRON)
-        // ==========================================
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
         function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
@@ -766,7 +705,6 @@
             showSosUI(`Anda (${reporterLabel})`, selectedSosCategory);
             
             try {
-                // Kunci utama: Gunakan waktu saat ini dan ID dokumen unik
                 await addDoc(collection(db, "sos_alerts"), { 
                     senderUid: currentUserUid, 
                     reporter: reporterLabel, 
@@ -779,29 +717,17 @@
         }
 
         function listenIncomingSos() {
-            // Ambil 1 data terbaru saja
             const q = query(collection(db, "sos_alerts"), limit(1));
-            
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const data = change.doc.data();
                         const docId = change.doc.id;
-
-                        // Filter 1: Jangan proses jika SOS berasal dari diri sendiri
                         if (data.senderUid === currentUserUid) return;
-                        
-                        // Filter 2: Jangan proses jika sudah pernah diproses (mencegah loop)
                         if (processedSosIds.has(docId)) return;
-
-                        // Filter 3: Jangan proses data lama saat aplikasi pertama dibuka (toleransi 10 detik)
                         const timeDiff = Date.now() - (data.timestamp || 0);
                         if (timeDiff > 10000) return; 
-
-                        // Tandai sudah diproses
                         processedSosIds.add(docId);
-                        
-                        // Tampilkan Sirene & UI
                         showSosUI(data.reporter, data.category);
                     }
                 });
