@@ -137,7 +137,8 @@
                             LIVE
                         </span>
                     </div>
-                    <p id="header-status-text" class="text-[11px] font-medium text-emerald-400 truncate mt-0.5">Ruang Suara RT 03 • 0/50 Bergabung</p>
+                    <!-- Teks Online Count di sini -->
+                    <p id="header-status-text" class="text-[11px] font-medium text-emerald-400 truncate mt-0.5">Ruang Suara RT 03 • 0 Warga Online</p>
                 </div>
             </div>
 
@@ -256,19 +257,18 @@
         </section>
     </div>
 
+    <!-- MODAL-MODAL (Sama seperti sebelumnya) -->
     <!-- ADMIN CONTROL MODAL -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center"
          role="dialog" aria-modal="true" aria-labelledby="admin-title">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
-            
             <div class="flex items-center justify-center gap-2 mb-1.5">
                 <div class="w-8 h-8 rounded-full bg-purple-500/15 border border-purple-500/35 flex items-center justify-center">
                     <i data-lucide="shield-check" class="w-4 h-4 text-purple-400"></i>
                 </div>
                 <h3 id="admin-title" class="text-base font-extrabold text-white tracking-tight">Kontrol Admin</h3>
             </div>
-            
             <div class="bg-slate-800/50 rounded-2xl p-3 flex items-center justify-center gap-3 mb-5 mt-4 border border-slate-700">
                 <div id="admin-target-avatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-bold text-xs shadow-inner relative">
                     --
@@ -278,13 +278,11 @@
                     <p id="admin-target-status" class="text-[11px] text-emerald-400">Sedang Berbicara</p>
                 </div>
             </div>
-
             <div class="mb-2">
                 <button type="button" id="admin-toggle-btn" onclick="toggleTargetMute()"
                     class="w-full py-3.5 rounded-2xl font-bold text-xs tracking-wide flex items-center justify-center gap-2 transition active:scale-[0.99] shadow-lg border">
                 </button>
             </div>
-
             <button type="button" onclick="closeAdminModal()"
                 class="w-full py-2.5 mt-2 rounded-2xl bg-slate-800/70 hover:bg-slate-800 text-xs font-semibold text-slate-400 hover:text-slate-200 transition focus-ring">
                 Tutup
@@ -297,7 +295,6 @@
          role="dialog" aria-modal="true" aria-labelledby="join-title">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
-            
             <div class="flex items-center justify-center gap-2 mb-1.5">
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center">
                     <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400"></i>
@@ -307,7 +304,6 @@
             <p class="text-xs text-slate-400 leading-relaxed text-center mb-5">
                 Ketik di mana posisi Anda sekarang. Nama lokasi akan muncul di bawah avatar Anda.
             </p>
-
             <div class="mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -318,7 +314,6 @@
                         class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/40 transition shadow-inner">
                 </div>
             </div>
-
             <div class="flex gap-2">
                 <button type="button" onclick="closeJoinModal()"
                     class="flex-1 py-3 rounded-2xl bg-slate-800/70 hover:bg-slate-800 text-xs font-bold text-slate-400 hover:text-slate-200 transition focus-ring">
@@ -418,7 +413,7 @@
     <!-- SCRIPT FIREBASE (MODULAR) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, limit, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         // --- KONFIGURASI FIREBASE ANDA ---
@@ -436,20 +431,70 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
+        let currentUserUid = null;
+        let onlineUserCount = 0;
+
         // Login Anonim agar aman
-        signInAnonymously(auth).then(() => {
+        signInAnonymously(auth).then((userCredential) => {
             console.log("Berhasil login anonim ke Firebase");
+            currentUserUid = userCredential.user.uid;
+            setupPresence(); // Mulai lacak kehadiran
+            listenToOnlineUsers(); // Mulai hitung yang online
         }).catch((error) => {
             console.error("Gagal login Firebase:", error);
             showToast("Gagal terhubung ke server. Cek koneksi.");
         });
 
-        // --- STATE ---
+        // ============ PRESENCE SYSTEM (FITUR ONLINE) ============
+        function setupPresence() {
+            if (!currentUserUid) return;
+            const userDocRef = doc(db, "presence", currentUserUid);
+
+            const updateStatus = () => {
+                setDoc(userDocRef, { lastSeen: Date.now() }, { merge: true }).catch(console.error);
+            };
+
+            // Kirim status pertama kali
+            updateStatus();
+
+            // Kirim detak jantung setiap 30 detik
+            setInterval(() => {
+                if (document.visibilityState === 'visible') updateStatus();
+            }, 30000);
+
+            // Kirim status jika aplikasi dibuka kembali dari background
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') updateStatus();
+            });
+
+            // Tandai offline jika tab ditutup (set waktu ke 0)
+            window.addEventListener('beforeunload', () => {
+                setDoc(userDocRef, { lastSeen: 0 }, { merge: true });
+            });
+        }
+
+        function listenToOnlineUsers() {
+            const presenceCol = collection(db, "presence");
+            onSnapshot(presenceCol, (snapshot) => {
+                const now = Date.now();
+                let count = 0;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Anggap online jika update terakhir kurang dari 65 detik yang lalu
+                    if (data.lastSeen && (now - data.lastSeen < 65000)) {
+                        count++;
+                    }
+                });
+                onlineUserCount = count;
+                updateCounters(); // Panggil ulang UI counter
+            });
+        }
+
+        // ============ STATE ============
         const MAX_SLOTS = 50;
         const DEFAULT_VISIBLE = 6;
         let isVoiceGridExpanded = false;
 
-        // Data dummy untuk ruang suara (Masih lokal simulasi UI)
         const initialOccupants = [
             { name:'Pak RT 03',  role:'Pos Utama',      initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
             { name:'Mas Dimas',  role:'Patroli Gang 2', initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
@@ -502,7 +547,8 @@
         function updateCounters() {
             const n = countJoined();
             $('voice-counter').textContent = `${n}/${MAX_SLOTS}`;
-            $('header-status-text').textContent = `Ruang Suara RT 03 • ${n}/${MAX_SLOTS} Bergabung`;
+            // Tampilkan jumlah warga online di header
+            $('header-status-text').textContent = `Ruang Suara RT 03 • ${onlineUserCount} Warga Online`;
         }
 
         function toggleVoiceGrid() {
@@ -845,22 +891,20 @@
         }
 
         // ============ FIREBASE CHAT LOGIC ============
-        // Render pesan dari database secara real-time
         function initFirebaseChat() {
             const chatColRef = collection(db, "chats");
-            const q = query(chatColRef, orderBy("timestamp", "asc"), limit(50)); // Batasi 50 pesan terakhir agar ringan
+            const q = query(chatColRef, orderBy("timestamp", "asc"), limit(50));
 
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
                 const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 50;
-                feed.innerHTML = ''; // Bersihkan feed lokal
+                feed.innerHTML = '';
 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     renderMessageBubble(data, isAtBottom);
                 });
                 
-                // Scroll ke bawah jika tadinya di bawah
                 if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                 lucide.createIcons();
             });
@@ -909,11 +953,10 @@
             feed.appendChild(wrapper);
         }
 
-        // Fungsi untuk mengirim chat ke Firebase
         async function sendChatToDB(text, isEmergency = false) {
             if (!text) return;
             
-            const isSelf = !isEmergency; // Anggap emergency bukan dari kita sendiri jika dikirim via sistem
+            const isSelf = !isEmergency; 
             const senderName = joinedSlotIndex !== null ? 'Anda (Admin)' : 'Anda';
             
             try {
@@ -922,7 +965,7 @@
                     message: text,
                     timestamp: serverTimestamp(),
                     time: getCurrentTime(),
-                    isSelf: true, // Catatan: Ini trik UI, karena kita memfilter "isSelf" dari client
+                    isSelf: true, 
                     tag: 'Warga',
                     tagStyle: 'text-slate-400 bg-slate-500/10 border-slate-500/25',
                     isEmergency: isEmergency
@@ -934,7 +977,7 @@
         }
 
         function sendSystemChat(text) {
-            sendChatToDB(text, false); // Bisa dimodifikasi jadi system message
+            sendChatToDB(text, false);
         }
 
         function submitChatForm(e) {
@@ -1041,7 +1084,6 @@
             }
         }
 
-        // Fungsi saat SOS Ditekan (Kirim ke Firebase)
         async function triggerEmergencyAlert() {
             closeSosModal();
             
@@ -1052,23 +1094,19 @@
             }
 
             try {
-                // 1. Kirim SOS ke Database
                 await addDoc(collection(db, "sos_alerts"), {
                     reporter: reporterLabel,
                     category: selectedSosCategory,
                     timestamp: serverTimestamp(),
                     active: true
                 });
-                // 2. Bunyikan sirene lokal seketika
                 startSosSiren();
-                // Catatan: Chat peringatan SOS akan masuk otomatis via listener (di bawah)
             } catch (e) {
                 console.error("Gagal kirim SOS:", e);
                 showToast("Gagal mengirim SOS. Cek internet.");
             }
         }
 
-        // --- MENDENGARKAN SOS MASUK DARI WARGA LAIN ---
         function listenIncomingSos() {
             const sosColRef = collection(db, "sos_alerts");
             const q = query(sosColRef, orderBy("timestamp", "desc"), limit(1));
@@ -1078,17 +1116,13 @@
                     if (change.type === "added") {
                         const data = change.doc.data();
                         
-                        // Jika pelapornya BUKAN kita (tidak ada tulisan 'Anda')
                         if (!data.reporter.includes('Anda')) {
-                            // Tampilkan Banner
                             $('push-category-text').textContent = data.category;
                             $('push-reporter-text').textContent = data.reporter;
                             $('push-notification-preview').classList.remove('hidden');
 
-                            // Mainkan Sirene
                             startSosSiren();
 
-                            // Masukkan ke Chat Lokal (sebagai emergency)
                             const feed = $('chat-feed');
                             const wrapper = document.createElement('div');
                             wrapper.className = 'w-full my-1';
@@ -1174,8 +1208,8 @@
         window.addEventListener('load', () => {
             renderVoiceGrid();
             startAmbientVoiceSimulation();
-            initFirebaseChat(); // Mulai dengarkan chat dari database
-            listenIncomingSos(); // Mulai dengarkan SOS dari database
+            initFirebaseChat();
+            listenIncomingSos(); 
             lucide.createIcons();
 
             const holdBtn = $('hold-sos-btn');
