@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Telulas Gank - Streaming Ronda RT 03</title>
+    <title>Telulas Gank - Ronda Nguling RW 13</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -120,25 +120,21 @@
 
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
 
-        <!-- HEADER -->
+        <!-- HEADER (Teks di bawah judul sudah dihilangkan) -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
                 <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/30 shrink-0">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                        <h1 class="font-extrabold text-base tracking-tight text-white leading-tight truncate">Telulas Gank</h1>
-                        <span class="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[9px] font-bold border border-rose-500/30 flex items-center gap-1 shrink-0">
-                            <span class="relative flex h-1.5 w-1.5">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
-                            </span>
-                            LIVE
+                <div class="min-w-0 flex items-center gap-2">
+                    <h1 class="font-extrabold text-lg tracking-tight text-white leading-tight truncate">Telulas Gank</h1>
+                    <span class="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[9px] font-bold border border-rose-500/30 flex items-center gap-1 shrink-0">
+                        <span class="relative flex h-1.5 w-1.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
                         </span>
-                    </div>
-                    <!-- Teks Online Count di sini -->
-                    <p id="header-status-text" class="text-[11px] font-medium text-emerald-400 truncate mt-0.5">Ruang Suara RT 03 • 0 Warga Online</p>
+                        LIVE
+                    </span>
                 </div>
             </div>
 
@@ -160,16 +156,17 @@
         <!-- VOICE CHANNEL -->
         <section class="px-3.5 pt-3 pb-2.5 shrink-0 bg-gradient-to-b from-night-900/70 to-transparent border-b border-slate-800/70">
             <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-1.5 min-w-0">
+                <!-- Info Nguling RW 13 dan Warga Online -->
+                <div class="flex items-center gap-2 min-w-0">
                     <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
-                    <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Ruang Suara</h2>
+                    <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide">Nguling RW 13</span>
                     <span id="voice-counter" class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-bold border border-emerald-500/25 shrink-0">
                         0/50
                     </span>
                 </div>
-                <span id="admin-hint" class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
+                <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Streaming Ronda
+                    <span id="online-count-text">0 Warga Online</span>
                 </span>
             </div>
 
@@ -245,7 +242,7 @@
                 </div>
 
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
-                    <input type="text" id="chat-input" placeholder="Kirim laporan situasi atau sapa warga..." autocomplete="off"
+                    <input type="text" id="chat-input" placeholder="Ketik laporan atau sapa warga..." autocomplete="off"
                         class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-3.5 py-2.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/40 transition">
                     <button type="submit"
                         class="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25 transition active:scale-95 shrink-0 flex items-center justify-center"
@@ -257,7 +254,6 @@
         </section>
     </div>
 
-    <!-- MODAL-MODAL (Sama seperti sebelumnya) -->
     <!-- ADMIN CONTROL MODAL -->
     <div id="admin-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center"
          role="dialog" aria-modal="true" aria-labelledby="admin-title">
@@ -302,14 +298,14 @@
                 <h3 id="join-title" class="text-base font-extrabold text-white tracking-tight">Lokasi Ronda</h3>
             </div>
             <p class="text-xs text-slate-400 leading-relaxed text-center mb-5">
-                Ketik di mana posisi Anda sekarang. Nama lokasi akan muncul di bawah avatar Anda.
+                Ketik di mana posisi Anda sekarang (Cth: RT 01 / RT 02).
             </p>
             <div class="mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <i data-lucide="navigation" class="w-5 h-5 text-slate-500"></i>
                     </div>
-                    <input type="text" id="custom-loc-input" placeholder="Cth: Gang 3, Depan Musholla, Blok A" autocomplete="off"
+                    <input type="text" id="custom-loc-input" placeholder="Cth: RT 01, RT 02, Pos Kamling" autocomplete="off"
                         onkeypress="if(event.key === 'Enter') confirmJoin()"
                         class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/40 transition shadow-inner">
                 </div>
@@ -339,7 +335,7 @@
                 <h3 id="sos-title" class="text-base font-extrabold text-white tracking-tight">Kirim Sinyal Darurat SOS</h3>
             </div>
             <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">RT 03</strong>.
+                Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">Nguling RW 13</strong>.
             </p>
             <div class="grid grid-cols-2 gap-2 mt-4 text-left">
                 <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn focus-ring p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition">
@@ -438,14 +434,14 @@
         signInAnonymously(auth).then((userCredential) => {
             console.log("Berhasil login anonim ke Firebase");
             currentUserUid = userCredential.user.uid;
-            setupPresence(); // Mulai lacak kehadiran
-            listenToOnlineUsers(); // Mulai hitung yang online
+            setupPresence(); 
+            listenToOnlineUsers(); 
         }).catch((error) => {
             console.error("Gagal login Firebase:", error);
             showToast("Gagal terhubung ke server. Cek koneksi.");
         });
 
-        // ============ PRESENCE SYSTEM (FITUR ONLINE) ============
+        // ============ PRESENCE SYSTEM ============
         function setupPresence() {
             if (!currentUserUid) return;
             const userDocRef = doc(db, "presence", currentUserUid);
@@ -454,20 +450,16 @@
                 setDoc(userDocRef, { lastSeen: Date.now() }, { merge: true }).catch(console.error);
             };
 
-            // Kirim status pertama kali
             updateStatus();
 
-            // Kirim detak jantung setiap 30 detik
             setInterval(() => {
                 if (document.visibilityState === 'visible') updateStatus();
             }, 30000);
 
-            // Kirim status jika aplikasi dibuka kembali dari background
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') updateStatus();
             });
 
-            // Tandai offline jika tab ditutup (set waktu ke 0)
             window.addEventListener('beforeunload', () => {
                 setDoc(userDocRef, { lastSeen: 0 }, { merge: true });
             });
@@ -480,13 +472,12 @@
                 let count = 0;
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Anggap online jika update terakhir kurang dari 65 detik yang lalu
                     if (data.lastSeen && (now - data.lastSeen < 65000)) {
                         count++;
                     }
                 });
                 onlineUserCount = count;
-                updateCounters(); // Panggil ulang UI counter
+                updateCounters(); 
             });
         }
 
@@ -495,13 +486,14 @@
         const DEFAULT_VISIBLE = 6;
         let isVoiceGridExpanded = false;
 
+        // Data awal (Menyesuaikan RT 01 & RT 02)
         const initialOccupants = [
-            { name:'Pak RT 03',  role:'Pos Utama',      initials:'RT', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
-            { name:'Mas Dimas',  role:'Patroli Gang 2', initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Pak Hendra', role:'Pos Gerbang',    initials:'PH', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
-            { name:'Wildan',     role:'Gang 4',         initials:'WL', gradient:'from-indigo-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Bu Sari',    role:'Blok B-04',      initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Mas Yudi',   role:'Blok C-11',      initials:'MY', gradient:'from-cyan-500 to-blue-700',    isSpeaking:false, isMuted:false, mutedByAdmin:false },
+            { name:'Pak RT 01',  role:'Pos Kamling',    initials:'R1', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
+            { name:'Mas Dimas',  role:'RT 01',          initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
+            { name:'Pak RT 02',  role:'Pos Ronda',      initials:'R2', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
+            { name:'Wildan',     role:'RT 02',          initials:'WL', gradient:'from-indigo-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
+            { name:'Bu Sari',    role:'RT 01',          initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
+            { name:'Mas Yudi',   role:'RT 02',          initials:'MY', gradient:'from-cyan-500 to-blue-700',    isSpeaking:false, isMuted:false, mutedByAdmin:false },
         ];
 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
@@ -520,7 +512,7 @@
         let targetAdminSlotIndex = null;
         let sosSirenInterval = null;
 
-        // Ekspos fungsi ke window agar bisa dipanggil dari HTML (onclick)
+        // Ekspos fungsi ke window
         window.openSosModal = openSosModal;
         window.closeSosModal = closeSosModal;
         window.selectSosCategory = selectSosCategory;
@@ -546,9 +538,10 @@
 
         function updateCounters() {
             const n = countJoined();
+            // Update slot counter
             $('voice-counter').textContent = `${n}/${MAX_SLOTS}`;
-            // Tampilkan jumlah warga online di header
-            $('header-status-text').textContent = `Ruang Suara RT 03 • ${onlineUserCount} Warga Online`;
+            // Update teks online di bagian atas avatar
+            $('online-count-text').textContent = `${onlineUserCount} Warga Online`;
         }
 
         function toggleVoiceGrid() {
@@ -571,7 +564,7 @@
         }
 
         function shareToWhatsApp() {
-            const text = "Ayo gabung ronda malam RT 03 di *Telulas Gank*! Pantau situasi & ngobrol bareng warga lewat streaming suara. Klik link ini untuk masuk: \n\n" + window.location.href;
+            const text = "Ayo gabung ronda malam Nguling RW 13 (RT 01 & 02) di *Telulas Gank*! Pantau situasi & ngobrol bareng warga lewat streaming suara. Klik link ini untuk masuk: \n\n" + window.location.href;
             const waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
             window.open(waUrl, '_blank');
         }
@@ -1153,7 +1146,7 @@
             stopSosSiren();
         }
 
-        // ============ AMBIENT SIMULATION (Voice visual only) ============
+        // ============ AMBIENT SIMULATION ============
         function startAmbientVoiceSimulation() {
             setInterval(() => {
                 const slotsToRender = isVoiceGridExpanded ? voiceSlots : voiceSlots.slice(0, DEFAULT_VISIBLE);
@@ -1208,7 +1201,7 @@
         window.addEventListener('load', () => {
             renderVoiceGrid();
             startAmbientVoiceSimulation();
-            initFirebaseChat();
+            initFirebaseChat(); 
             listenIncomingSos(); 
             lucide.createIcons();
 
