@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telulas Gank - Ronda & Darurat</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-color: #f8fafc;
+            --accent-red: #ef4444;
+            --accent-red-dark: #b91c1c;
+            --accent-green: #22c55e;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+        }
+
+        header {
+            padding: 16px;
+            text-align: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .header-sub {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Tombol SOS Pill */
+        .sos-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .sos-btn {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            transition: transform 0.1s ease;
+            width: 85%;
+            max-width: 320px;
+        }
+
+        .sos-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Indikator pengisian saat tombol ditahan */
+        .sos-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-red-dark);
+            z-index: 1;
+            transition: width 1.5s linear;
+        }
+
+        .sos-text {
+            position: relative;
+            z-index: 2;
+        }
+
+        .sos-hint {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        /* Panel Voice Channel & Chat */
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .voice-panel {
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-btn {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            width: 100%;
+            max-width: 260px;
+        }
+
+        .chat-box {
+            flex: 1;
+            min-height: 150px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            user-select: text;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            outline: none;
+        }
+
+        .chat-input-area button {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        TELULAS GANK
+        <span class="header-sub">Sistem Komunikasi & Siaga Warga</span>
+    </header>
+
+    <div class="container">
+        <!-- Tombol SOS Utama -->
+        <div class="sos-container">
+            <button class="sos-btn" id="sosBtn">
+                <div class="sos-progress" id="sosProgress"></div>
+                <span class="sos-text">DARURAT (SOS)</span>
+            </button>
+            <span class="sos-hint">Tahan tombol 1,5 detik untuk mengirim sinyal</span>
+        </div>
+
+        <!-- Panel Voice Channel -->
+        <div class="panel voice-panel">
+            <h3 style="margin: 0; font-size: 1rem;">Saluran Suara (Walkie-Talkie)</h3>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Status: Siaga (0/20 Anggota Aktif)</p>
+            <button class="voice-btn" id="voiceToggle">Tahan untuk Bicara</button>
+        </div>
+
+        <!-- Panel Obrolan Teks -->
+        <div class="panel" style="flex: 1;">
+            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1rem;">Obrolan Telulas Gank</h3>
+            <div class="chat-box" id="chatBox">
+                <div style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px;">
+                    <b style="color: #38bdf8;">Sistem:</b> Selamat datang di kanal ronda Telulas Gank.
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ketik pesan singkat...">
+                <button id="sendBtn">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logika dasar tahan tombol SOS 1.5 detik
+        const sosBtn = document.getElementById('sosBtn');
+        const sosProgress = document.getElementById('sosProgress');
+        let sosTimer;
+
+        function startSos() {
+            sosProgress.style.transition = 'width 1.5s linear';
+            sosProgress.style.width = '100%';
+            sosTimer = setTimeout(() => {
+                alert('SINYAL DARURAT TELULAS GANK TERKIRIM KE SEMUA ANGGOTA!');
+                resetSos();
+            }, 1500);
+        }
+
+        function resetSos() {
+            clearTimeout(sosTimer);
+            sosProgress.style.transition = 'none';
+            sosProgress.style.width = '0%';
+        }
+
+        sosBtn.addEventListener('mousedown', startSos);
+        sosBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startSos(); });
+        
+        sosBtn.addEventListener('mouseup', resetSos);
+        sosBtn.addEventListener('mouseleave', resetSos);
+        sosBtn.addEventListener('touchend', resetSos);
+    </script>
+
+</body>
+</html>
