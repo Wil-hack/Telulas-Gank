@@ -2,17 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telulas Gank - Ronda & Darurat</title>
     <style>
         :root {
             --bg-color: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-bg: rgba(30, 41, 59, 0.75);
             --text-color: #f8fafc;
             --accent-red: #ef4444;
-            --accent-red-dark: #b91c1c;
+            --accent-red-dark: #991b1b;
             --accent-green: #22c55e;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.12);
         }
 
         body {
@@ -23,48 +23,51 @@
             color: var(--text-color);
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
+            min-height: 100dvh;
             user-select: none;
+            box-sizing: border-box;
         }
 
         header {
-            padding: 16px;
+            padding: 12px 16px;
             text-align: center;
             background: var(--card-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 800;
             letter-spacing: 0.5px;
+            flex-shrink: 0;
         }
 
         .header-sub {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: normal;
             color: #94a3b8;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .container {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 16px;
-            gap: 16px;
+            padding: 12px;
+            gap: 12px;
             max-width: 600px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
         }
 
-        /* Tombol SOS Pill */
+        /* Tombol SOS Slim Pill */
         .sos-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 8px 0;
+            flex-shrink: 0;
         }
 
         .sos-btn {
@@ -73,22 +76,21 @@
             background-color: var(--accent-red);
             color: white;
             border: none;
-            padding: 16px 40px;
-            font-size: 1.1rem;
+            padding: 12px 28px;
+            font-size: 1rem;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
             transition: transform 0.1s ease;
-            width: 85%;
-            max-width: 320px;
+            width: auto;
+            max-width: 250px;
         }
 
         .sos-btn:active {
             transform: scale(0.96);
         }
 
-        /* Indikator pengisian saat tombol ditahan */
         .sos-progress {
             position: absolute;
             top: 0;
@@ -97,7 +99,6 @@
             width: 0%;
             background-color: var(--accent-red-dark);
             z-index: 1;
-            transition: width 1.5s linear;
         }
 
         .sos-text {
@@ -106,77 +107,116 @@
         }
 
         .sos-hint {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #94a3b8;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
-        /* Panel Voice Channel & Chat */
+        /* Panel Voice Grid & Chat */
         .panel {
             background: var(--card-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
         }
 
-        .voice-panel {
-            align-items: center;
+        .voice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
+            margin-top: 8px;
         }
 
-        .voice-btn {
-            background-color: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 0.95rem;
+        .channel-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .channel-card.add-new {
+            border-style: dashed;
+            border-color: rgba(34, 197, 94, 0.5);
+            background: rgba(34, 197, 94, 0.05);
             cursor: pointer;
-            width: 100%;
-            max-width: 260px;
+            transition: background 0.2s;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .channel-card.add-new:hover {
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .add-icon {
+            font-size: 1.8rem;
+            color: var(--accent-green);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .channel-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+
+        .channel-status {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .chat-panel {
+            flex: 1;
+            min-height: 180px;
         }
 
         .chat-box {
             flex: 1;
-            min-height: 150px;
-            max-height: 250px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
             background: rgba(15, 23, 42, 0.5);
             user-select: text;
+            max-height: 160px;
         }
 
         .chat-input-area {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 0;
         }
 
         .chat-input-area input {
             flex: 1;
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
             background: rgba(255, 255, 255, 0.05);
             color: white;
             outline: none;
+            font-size: 0.9rem;
         }
 
         .chat-input-area button {
-            padding: 10px 18px;
-            border-radius: 10px;
+            padding: 8px 14px;
+            border-radius: 8px;
             border: none;
             background: #3b82f6;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -188,28 +228,43 @@
     </header>
 
     <div class="container">
-        <!-- Tombol SOS Utama -->
+        <!-- Tombol SOS Slim Pill -->
         <div class="sos-container">
             <button class="sos-btn" id="sosBtn">
                 <div class="sos-progress" id="sosProgress"></div>
                 <span class="sos-text">DARURAT (SOS)</span>
             </button>
-            <span class="sos-hint">Tahan tombol 1,5 detik untuk mengirim sinyal</span>
+            <span class="sos-hint">Tahan 1,5 detik untuk kirim sinyal</span>
         </div>
 
-        <!-- Panel Voice Channel -->
-        <div class="panel voice-panel">
-            <h3 style="margin: 0; font-size: 1rem;">Saluran Suara (Walkie-Talkie)</h3>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Status: Siaga (0/20 Anggota Aktif)</p>
-            <button class="voice-btn" id="voiceToggle">Tahan untuk Bicara</button>
+        <!-- Panel Grid Kanal Suara -->
+        <div class="panel">
+            <h3 style="margin: 0; font-size: 0.95rem;">Kanal Suara Warga</h3>
+            <div class="voice-grid" id="voiceGrid">
+                <!-- Slot Kanal Aktif 1 -->
+                <div class="channel-card">
+                    <span class="channel-name">Ronda Blok A</span>
+                    <span class="channel-status">5/10 Anggota</span>
+                </div>
+                <!-- Slot Kanal Aktif 2 -->
+                <div class="channel-card">
+                    <span class="channel-name">Patroli Timur</span>
+                    <span class="channel-status">3/10 Anggota</span>
+                </div>
+                <!-- Tombol Tambah Kanal Baru -->
+                <div class="channel-card add-new" id="addChannelBtn">
+                    <span class="add-icon">+</span>
+                    <span class="channel-name" style="color: var(--accent-green);">Tambah Kanal</span>
+                </div>
+            </div>
         </div>
 
         <!-- Panel Obrolan Teks -->
-        <div class="panel" style="flex: 1;">
-            <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1rem;">Obrolan Telulas Gank</h3>
+        <div class="panel chat-panel">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 0.95rem;">Obrolan Telulas Gank</h3>
             <div class="chat-box" id="chatBox">
-                <div style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px;">
-                    <b style="color: #38bdf8;">Sistem:</b> Selamat datang di kanal ronda Telulas Gank.
+                <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 4px;">
+                    <b style="color: #38bdf8;">Sistem:</b> Selamat datang di aplikasi ronda Telulas Gank.
                 </div>
             </div>
             <div class="chat-input-area">
@@ -220,14 +275,16 @@
     </div>
 
     <script>
-        // Logika dasar tahan tombol SOS 1.5 detik
+        // Logika Tombol SOS
         const sosBtn = document.getElementById('sosBtn');
         const sosProgress = document.getElementById('sosProgress');
         let sosTimer;
 
-        function startSos() {
+        function startSos(e) {
+            if (e.cancelable) e.preventDefault();
             sosProgress.style.transition = 'width 1.5s linear';
             sosProgress.style.width = '100%';
+            
             sosTimer = setTimeout(() => {
                 alert('SINYAL DARURAT TELULAS GANK TERKIRIM KE SEMUA ANGGOTA!');
                 resetSos();
@@ -236,16 +293,33 @@
 
         function resetSos() {
             clearTimeout(sosTimer);
-            sosProgress.style.transition = 'none';
+            sosProgress.style.transition = 'width 0.2s ease-out';
             sosProgress.style.width = '0%';
         }
 
         sosBtn.addEventListener('mousedown', startSos);
-        sosBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startSos(); });
+        sosBtn.addEventListener('touchstart', startSos, { passive: false });
         
         sosBtn.addEventListener('mouseup', resetSos);
         sosBtn.addEventListener('mouseleave', resetSos);
         sosBtn.addEventListener('touchend', resetSos);
+
+        // Simulasi Tambah Kanal
+        const addChannelBtn = document.getElementById('addChannelBtn');
+        const voiceGrid = document.getElementById('voiceGrid');
+
+        addChannelBtn.addEventListener('click', () => {
+            const channelName = prompt("Masukkan nama kanal baru:");
+            if (channelName && channelName.trim() !== "") {
+                const newCard = document.createElement('div');
+                newCard.className = 'channel-card';
+                newCard.innerHTML = `
+                    <span class="channel-name">${channelName.trim()}</span>
+                    <span class="channel-status">1/10 Anggota</span>
+                `;
+                voiceGrid.insertBefore(newCard, addChannelBtn);
+            }
+        });
     </script>
 
 </body>
