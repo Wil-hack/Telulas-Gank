@@ -649,7 +649,6 @@
                 
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 
-                // Konfigurasi mic langsung menggunakan encoder config standar suara (menggantikan setAudioProfile yang error)
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
                     AEC: true,
@@ -661,19 +660,15 @@
 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
-                    if (mediaType === "audio") {
+                    if (mediaType === "audio" && user.audioTrack) {
                         remoteAudioTracks[user.uid] = user.audioTrack;
-                        try {
-                            user.audioTrack.play();
-                        } catch (err) {
-                            console.log("Autoplay diblokir:", err);
-                        }
-                        $('btn-force-audio').classList.remove('hidden');
+                        user.audioTrack.play();
                     }
                 });
 
                 agoraClient.on("user-unpublished", (user, mediaType) => {
                     if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
+                        remoteAudioTracks[user.uid].stop();
                         delete remoteAudioTracks[user.uid];
                     }
                 });
@@ -711,7 +706,7 @@
                 };
 
                 $('audio-control-bar').classList.remove('hidden');
-                $('btn-force-audio').classList.remove('hidden'); 
+                $('btn-force-audio').classList.add('hidden'); 
                 updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
                 showToast(`Terhubung ke Saluran Suara!`);
