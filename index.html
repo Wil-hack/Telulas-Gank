@@ -75,9 +75,12 @@
         <!-- HEADER -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0">
+                
+                <!-- TOMBOL RAHASIA ADMIN (Logo Radio) -->
+                <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
-                </div>
+                </button>
+                
                 <div class="min-w-0 flex items-center gap-2">
                     <h1 class="font-extrabold text-lg text-white truncate">Telulas Gank</h1>
                     <span class="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 text-[9px] font-bold border border-rose-500/30 flex items-center gap-1 shrink-0">
@@ -88,10 +91,6 @@
             </div>
             
             <div class="flex items-center gap-1.5 shrink-0">
-                <!-- TOMBOL ADMIN (GEAR) -->
-                <button type="button" onclick="openAdminTokenModal()" class="p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 border border-slate-700 transition active:scale-95" title="Menu Admin">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
                 <button type="button" onclick="shareToWhatsApp()" class="p-1.5 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 border border-slate-700 transition active:scale-95">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
                 </button>
@@ -174,7 +173,7 @@
         <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 relative overflow-hidden animate-sheet-up">
             <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/35 flex items-center justify-center"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i></div>
-                <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin RT</h3>
+                <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
             </div>
             
             <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora. (PIN: 1234)</p>
@@ -226,7 +225,7 @@
         </div>
     </div>
 
-    <!-- SOS & LAINNYA (Sama seperti sebelumnya) -->
+    <!-- SOS MODAL -->
     <div id="sos-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 text-center relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
@@ -296,7 +295,6 @@
         const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
         const AGORA_CHANNEL = "telulas-gank-rw13"; 
         
-        // Token ini akan ditimpa oleh Token dari Admin di Firebase
         let AGORA_TOKEN = ""; 
 
         let agoraClient = null;
@@ -320,7 +318,7 @@
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
             listenToOnlineUsers(); 
-            fetchLatestAgoraToken(); // Ambil token dari Firebase saat aplikasi dibuka
+            fetchLatestAgoraToken(); // Ambil token dari Firebase
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
@@ -344,7 +342,6 @@
             if (pin === "1234") {
                 document.getElementById('admin-pin-section').classList.add('hidden');
                 document.getElementById('admin-token-section').classList.remove('hidden');
-                // Tampilkan token yang ada saat ini jika ada
                 document.getElementById('new-agora-token').value = AGORA_TOKEN;
             } else {
                 alert("PIN Admin Salah!");
@@ -356,7 +353,6 @@
             if (!newToken) return alert("Token tidak boleh kosong!");
             
             try {
-                // Simpan ke Firestore di collection 'config', document 'agora'
                 await setDoc(doc(db, "config", "agora"), { token: newToken });
                 AGORA_TOKEN = newToken;
                 showToast("Token berhasil diperbarui untuk semua warga!");
@@ -384,7 +380,7 @@
         }
 
         // ==========================================
-        // LOGIKA LAINNYA (TETAP SAMA)
+        // LOGIKA LAINNYA
         // ==========================================
         function setupPresence() {
             if (!currentUserUid) return;
@@ -591,15 +587,13 @@
             if (index === null) return;
             if (!AGORA_APP_ID) return alert("App ID Agora belum dimasukkan.");
             if (!AGORA_TOKEN) {
-                // Coba ambil ulang sekali lagi jika kosong (siapa tahu Admin baru saja mengisi)
                 await fetchLatestAgoraToken();
                 if (!AGORA_TOKEN) {
-                    return alert("Token Agora belum diatur oleh Pak RT. Mohon tunggu atau hubungi Pak RT.");
+                    return alert("Token Agora belum diatur oleh Admin. Mohon tunggu atau hubungi Admin.");
                 }
             }
 
             try {
-                // Agora Init dengan TOKEN DARI FIREBASE
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, currentUserUid);
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -625,7 +619,7 @@
             } catch (err) {
                 console.error("Agora Error:", err);
                 if (err.message.includes("CAN_NOT_GET_GATEWAY_SERVER") || err.message.includes("TOKEN_EXPIRED")) {
-                    alert("Token Agora sudah kedaluwarsa. Silakan hubungi Admin (Pak RT) untuk memperbarui Token.");
+                    alert("Token Agora sudah kedaluwarsa. Silakan hubungi Admin untuk memperbarui Token.");
                 } else {
                     alert("Gagal terhubung ke Agora: " + err.message);
                 }
