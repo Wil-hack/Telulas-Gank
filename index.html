@@ -328,23 +328,17 @@
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
-        // DIBATASI 5 SLOT UNTUK UJI COBA STABILITAS AUDIO
+        // 5 SLOT KOSONG (BEBAS DITEMPATI WARGA SECARA REAL-TIME)
         const MAX_SLOTS = 5;
         const DEFAULT_VISIBLE = 5;
         let isVoiceGridExpanded = false;
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
 
-        const initialOccupants = [
-            { name:'Pak RT 01',  role:'Pos Kamling', initials:'R1', gradient:'from-emerald-500 to-teal-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Mas Dimas',  role:'RT 01',       initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Pak RT 02',  role:'Pos Ronda',   initials:'R2', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
-            { name:'Wildan',     role:'RT 02',       initials:'WL', gradient:'from-indigo-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
-            { name:'Bu Sari',    role:'RT 01',       initials:'BS', gradient:'from-fuchsia-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
-        ];
+        // TANPA DATA DUMMY AWAL, SEMUA KOSONG MENUNGGU WARGA JOIN
+        let initialOccupants = [];
 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
-            const occ = initialOccupants[i];
-            return occ ? { id:i, occupied:true, isSelf:false, ...occ } : { id:i, occupied:false };
+            return { id:i, occupied:false };
         });
 
         let joinedSlotIndex = null;
@@ -370,10 +364,6 @@
             onSnapshot(slotsCol, (snapshot) => {
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
                     return { id:i, occupied:false };
-                });
-
-                initialOccupants.forEach((occ, i) => {
-                    voiceSlots[i] = { id:i, occupied:true, isSelf:false, ...occ };
                 });
 
                 snapshot.forEach((docSnap) => {
