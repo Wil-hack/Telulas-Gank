@@ -47,9 +47,6 @@
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
-    <!-- AUDIO BISU UNTUK BACKGROUND + MEDIA SESSION -->
-    <audio id="silent-audio" loop playsinline style="display:none;" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
-
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
         <div class="absolute top-1/4 -right-28 w-72 h-72 bg-rose-900/10 rounded-full blur-3xl"></div>
@@ -139,43 +136,18 @@
                 <h2 class="text-white font-bold text-lg">🎙️ Voice Diagnostic</h2>
                 <button onclick="toggleDiag()" class="text-slate-400 text-xs bg-slate-800 px-3 py-1 rounded-lg">Tutup</button>
             </div>
-
             <div class="bg-slate-900 rounded-xl p-3 space-y-2">
-                <div class="flex items-center gap-2">
-                    <span id="chk-agora">⏳</span>
-                    <span class="text-white flex-1">Koneksi Agora</span>
-                    <span id="val-agora" class="text-slate-400 text-xs">-</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="chk-token">⏳</span>
-                    <span class="text-white flex-1">Token Agora</span>
-                    <span id="val-token" class="text-slate-400 text-xs">-</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="chk-mic">⏳</span>
-                    <span class="text-white flex-1">Mic Publik</span>
-                    <span id="val-mic" class="text-slate-400 text-xs">-</span>
-                </div>
-                <div class="mt-1 h-2 bg-slate-800 rounded">
-                    <div id="meter-mic" class="h-2 bg-green-500 rounded transition-all" style="width:0%"></div>
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <span id="chk-remotes">⏳</span>
-                    <span class="text-white flex-1">Remote Users</span>
-                    <span id="val-remotes" class="text-slate-400 text-xs">0</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="chk-tracks">⏳</span>
-                    <span class="text-white flex-1">Audio Track Aktif</span>
-                    <span id="val-tracks" class="text-slate-400 text-xs">0</span>
-                </div>
+                <div class="flex items-center gap-2"><span id="chk-agora">⏳</span><span class="text-white flex-1">Koneksi Agora</span><span id="val-agora" class="text-slate-400 text-xs">-</span></div>
+                <div class="flex items-center gap-2"><span id="chk-token">⏳</span><span class="text-white flex-1">Token Agora</span><span id="val-token" class="text-slate-400 text-xs">-</span></div>
+                <div class="flex items-center gap-2"><span id="chk-mic">⏳</span><span class="text-white flex-1">Mic Publik</span><span id="val-mic" class="text-slate-400 text-xs">-</span></div>
+                <div class="mt-1 h-2 bg-slate-800 rounded"><div id="meter-mic" class="h-2 bg-green-500 rounded transition-all" style="width:0%"></div></div>
+                <div class="flex items-center gap-2 mt-2"><span id="chk-remotes">⏳</span><span class="text-white flex-1">Remote Users</span><span id="val-remotes" class="text-slate-400 text-xs">0</span></div>
+                <div class="flex items-center gap-2"><span id="chk-tracks">⏳</span><span class="text-white flex-1">Audio Track Aktif</span><span id="val-tracks" class="text-slate-400 text-xs">0</span></div>
                 <div id="remote-list" class="text-xs text-slate-400 space-y-1 mt-2"></div>
             </div>
-
-            <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold">🔔 Test Speaker (Dengar Beep?)</button>
+            <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold">🔔 Test Speaker</button>
             <button onclick="forceRepublish()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold">🔄 Force Re-Publish Mic</button>
             <button onclick="doUnlockAudio()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold">🔊 Force Play Remote Audio</button>
-
             <div class="bg-slate-900 rounded-xl p-3 text-xs text-slate-300 font-mono max-h-48 overflow-y-auto" id="diag-log"></div>
         </div>
     </div>
@@ -187,12 +159,10 @@
                 <div class="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/35 flex items-center justify-center"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
             </div>
-            
             <div id="admin-pin-section">
                 <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora. (PIN: 1234)</p>
                 <input type="password" id="admin-pin-input" placeholder="Masukkan PIN (1234)" class="w-full bg-slate-900/95 text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl border border-slate-700/80 focus:outline-none focus:border-amber-500/70 mb-3 transition">
                 <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
-                
                 <div class="pt-3 border-t border-slate-700/60">
                     <p class="text-[10px] text-center text-slate-500 mb-2">Warga tidak bisa dengar/bicara?</p>
                     <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition">
@@ -200,7 +170,6 @@
                     </button>
                 </div>
             </div>
-            
             <div id="admin-token-section" class="hidden">
                 <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
                 <textarea id="new-agora-token" rows="3" class="w-full bg-slate-900/95 text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
@@ -209,7 +178,6 @@
                     <i data-lucide="save" class="w-4 h-4"></i> Simpan Token ke Server
                 </button>
             </div>
-            
             <button type="button" onclick="closeAdminTokenModal()" class="mt-3 w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
         </div>
     </div>
@@ -310,7 +278,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -342,9 +310,9 @@
         let onlineUserCount = 0;
         let processedSosIds = [];
         
-        // State untuk Optimasi Chat
-        let renderedChatIds = new Set(); 
+        let renderedChatIds = new Set();
         let lastKnownChatTs = 0;
+        let hasClearedChatThisEmptySession = false;
 
         const MAX_SLOTS = 5;
         const SLOT_TIMEOUT_MS = 90000;
@@ -398,7 +366,6 @@
         setInterval(updateDiagUI, 1000);
 
         async function testSpeakerTone() {
-            vlog("TEST: speaker tone start");
             try {
                 await Tone.start();
                 const synth = new Tone.Synth().toDestination();
@@ -407,35 +374,24 @@
                 setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 250);
                 setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 500);
                 showToast("🔔 Test tone diputar. Dengar beep?");
-                vlog("TEST: tone played OK");
-            } catch(e) {
-                vlog("TEST ERR:", e.message);
-                alert("Tone error: " + e.message);
-            }
+            } catch(e) { alert("Tone error: " + e.message); }
         }
         window.testSpeakerTone = testSpeakerTone;
 
         async function forceRepublish() {
             if (!agoraClient || !localAudioTrack) { alert("Belum join!"); return; }
-            vlog("FORCE: republish mic");
             try {
                 await agoraClient.unpublish([localAudioTrack]);
                 await new Promise(r => setTimeout(r, 500));
                 await agoraClient.publish([localAudioTrack]);
                 showToast("Mic di-republish");
-                vlog("FORCE: republish OK");
-            } catch(e) {
-                vlog("FORCE ERR:", e.message);
-                alert("Gagal: " + e.message);
-            }
+            } catch(e) { alert("Gagal: " + e.message); }
         }
         window.forceRepublish = forceRepublish;
 
         let audioPrimed = false;
         async function primeAudio() {
-            for (const uid in remoteAudioTracks) {
-                try { await remoteAudioTracks[uid].play(); } catch (e) {}
-            }
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
             if (audioPrimed) return;
             audioPrimed = true;
             try {
@@ -446,9 +402,7 @@
                     synth.triggerAttackRelease("C4", 0.01);
                 }
             } catch (e) {}
-            try {
-                if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext();
-            } catch (e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
         }
 
         document.addEventListener('pointerdown', primeAudio, { capture: true });
@@ -457,55 +411,58 @@
         document.addEventListener('keydown', primeAudio, { capture: true });
 
         if (window.AgoraRTC) {
-            AgoraRTC.onAutoplayFailed = () => {
-                vlog("AUTOPLAY FAILED - show unlock banner");
-                showUnlockBanner();
-                audioPrimed = false;
-            };
+            AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; };
         }
 
-        function showUnlockBanner() {
-            $('unlock-audio-banner').classList.remove('hidden');
-            lucide.createIcons();
-        }
-        function hideUnlockBanner() {
-            $('unlock-audio-banner').classList.add('hidden');
-        }
+        function showUnlockBanner() { $('unlock-audio-banner').classList.remove('hidden'); lucide.createIcons(); }
+        function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
+        
         async function doUnlockAudio() {
-            vlog("UNLOCK: start");
             try {
                 await Tone.start();
                 const synth = new Tone.Synth().toDestination();
                 synth.volume.value = -10;
                 synth.triggerAttackRelease("C5", "8n");
                 setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
-                vlog("UNLOCK: tone OK");
-            } catch(e) { vlog("UNLOCK Tone ERR:", e.message); }
-
-            try {
-                if (window.AgoraRTC?.resumeAudioContext) {
-                    await AgoraRTC.resumeAudioContext();
-                    vlog("UNLOCK: resumeAudioContext OK");
-                }
-            } catch(e) { vlog("UNLOCK resume ERR:", e.message); }
-
+            } catch(e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
             let played = 0;
             for (const uid in remoteAudioTracks) {
-                try {
-                    await remoteAudioTracks[uid].play();
-                    played++;
-                    vlog("UNLOCK: replay uid", uid, "OK");
-                } catch(e) { vlog("UNLOCK: replay uid", uid, "ERR:", e.message); }
+                try { await remoteAudioTracks[uid].play(); played++; } catch(e) {}
             }
-
-            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) {
-                hideUnlockBanner();
-            }
+            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
             showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
         }
-        window.showUnlockBanner = showUnlockBanner;
-        window.hideUnlockBanner = hideUnlockBanner;
         window.doUnlockAudio = doUnlockAudio;
+
+        // ============ BACKGROUND AUDIO KEEP ALIVE ============
+        let keepAliveCtx = null;
+        let silentOscillator = null;
+
+        function startBackgroundKeepAlive() {
+            if (keepAliveCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                keepAliveCtx = new AudioContext();
+                silentOscillator = keepAliveCtx.createOscillator();
+                const gainNode = keepAliveCtx.createGain();
+                gainNode.gain.value = 0.0001; 
+                silentOscillator.connect(gainNode);
+                gainNode.connect(keepAliveCtx.destination);
+                silentOscillator.start();
+
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' });
+                }
+            } catch(e) { console.log("KeepAlive error:", e); }
+        }
+
+        function stopBackgroundKeepAlive() {
+            if (silentOscillator) { silentOscillator.stop(); silentOscillator.disconnect(); silentOscillator = null; }
+            if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
+            if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+        }
+        // ====================================================================
 
         async function triggerChatNotification() {
             try { navigator.vibrate([200, 100, 200]); } catch(e) {}
@@ -522,7 +479,6 @@
 
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
-            vlog("Firebase login OK uid:", currentUserUid.substring(0,8));
             setupPresence(); 
             listenToOnlineUsers(); 
             fetchLatestAgoraToken(); 
@@ -580,18 +536,13 @@
                     if (mySlot && mySlot.occupied) {
                         const nowMutedByAdmin = mySlot.mutedByAdmin === true;
                         if (nowMutedByAdmin && !wasMutedByAdmin) {
-                            localAudioTrack.setEnabled(false);
-                            updateAudioControlUI();
-                            showToast("Anda dibisukan oleh Admin.");
+                            localAudioTrack.setEnabled(false); updateAudioControlUI(); showToast("Anda dibisukan oleh Admin.");
                         } else if (!nowMutedByAdmin && wasMutedByAdmin) {
-                            localAudioTrack.setEnabled(!isMicMuted);
-                            updateAudioControlUI();
+                            localAudioTrack.setEnabled(!isMicMuted); updateAudioControlUI();
                         }
                         wasMutedByAdmin = nowMutedByAdmin;
                         if (!nowMutedByAdmin && mySlot.isMuted !== isMicMuted) {
-                            isMicMuted = mySlot.isMuted;
-                            localAudioTrack.setEnabled(!isMicMuted);
-                            updateAudioControlUI();
+                            isMicMuted = mySlot.isMuted; localAudioTrack.setEnabled(!isMicMuted); updateAudioControlUI();
                         }
                     }
                 }
@@ -629,11 +580,8 @@
         async function fetchLatestAgoraToken() {
             try {
                 const docSnap = await getDoc(doc(db, "config", "agora"));
-                if (docSnap.exists() && docSnap.data().token) {
-                    AGORA_TOKEN = docSnap.data().token;
-                    vlog("Token fetched:", AGORA_TOKEN.substring(0,10) + "...");
-                }
-            } catch (e) { vlog("Token ERR:", e.message); }
+                if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token;
+            } catch (e) {}
         }
 
         function setupPresence() {
@@ -645,6 +593,7 @@
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
             window.addEventListener('beforeunload', () => { setDoc(userDocRef, { lastSeen: 0 }, { merge: true }); });
         }
+
         function listenToOnlineUsers() {
             onSnapshot(collection(db, "presence"), (snapshot) => {
                 const now = Date.now();
@@ -655,15 +604,39 @@
                 });
                 onlineUserCount = count;
                 updateCounters();
+
+                // JIKA TIDAK ADA ORANG LAIN (0 ATAU 1), HAPUS SEMUA CHAT
+                if (onlineUserCount <= 1) {
+                    if (!hasClearedChatThisEmptySession) {
+                        clearAllChats();
+                        hasClearedChatThisEmptySession = true;
+                        showToast("Room kosong. Obrolan di-reset.");
+                    }
+                } else {
+                    hasClearedChatThisEmptySession = false;
+                }
             });
+        }
+
+        async function clearAllChats() {
+            try {
+                const snap = await getDocs(collection(db, "chats"));
+                if (!snap.empty) {
+                    const batch = writeBatch(db);
+                    snap.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    
+                    $('chat-feed').innerHTML = '';
+                    renderedChatIds.clear();
+                    lastKnownChatTs = 0;
+                }
+            } catch(e) { console.log("Gagal hapus chat:", e); }
         }
 
         function startHeartbeat() {
             setInterval(async () => {
                 if (joinedSlotIndex === null || !currentUserUid) return;
-                try {
-                    await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true });
-                } catch(e) {}
+                try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true }); } catch(e) {}
             }, 20000);
         }
         function startStaleCleanup() {
@@ -673,8 +646,7 @@
                     const now = Date.now();
                     for (const d of snap.docs) {
                         const data = d.data();
-                        if (!data.lastSeen) continue;
-                        if (data.uid === currentUserUid) continue;
+                        if (!data.lastSeen || data.uid === currentUserUid) continue;
                         if (now - data.lastSeen > SLOT_TIMEOUT_MS) {
                             try { await deleteDoc(d.ref); } catch(e) {}
                         }
@@ -734,7 +706,6 @@
             });
             lucide.createIcons();
             updateCounters();
-            
             if (joinedSlotIndex !== null) {
                 $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> <span class="text-purple-300">Mode Admin</span>`;
             } else {
@@ -820,7 +791,6 @@
                 await fetchLatestAgoraToken();
                 if (!AGORA_TOKEN) return alert("Token Agora belum diatur oleh Admin.");
             }
-            vlog("JOIN: start", { index, name, location });
 
             try {
                 const slotRef = doc(db, "active_slots", `slot_${index}`);
@@ -835,124 +805,61 @@
                             occupied: true, lastSeen: Date.now()
                         });
                     });
-                    vlog("JOIN: slot claimed");
                 } catch (e) {
                     if (e.message === "SLOT_OCCUPIED") { showToast("Slot sudah diambil. Coba lain."); return; }
                     throw e;
                 }
 
                 localAgoraUid = myAgoraUid;
-                vlog("JOIN: local uid =", localAgoraUid);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                vlog("JOIN: client created");
 
                 agoraClient.on("user-published", async (user, mediaType) => {
-                    vlog("EVENT: user-published uid", user.uid, "type", mediaType);
                     try {
                         await agoraClient.subscribe(user, mediaType);
-                        vlog("EVENT: subscribed to", user.uid, mediaType);
                         if (mediaType === "audio" && user.audioTrack) {
                             remoteAudioTracks[user.uid] = user.audioTrack;
-                            vlog("EVENT: audio track stored for uid", user.uid);
                             try {
-                                try {
-                                    if (typeof user.audioTrack.setPlaybackDevice === 'function') {
-                                        await user.audioTrack.setPlaybackDevice('speakerphone');
-                                        vlog("EVENT: setPlaybackDevice speakerphone OK");
-                                    }
-                                } catch(devErr) { vlog("EVENT: setPlaybackDevice ERR:", devErr.message); }
-                                try { user.audioTrack.setVolume(100); } catch(e) {}
-
+                                if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
+                                user.audioTrack.setVolume(100);
                                 await user.audioTrack.play();
-                                vlog("EVENT: play() OK for uid", user.uid, "isPlaying=", user.audioTrack.isPlaying);
                                 hideUnlockBanner();
                                 startAutoRetryPlay(user);
                             } catch (playErr) {
-                                vlog("EVENT: play() ERR:", playErr.message);
-                                showUnlockBanner();
-                                startAutoRetryPlay(user);
+                                showUnlockBanner(); startAutoRetryPlay(user);
                             }
                         }
-                    } catch (e) {
-                        vlog("EVENT: subscribe ERR:", e.message);
-                    }
+                    } catch (e) {}
                 });
 
                 agoraClient.on("user-unpublished", (user, mediaType) => {
-                    vlog("EVENT: user-unpublished", user.uid, mediaType);
                     if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
                         try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
                         delete remoteAudioTracks[user.uid];
                     }
                 });
 
-                agoraClient.on("user-joined", (user) => {
-                    vlog("EVENT: user-joined uid", user.uid);
-                });
-
-                agoraClient.on("connection-state-changed", (cur, prev, reason) => {
-                    vlog("EVENT: connection", prev, "->", cur, "reason:", reason);
-                });
-
-                agoraClient.on("exception", (event) => {
-                    vlog("EVENT: exception", event.code, event.msg, event.uid);
-                });
-
-                vlog("JOIN: joining channel...");
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
-                vlog("JOIN: channel joined! remoteUsers =", agoraClient.remoteUsers.length);
 
-                try {
-                    if (AgoraRTC.setParameter) {
-                        await AgoraRTC.setParameter('AUDIO_PLAYBACK_DEVICE', 'speakerphone');
-                        vlog("JOIN: global speakerphone OK");
-                    }
-                } catch(e) { vlog("JOIN: global speakerphone ERR:", e.message); }
+                try { if (AgoraRTC.setParameter) await AgoraRTC.setParameter('AUDIO_PLAYBACK_DEVICE', 'speakerphone'); } catch(e) {}
 
                 agoraClient.remoteUsers.forEach(async (user) => {
-                    vlog("JOIN: existing remote uid", user.uid, "hasAudio=", user.hasAudio);
                     if (user.hasAudio) {
                         try {
                             await agoraClient.subscribe(user, "audio");
-                            vlog("JOIN: subscribed existing uid", user.uid);
                             if (user.audioTrack) {
                                 remoteAudioTracks[user.uid] = user.audioTrack;
-                                try { user.audioTrack.setVolume(100); } catch(e) {}
-                                try {
-                                    await user.audioTrack.play();
-                                    vlog("JOIN: play existing uid", user.uid, "OK");
-                                } catch(e) { vlog("JOIN: play existing uid", user.uid, "ERR:", e.message); showUnlockBanner(); }
+                                try { user.audioTrack.setVolume(100); await user.audioTrack.play(); } catch(e) { showUnlockBanner(); }
                                 startAutoRetryPlay(user);
                             }
-                        } catch(e) { vlog("JOIN: subscribe existing ERR:", e.message); }
+                        } catch(e) {}
                     }
                 });
 
-                vlog("JOIN: creating mic track...");
-                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-                    encoderConfig: "speech_standard",
-                    AEC: true, AGC: true, ANS: true
-                });
-                vlog("JOIN: mic track created");
-
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "speech_standard", AEC: true, AGC: true, ANS: true });
                 await agoraClient.publish([localAudioTrack]);
-                vlog("JOIN: mic published");
 
-                // AKTIFKAN MEDIA SESSION & AUDIO BISU UNTUK BACKGROUND
-                const silentAudio = $('silent-audio');
-                if (silentAudio) {
-                    silentAudio.volume = 0.01;
-                    silentAudio.play().catch(e => console.log("Gagal play silent", e));
-                }
-                if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = new MediaMetadata({
-                        title: 'Ronda Nguling RW 13',
-                        artist: 'Telulas Gank',
-                        album: 'Live Voice'
-                    });
-                    navigator.mediaSession.setActionHandler('play', () => { if(silentAudio) silentAudio.play(); });
-                    navigator.mediaSession.setActionHandler('pause', () => { if(silentAudio) silentAudio.pause(); });
-                }
+                // MULAI TRIK BACKGROUND AUDIO
+                startBackgroundKeepAlive();
 
                 agoraClient.enableAudioVolumeIndicator();
                 agoraClient.on("volume-indicator", volumes => {
@@ -984,18 +891,16 @@
                 await requestWakeLock();
 
                 setTimeout(() => {
-                    if (Object.keys(remoteAudioTracks).length === 0) {
-                        showUnlockBanner();
-                    } else {
+                    if (Object.keys(remoteAudioTracks).length === 0) showUnlockBanner();
+                    else {
                         const anyBlocked = Object.values(remoteAudioTracks).some(t => !t.isPlaying);
                         if (anyBlocked) showUnlockBanner();
                     }
                 }, 1500);
 
             } catch (err) {
-                vlog("JOIN ERR:", err.message, err.code);
                 try { await deleteDoc(doc(db, "active_slots", `slot_${index}`)); } catch(e) {}
-                alert("GAGAL SUARA: " + err.message + (err.code ? ` (code ${err.code})` : ''));
+                alert("GAGAL SUARA: " + err.message);
             }
         }
 
@@ -1005,13 +910,8 @@
                 attempts++;
                 if (attempts > 30) { clearInterval(interval); return; }
                 if (!user.audioTrack) { clearInterval(interval); return; }
-                if (user.audioTrack.isPlaying) { clearInterval(interval); vlog("RETRY: stopped, playing OK uid", user.uid); return; }
-                try {
-                    await user.audioTrack.play();
-                    vlog("RETRY: success uid", user.uid);
-                    clearInterval(interval);
-                    hideUnlockBanner();
-                } catch(e) {}
+                if (user.audioTrack.isPlaying) { clearInterval(interval); return; }
+                try { await user.audioTrack.play(); clearInterval(interval); hideUnlockBanner(); } catch(e) {}
             }, 1000);
         }
 
@@ -1019,7 +919,6 @@
             if (joinedSlotIndex === null) return;
             const prevIndex = joinedSlotIndex;
             const leavingName = userProfile.name;
-            vlog("LEAVE: from slot", prevIndex);
 
             hideUnlockBanner();
             joinedSlotIndex = null;
@@ -1029,9 +928,7 @@
             remoteAudioTracks = {};
             wasMutedByAdmin = false;
 
-            const silentAudio = $('silent-audio');
-            if (silentAudio) silentAudio.pause();
-            if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+            stopBackgroundKeepAlive();
 
             renderVoiceGrid();
             showToast('Keluar dari ruang suara');
@@ -1042,7 +939,7 @@
                 if (localAudioTrack) { localAudioTrack.stop(); localAudioTrack.close(); localAudioTrack = null; }
                 if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
                 await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
-            } catch (e) { console.error("Error saat keluar:", e); }
+            } catch (e) {}
         }
 
         async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
@@ -1056,9 +953,7 @@
             localAudioTrack.setEnabled(!isMicMuted);
             updateAudioControlUI();
             showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan');
-            try {
-                await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { isMuted: isMicMuted }, { merge: true });
-            } catch(e) {}
+            try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { isMuted: isMicMuted }, { merge: true }); } catch(e) {}
         }
 
         function toggleSpeaker() {
@@ -1094,7 +989,6 @@
                 badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
             }
-            
             if (isSpeakerOn) {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
                 spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
@@ -1105,7 +999,7 @@
             lucide.createIcons();
         }
 
-        // ============ OPTIMASI CHAT (INSTAN TANPA DELAY) ============
+        // ============ CHAT INSTAN & OPTIMASI ============
         function initFirebaseChat() {
             const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
@@ -1113,53 +1007,40 @@
                 let isNewMessage = false;
                 let newChats = [];
 
-                snapshot.forEach((docSnap) => {
-                    const data = { id: docSnap.id, ...docSnap.data() };
-                    const msgTs = (data.timestamp?.toMillis) ? data.timestamp.toMillis() : (data.timestamp || 0);
-                    
-                    // Deteksi jika ada pesan baru dari orang lain
-                    if (msgTs > lastKnownChatTs) {
-                        if (data.senderUid !== currentUserUid && !data.isEmergency && lastKnownChatTs !== 0) {
-                            isNewMessage = true;
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = { id: change.doc.id, ...change.doc.data() };
+                        const msgTs = (data.timestamp?.toMillis) ? data.timestamp.toMillis() : (data.timestamp || 0);
+                        
+                        if (msgTs > lastKnownChatTs) {
+                            if (data.senderUid !== currentUserUid && !data.isEmergency && lastKnownChatTs !== 0) {
+                                isNewMessage = true;
+                            }
+                            lastKnownChatTs = msgTs;
                         }
-                        lastKnownChatTs = msgTs;
-                    }
 
-                    // Hanya render jika ID belum ada di layar
-                    if (!renderedChatIds.has(data.id)) {
-                        newChats.push(data);
+                        if (!renderedChatIds.has(data.id)) {
+                            newChats.push(data);
+                            renderedChatIds.add(data.id);
+                        }
                     }
                 });
 
                 if (isNewMessage) triggerChatNotification();
 
                 if (newChats.length > 0) {
-                    // Urutkan pesan baru
                     newChats.sort((a, b) => {
-                        const getMs = (val) => {
-                            if (!val) return 0;
-                            if (typeof val.toMillis === 'function') return val.toMillis();
-                            if (typeof val === 'number') return val;
-                            return 0;
-                        };
+                        const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
                         return getMs(a.timestamp) - getMs(b.timestamp);
                     });
 
-                    // Render HANYA pesan baru
-                    newChats.forEach(data => {
-                        renderMessageBubble(data);
-                        renderedChatIds.add(data.id);
-                    });
-
                     const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 100;
+                    newChats.forEach(data => renderMessageBubble(data));
                     if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                     lucide.createIcons();
                 }
-            }, (error) => { 
-                console.error("Chat Error:", error); 
-            });
+            }, (error) => { console.error("Chat Error:", error); });
         }
-        // ============================================================
 
         function renderMessageBubble(data) {
             const feed = $('chat-feed'); const wrapper = document.createElement('div');
@@ -1185,34 +1066,21 @@
             if (!text) return;
             if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
             const senderName = joinedSlotIndex !== null ? userProfile.name : 'Warga';
-            
-            // KOSONGKAN INPUT & LANGSUNG KIRIM (TANPA NUNGGU)
-            $('chat-input').value = '';
-
+            $('chat-input').value = ''; // Kosongkan instan
             try {
                 await addDoc(collection(db, "chats"), {
-                    senderUid: currentUserUid, 
-                    sender: senderName, 
-                    message: text,
-                    timestamp: Date.now(), 
-                    time: getCurrentTime(),
+                    senderUid: currentUserUid, sender: senderName, message: text,
+                    timestamp: Date.now(), time: getCurrentTime(),
                     tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
                     isEmergency: !!opts.isEmergency
                 });
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
         function sendSystemChat(text) { sendChatToDB(text); }
-        
-        function submitChatForm(e) { 
-            e.preventDefault(); 
-            const input = $('chat-input'); 
-            const val = input.value.trim(); 
-            if (!val) return; 
-            sendChatToDB(val); 
-        }
+        function submitChatForm(e) { e.preventDefault(); const val = $('chat-input').value.trim(); if (!val) return; sendChatToDB(val); }
 
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
-        function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
+        function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); }
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
         function selectSosCategory(btn, category) {
             selectedSosCategory = category;
@@ -1257,12 +1125,7 @@
                     if (data.senderUid === currentUserUid) return;
                     if (processedSosIds.includes(docId)) return;
                     
-                    const getMs = (val) => {
-                        if (!val) return 0;
-                        if (typeof val.toMillis === 'function') return val.toMillis();
-                        if (typeof val === 'number') return val;
-                        return 0;
-                    };
+                    const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
                     const timeDiff = Date.now() - getMs(data.timestamp);
                     
                     if (timeDiff > 60000) return;
@@ -1319,13 +1182,10 @@
                             if (window.AgoraRTC?.resumeAudioContext) {
                                 await AgoraRTC.resumeAudioContext();
                             }
-                            const silentAudio = $('silent-audio');
-                            if (silentAudio) silentAudio.play().catch(e=>{});
-                            
                             for (const uid in remoteAudioTracks) {
                                 try { await remoteAudioTracks[uid].play(); } catch(e) {}
                             }
-                        } catch(e) { console.log("Gagal resume audio", e); }
+                        } catch(e) {}
                     }
                 }
             });
