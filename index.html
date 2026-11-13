@@ -318,24 +318,23 @@
         document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
         document.body.addEventListener('click', unlockAudioContext, { once: true });
 
+        // AUTOMATISASI LOGIN & SYNC SAAT HALAMAN DIBUKA (TANPA PERLU KLIK SOS)
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
             listenToOnlineUsers(); 
             fetchLatestAgoraToken(); 
             listenToActiveSlots(); 
+            initFirebaseChat();
+            listenIncomingSos(); // Langsung aktif mendengarkan SOS masuk sejak awal
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
-        // 5 SLOT KOSONG (BEBAS DITEMPATI WARGA SECARA REAL-TIME)
         const MAX_SLOTS = 5;
         const DEFAULT_VISIBLE = 5;
         let isVoiceGridExpanded = false;
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
-
-        // TANPA DATA DUMMY AWAL, SEMUA KOSONG MENUNGGU WARGA JOIN
-        let initialOccupants = [];
 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
             return { id:i, occupied:false };
@@ -789,7 +788,7 @@
                 chats.forEach((data) => renderMessageBubble(data, isAtBottom));
                 if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                 lucide.createIcons();
-            }, (error) => { alert("Gagal Memuat Chat: " + error.message); });
+            }, (error) => { console.error("Gagal Memuat Chat:", error); });
         }
 
         function renderMessageBubble(data, isAtBottom) {
@@ -889,6 +888,8 @@
                         showSosUI(data.reporter, data.category);
                     }
                 });
+            }, (error) => {
+                console.error("Error mendengarkan SOS:", error);
             });
         }
 
@@ -901,7 +902,7 @@
         function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
         window.addEventListener('load', () => {
-            renderVoiceGrid(); initFirebaseChat(); listenIncomingSos(); lucide.createIcons();
+            renderVoiceGrid(); lucide.createIcons();
             const holdBtn = $('hold-sos-btn');
             holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
             holdBtn.addEventListener('touchend', cancelHoldSos);
