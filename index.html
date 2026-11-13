@@ -717,10 +717,11 @@
             });
             lucide.createIcons();
             updateCounters();
+            
             if (joinedSlotIndex !== null) {
                 $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> <span class="text-purple-300">Mode Admin</span>`;
             } else {
-                $('admin-hint').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Streaming Ronda`;
+                $('admin-hint').innerHTML = ''; 
             }
             lucide.createIcons();
         }
@@ -1108,8 +1109,11 @@
             const senderName = joinedSlotIndex !== null ? userProfile.name : 'Warga';
             try {
                 await addDoc(collection(db, "chats"), {
-                    senderUid: currentUserUid, sender: senderName, message: text,
-                    timestamp: Date.now(), time: getCurrentTime(),
+                    senderUid: currentUserUid, 
+                    sender: senderName, 
+                    message: text,
+                    timestamp: Date.now(), // <--- KEMBALI KE DATE.NOW() AGAR LANGSUNG MUNCUL
+                    time: getCurrentTime(),
                     tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
                     isEmergency: !!opts.isEmergency
                 });
@@ -1147,7 +1151,7 @@
             try {
                 await addDoc(collection(db, "sos_alerts"), {
                     senderUid: currentUserUid, reporter: reporterLabel,
-                    category: selectedSosCategory, timestamp: Date.now(), active: true
+                    category: selectedSosCategory, timestamp: Date.now(), active: true // <--- KEMBALI KE DATE.NOW()
                 });
                 await sendChatToDB(`🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}. Segera merapat!`, { isEmergency: true });
                 showToast("SOS Berhasil Dikirim!");
