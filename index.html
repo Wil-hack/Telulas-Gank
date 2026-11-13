@@ -60,6 +60,14 @@
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
         .focus-ring:focus-visible { outline: 2px solid #10b981; }
+
+        /* Animasi Tombol Paksa Suara */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .btn-pulse { animation: pulse-ring 2s infinite; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
@@ -123,6 +131,7 @@
                 </button>
             </div>
 
+            <!-- Compact Audio Control Bar -->
             <div id="audio-control-bar" class="hidden mt-2 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2 min-w-0">
                     <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
@@ -130,10 +139,17 @@
                     </div>
                     <div class="min-w-0">
                         <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
-                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Suara Agora Terhubung</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Speaker: Aktif</p>
                     </div>
                 </div>
+                
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <!-- TOMBOL PENTING: PAKSA SUARA -->
+                    <button type="button" id="btn-force-audio" onclick="forceAudioPlay()" class="btn-pulse px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95" title="Klik jika tidak mendengar suara">
+                        <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                        <span>Dengar</span>
+                    </button>
+
                     <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
                     <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
                     <button type="button" onclick="leaveSlot()" class="px-2.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/35 text-xs font-semibold active:scale-95"><i data-lucide="phone-off" class="w-3.5 h-3.5"></i></button>
@@ -205,7 +221,7 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Pastikan Mikrofon diizinkan).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Klik "Izinkan" untuk Mikrofon).</p>
             
             <div class="space-y-3 mb-5">
                 <div class="relative">
@@ -297,6 +313,7 @@
         let agoraClient = null;
         let localAudioTrack = null;
         let localAgoraUid = null; 
+        let isAudioUnlocked = false;
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -470,6 +487,7 @@
         window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
         window.toggleTargetMute = toggleTargetMute; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
         window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm; window.sendQuickChat = sendQuickChat;
+        window.forceAudioPlay = forceAudioPlay;
 
         const $ = id => document.getElementById(id);
         const countJoined = () => voiceSlots.filter(s => s.occupied).length;
@@ -634,16 +652,7 @@
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
                     if (mediaType === "audio") {
-                        try {
-                            user.audioTrack.play();
-                        } catch (err) {
-                            console.error("Gagal memutar suara otomatis. Memaksa putar via elemen audio...", err);
-                            // FALLBACK: Paksa putar lewat HTML Audio jika browser blokir
-                            const audioEl = document.createElement('audio');
-                            audioEl.srcObject = user.audioTrack.getMediaStreamTrack();
-                            audioEl.autoplay = true;
-                            audioEl.play().catch(e => console.log("Browser blokir mutlak:", e));
-                        }
+                        user.audioTrack.play().catch(e => console.log("Autoplay diblokir, tunggu klik user."));
                     }
                 });
 
@@ -665,6 +674,7 @@
 
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
+                isAudioUnlocked = false; // Reset status audio
 
                 await setDoc(doc(db, "active_slots", currentUserUid), {
                     slotId: index, uid: currentUserUid, agoraUid: localAgoraUid,
@@ -680,9 +690,10 @@
                 };
 
                 $('audio-control-bar').classList.remove('hidden');
+                $('btn-force-audio').classList.remove('hidden'); // Munculkan tombol dengar
                 updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
-                showToast(`Suara Agora Terhubung!`);
+                showToast(`Suara Terhubung! Klik "Dengar" jika sunyi.`);
                 await requestWakeLock();
 
             } catch (err) {
@@ -692,25 +703,44 @@
         }
 
         // ==========================================
-        // PERBAIKAN: TOMBOL KELUAR INSTAN (ANTI MACET)
+        // FUNGSI PAKSA SUARA KELUAR
+        // ==========================================
+        function forceAudioPlay() {
+            if (!agoraClient) return;
+            
+            let playedCount = 0;
+            agoraClient.remoteUsers.forEach(user => {
+                if (user.audioTrack) {
+                    user.audioTrack.play();
+                    playedCount++;
+                }
+            });
+
+            isAudioUnlocked = true;
+            $('btn-force-audio').classList.add('hidden'); // Sembunyikan tombol setelah diklik
+            showToast(playedCount > 0 ? "Suara diaktifkan!" : "Menunggu warga lain bicara...");
+        }
+
+        // ==========================================
+        // FUNGSI KELUAR INSTAN (ANTI MACET)
         // ==========================================
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
 
-            // 1. SIMPAN UID LOKAL SEBELUM DIHAPUS
             const localUid = currentUserUid;
             const prevIndex = joinedSlotIndex;
 
-            // 2. RESET UI SEKETIKA (Agar tidak macet menunggu server)
+            // 1. Reset UI Seketika
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
+            $('btn-force-audio').classList.add('hidden');
             renderVoiceGrid();
             showToast('Keluar dari ruang suara');
             sendSystemChat('Anda keluar dari ruang suara.');
             releaseWakeLock();
 
-            // 3. LAKUKAN PEMBERSIHAN DI LATAR BELAKANG
+            // 2. Bersihkan Hardware & Server di Background
             try {
                 if (localAudioTrack) { 
                     localAudioTrack.stop(); 
