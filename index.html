@@ -319,28 +319,25 @@
             setupPresence(); 
             listenToOnlineUsers(); 
             fetchLatestAgoraToken(); 
-            listenToActiveSlots(); // PANGGIL FUNGSI SINKRONISASI SLOT
+            listenToActiveSlots(); 
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
         // ==========================================
-        // FUNGSI SINKRONISASI SLOT (REAL-TIME)
+        // SINKRONISASI SLOT SUARA
         // ==========================================
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
-                // Reset semua slot ke kondisi kosong
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
                     return { id:i, occupied:false };
                 });
 
-                // Isi slot dengan data statis (hiasan)
                 initialOccupants.forEach((occ, i) => {
                     voiceSlots[i] = { id:i, occupied:true, isSelf:false, ...occ };
                 });
 
-                // Timpa dengan data real dari database
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const slotId = data.slotId;
@@ -354,13 +351,12 @@
                             initials: data.name.substring(0, 2).toUpperCase(),
                             gradient: 'from-emerald-400 to-emerald-600',
                             isSpeaking: false, 
-                            isMuted: data.isMuted || false, 
+                            isMuted: false, 
                             mutedByAdmin: false
                         };
                     }
                 });
 
-                // Jika user ini sedang join, pastikan UI-nya menampilkan 'Anda'
                 if (joinedSlotIndex !== null && voiceSlots[joinedSlotIndex]) {
                     voiceSlots[joinedSlotIndex].isSelf = true;
                 }
@@ -635,8 +631,12 @@
             }
 
             try {
+                // FIX UID_CONFLICT: Gunakan UID Acak Baru (Number) setiap kali join
+                const randomAgoraUid = Math.floor(Math.random() * 100000000);
+
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, currentUserUid);
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, randomAgoraUid);
+                
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await agoraClient.publish([localAudioTrack]);
 
@@ -648,7 +648,7 @@
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
 
-                // SIMPAN KE FIREBASE AGAR SINKRON
+                // Simpan ke Firebase
                 await setDoc(doc(db, "active_slots", currentUserUid), {
                     slotId: index,
                     uid: currentUserUid,
@@ -665,7 +665,7 @@
 
             } catch (err) {
                 console.error("Agora Error:", err);
-                alert("GAGAL SUARA: " + err.message);
+                alert("GAGAL SUARA: " + err.message + "\n\nPastikan Mikrofon diizinkan & Token benar.");
             }
         }
 
@@ -674,7 +674,6 @@
             if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
             if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
 
-            // HAPUS DARI FIREBASE
             try {
                 await deleteDoc(doc(db, "active_slots", currentUserUid));
             } catch (e) { console.error(e); }
@@ -707,19 +706,19 @@
             const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
             const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
             const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
+            
             if (isMicMuted) {
                 btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
                 micLabel.textContent = 'Mic Mute'; micLabel.className = 'text-xs font-bold text-rose-300 truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic-off'); 
-                badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-rose-400');
+                badgeIcon.setAttribute('data-lucide', 'mic-off'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-rose-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
             } else {
                 btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
                 micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic'); 
-                badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
+                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
             }
+            
             if (isSpeakerOn) {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
                 spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
