@@ -644,13 +644,12 @@
             }
 
             try {
-                await AgoraRTC.setAudioProfile("speech_standard");
-                
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 
+                // Konfigurasi mic langsung menggunakan encoder config standar suara (menggantikan setAudioProfile yang error)
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
                     AEC: true,
