@@ -342,7 +342,6 @@
                 document.getElementById('admin-token-section').classList.remove('hidden');
                 document.getElementById('new-agora-token').value = AGORA_TOKEN;
                 
-                // Tampilkan potongan token saat ini
                 const disp = document.getElementById('current-token-display');
                 if (AGORA_TOKEN) {
                     disp.textContent = AGORA_TOKEN.substring(0, 10) + "...";
@@ -615,8 +614,7 @@
 
             } catch (err) {
                 console.error("Agora Error:", err);
-                // MENAMPILKAN ERROR ASLI DARI AGORA
-                alert("GAGAL SUARA: " + err.message + "\n\nCek: Apakah Token dibuat dengan UID KOSONG dan Channel Name yang benar (telulas-gank-rw13)?");
+                alert("GAGAL SUARA: " + err.message);
             }
         }
 
@@ -655,18 +653,25 @@
         function updateAudioControlUI() {
             const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
             const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
-            const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
+            
+            // PERBAIKAN: Gunakan setAttribute untuk SVG
+            const badgeIcon = $('mic-badge-icon'); 
+            const badgeBg = $('mic-badge-bg');
+
             if (isMicMuted) {
                 btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
                 micLabel.textContent = 'Mic Mute'; micLabel.className = 'text-xs font-bold text-rose-300 truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic-off'); badgeIcon.className = 'w-3.5 h-3.5 text-rose-400';
+                badgeIcon.setAttribute('data-lucide', 'mic-off'); 
+                badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-rose-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
             } else {
                 btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
                 micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.className = 'w-3.5 h-3.5 text-emerald-400';
+                badgeIcon.setAttribute('data-lucide', 'mic'); 
+                badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
             }
+            
             if (isSpeakerOn) {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
                 spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
