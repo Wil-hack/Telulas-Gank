@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telulas Gank - Ronda Nguling RW 13</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050911">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font tambahan untuk judul yang lebih kece -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -66,7 +68,7 @@
         <div class="absolute -bottom-28 left-1/3 w-96 h-96 bg-teal-900/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- ================= LAYAR LOGIN / REGISTER (KUNCI APLIKASI) ================= -->
+    <!-- ================= LAYAR LOGIN / REGISTER ================= -->
     <div id="auth-screen" class="fixed inset-0 z-[200] bg-night-950 flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden animate-sheet-up">
             
@@ -78,14 +80,12 @@
                 <p class="text-[11px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Ronda Nguling RW 13</p>
             </div>
 
-            <!-- FORM LOGIN -->
             <div id="form-login">
                 <div class="space-y-3">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div>
                         <input type="text" id="login-username" placeholder="Username Anda" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
                     </div>
-                    <!-- INPUT PASSWORD DENGAN IKON MATA -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div>
                         <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
@@ -98,14 +98,12 @@
                 <p class="text-center text-xs text-slate-400 mt-5">Belum punya akun? <button onclick="toggleAuth('register')" class="text-emerald-400 font-bold hover:underline">Daftar Warga</button></p>
             </div>
 
-            <!-- FORM REGISTER -->
             <div id="form-register" class="hidden">
                 <div class="space-y-3">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div>
                         <input type="text" id="reg-username" placeholder="Buat Username" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
                     </div>
-                    <!-- INPUT PASSWORD DENGAN IKON MATA -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div>
                         <input type="password" id="reg-password" placeholder="Buat Password (Min. 6 Karakter)" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
@@ -185,14 +183,21 @@
                 <div class="flex items-center gap-1.5">
                     <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
                     <span class="text-xs font-semibold text-slate-300">Obrolan Warga</span>
+                    <span id="typing-indicator" class="text-[10px] text-emerald-400 italic hidden animate-pulse ml-2">Seseorang mengetik...</span>
                 </div>
                 <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Real-time</span>
             </div>
-            <div id="chat-feed" class="flex-1 overflow-y-auto px-3.5 py-3 space-y-3 scroll-smooth"></div>
+            
+            <div id="chat-feed" class="flex-1 overflow-y-auto px-3.5 py-3 scroll-smooth flex flex-col">
+                <!-- Tombol Load More -->
+                <div class="flex justify-center mb-2">
+                    <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
+                </div>
+            </div>
             
             <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
-                    <input type="text" id="chat-input" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-3.5 py-2.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
+                    <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-3.5 py-2.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
                     <button type="submit" class="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg active:scale-95 shrink-0 flex items-center justify-center"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </form>
             </div>
@@ -230,9 +235,7 @@
                 <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
             </div>
             <div id="admin-pin-section">
-                <!-- Tulisan PIN 1234 dihilangkan -->
                 <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora.</p>
-                <!-- Input PIN dengan Ikon Mata -->
                 <div class="relative mb-4">
                     <input type="password" id="admin-pin-input" placeholder="Masukkan PIN" class="w-full bg-slate-900/95 text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl border border-slate-700/80 focus:outline-none focus:border-amber-500/70 transition pr-12">
                     <button type="button" onclick="togglePasswordVisibility('admin-pin-input', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-amber-400 transition cursor-pointer">
@@ -242,12 +245,15 @@
                 <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
                 
                 <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
-                    <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition">
-                        <i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara (Diagnostik)
+                    <!-- TOMBOL DAFTAR WARGA -->
+                    <button type="button" onclick="openUserListModal()" class="w-full py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-600/30 transition">
+                        <i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga
                     </button>
-                    <!-- TOMBOL LOGOUT TERSEMBUNYI -->
+                    <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition">
+                        <i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara
+                    </button>
                     <button type="button" onclick="doLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-500/30 transition">
-                        <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun (Logout)
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun
                     </button>
                 </div>
             </div>
@@ -260,6 +266,17 @@
                 </button>
             </div>
             <button type="button" onclick="closeAdminTokenModal()" class="mt-3 w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
+        </div>
+    </div>
+
+    <!-- MODAL DAFTAR WARGA (BAN) -->
+    <div id="user-list-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 h-[80vh] flex flex-col relative animate-sheet-up">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-extrabold text-white">Daftar Warga</h3>
+                <button onclick="closeUserListModal()" class="text-slate-400 text-xs bg-slate-800 px-3 py-1 rounded-lg">Tutup</button>
+            </div>
+            <div id="user-list-feed" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
         </div>
     </div>
 
@@ -363,8 +380,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch, startAfter, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
@@ -377,12 +395,18 @@
 
         const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
         const AGORA_CHANNEL = "telulas-gank-rw13"; 
-        
-        // PIN DIUBAH MENJADI 7454
         const ADMIN_PIN = "7454";
         const ADMIN_USERNAME = "wildan jaka"; 
+        
+        // KOSONGKAN SAJA JIKA TIDAK PAKAI FCM / TIDAK PUNYA VAPID KEY
+        const VAPID_KEY = "VAPID_KEY_DISINI"; 
 
-        try { AgoraRTC.setLogLevel(0); } catch(e) {}
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        let messaging = null;
+        try { messaging = getMessaging(app); } catch (e) { console.log("FCM tidak didukung browser ini"); }
 
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
@@ -390,26 +414,50 @@
         let localAgoraUid = null; 
         let remoteAudioTracks = {};
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
         let currentUserUid = null;
         let currentUsername = '';
         let isAdmin = false;
         let onlineUserCount = 0;
         let processedSosIds = [];
         
-        let renderedChatIds = new Set();
-        let lastKnownChatTs = 0;
-        let hasClearedChatThisEmptySession = false;
+        let lastVisibleChatDoc = null;
+        let isLoadingMore = false;
+        let typingTimeout = null;
 
         const MAX_SLOTS = 20;
         const SLOT_TIMEOUT_MS = 30000; 
 
         const $ = id => document.getElementById(id);
 
-        // ================= SISTEM LOGIN & AUTH =================
+        // ================= PWA & FCM =================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then((registration) => {
+                console.log('Service Worker registered');
+                if (messaging && VAPID_KEY !== "VAPID_KEY_DISINI") {
+                    Notification.requestPermission().then((permission) => {
+                        if (permission === 'granted') {
+                            getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
+                            .then((currentToken) => {
+                                if (currentToken && currentUserUid) {
+                                    setDoc(doc(db, "users", currentUserUid), { fcmToken: currentToken }, { merge: true });
+                                }
+                            }).catch((err) => { console.log('Gagal ambil token FCM: ', err); });
+                        }
+                    });
+                }
+            });
+        }
+
+        if(messaging) {
+            onMessage(messaging, (payload) => {
+                if(payload.notification) {
+                    showToast(`${payload.notification.title}: ${payload.notification.body}`);
+                    triggerChatNotification();
+                }
+            });
+        }
+        // ========================================================
+
         window.toggleAuth = (mode) => {
             if (mode === 'register') {
                 $('form-login').classList.add('hidden');
@@ -420,7 +468,6 @@
             }
         }
 
-        // FUNGSI UNTUK LIHAT PASSWORD
         window.togglePasswordVisibility = (inputId, btnElement) => {
             const input = $(inputId);
             const icon = btnElement.querySelector('i');
@@ -462,7 +509,8 @@
                 
                 await setDoc(doc(db, "users", userCred.user.uid), {
                     username: user,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    isBanned: false
                 });
 
                 alert(`Pendaftaran Berhasil! Selamat datang ${user}.`);
@@ -489,8 +537,16 @@
                 
                 const userDoc = await getDoc(doc(db, "users", currentUserUid));
                 if (userDoc.exists()) {
-                    currentUsername = userDoc.data().username;
+                    const userData = userDoc.data();
                     
+                    if (userData.isBanned) {
+                        alert("Akun Anda telah diblokir oleh Admin karena melanggar aturan.");
+                        await signOut(auth);
+                        location.reload();
+                        return;
+                    }
+
+                    currentUsername = userData.username;
                     isAdmin = (currentUsername.toLowerCase() === ADMIN_USERNAME);
                     
                     $('role-badge').textContent = isAdmin ? 'Admin' : 'Warga';
@@ -508,6 +564,7 @@
                     fetchLatestAgoraToken(); 
                     listenToActiveSlots(); 
                     initFirebaseChat();
+                    listenTypingStatus();
                     listenIncomingSos();
                     startHeartbeat();
                     startStaleCleanup();
@@ -522,119 +579,218 @@
                 $('auth-screen').classList.remove('hidden');
             }
         });
-        // ========================================================
 
-        function vlog(...args) {
-            console.log("[VOICE]", ...args);
-            const logEl = $('diag-log');
-            if (logEl) {
-                const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
-                logEl.innerHTML += `> ${msg}<br>`;
-                if (logEl.children.length > 50) logEl.removeChild(logEl.firstChild);
-                logEl.scrollTop = logEl.scrollHeight;
-            }
-        }
-
-        let diagOpen = false;
-        function toggleDiag() { diagOpen = !diagOpen; $('diag-overlay').classList.toggle('hidden', !diagOpen); if (diagOpen) updateDiagUI(); }
-        window.toggleDiag = toggleDiag;
-
-        function setCheck(id, ok, val) {
-            const el = $(id); if (!el) return;
-            el.textContent = ok === true ? '✅' : ok === false ? '❌' : '⏳';
-            if (val !== undefined) { const v = $('val-' + id.replace('chk-','')); if (v) v.textContent = val; }
-        }
-
-        function updateDiagUI() {
-            setCheck('chk-token', !!AGORA_TOKEN, AGORA_TOKEN ? `ok (${AGORA_TOKEN.length}c)` : 'belum');
-            const conn = agoraClient ? agoraClient.connectionState : 'disconnected';
-            setCheck('chk-agora', conn === 'CONNECTED', conn);
-            const hasMic = !!localAudioTrack;
-            setCheck('chk-mic', hasMic, hasMic ? (isMicMuted ? 'mute' : 'aktif') : 'belum');
-            const ru = agoraClient ? agoraClient.remoteUsers.length : 0;
-            setCheck('chk-remotes', ru > 0, String(ru));
-            const rt = Object.keys(remoteAudioTracks).length;
-            setCheck('chk-tracks', rt > 0, String(rt));
-            const listEl = $('remote-list');
-            if (listEl && agoraClient) {
-                listEl.innerHTML = agoraClient.remoteUsers.map(u => {
-                    const t = remoteAudioTracks[u.uid];
-                    const playing = t && t.isPlaying ? '🔊 playing' : '🔇 silent';
-                    return `<div class="flex justify-between"><span>UID ${u.uid}</span><span>${u.hasAudio ? '🎤' : '❌'} ${playing}</span></div>`;
-                }).join('') || '<div class="text-slate-500">(tidak ada)</div>';
-            }
-        }
-        setInterval(updateDiagUI, 1000);
-
-        async function testSpeakerTone() {
-            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -8; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 250); setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 500); showToast("🔔 Test tone diputar. Dengar beep?"); } catch(e) { alert("Tone error: " + e.message); }
-        }
-        window.testSpeakerTone = testSpeakerTone;
-
-        async function forceRepublish() {
-            if (!agoraClient || !localAudioTrack) { alert("Belum join!"); return; }
-            try { await agoraClient.unpublish([localAudioTrack]); await new Promise(r => setTimeout(r, 500)); await agoraClient.publish([localAudioTrack]); showToast("Mic di-republish"); } catch(e) { alert("Gagal: " + e.message); }
-        }
-        window.forceRepublish = forceRepublish;
-
-        let audioPrimed = false;
-        async function primeAudio() {
-            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
-            if (audioPrimed) return;
-            audioPrimed = true;
-            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
-            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
-        }
-
-        document.addEventListener('pointerdown', primeAudio, { capture: true });
-        document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
-        document.addEventListener('click', primeAudio, { capture: true });
-        document.addEventListener('keydown', primeAudio, { capture: true });
-
-        if (window.AgoraRTC) { AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; }; }
-
-        function showUnlockBanner() { $('unlock-audio-banner').classList.remove('hidden'); lucide.createIcons(); }
-        function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
-        
-        async function doUnlockAudio() {
-            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200); } catch(e) {}
-            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
-            let played = 0;
-            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); played++; } catch(e) {} }
-            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
-            showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
-        }
-        window.doUnlockAudio = doUnlockAudio;
-
-        let keepAliveCtx = null;
-        let silentOscillator = null;
-
-        function startBackgroundKeepAlive() {
-            if (keepAliveCtx) return;
+        // ================= FITUR BAN =================
+        window.openUserListModal = async () => {
+            closeAdminTokenModal();
+            $('user-list-modal').classList.remove('hidden');
+            const feed = $('user-list-feed');
+            feed.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Memuat data...</div>';
+            
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                keepAliveCtx = new AudioContext();
-                silentOscillator = keepAliveCtx.createOscillator();
-                const gainNode = keepAliveCtx.createGain();
-                gainNode.gain.value = 0.0001; 
-                silentOscillator.connect(gainNode);
-                gainNode.connect(keepAliveCtx.destination);
-                silentOscillator.start();
-                if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' }); }
-            } catch(e) { console.log("KeepAlive error:", e); }
+                const snap = await getDocs(collection(db, "users"));
+                feed.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const uid = docSnap.id;
+                    const isBanned = data.isBanned ? true : false;
+                    const banText = isBanned ? 'Buka Blokir' : 'Blokir';
+                    const banColor = isBanned ? 'bg-emerald-600' : 'bg-rose-600';
+                    const isSelf = uid === currentUserUid;
+
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">${data.username.substring(0,2).toUpperCase()}</div>
+                            <div>
+                                <p class="text-xs font-bold text-white">${escapeHTML(data.username)}</p>
+                                <p class="text-[9px] text-slate-400">${isBanned ? '<span class="text-rose-400">Diblokir</span>' : 'Aktif'}</p>
+                            </div>
+                        </div>
+                        ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">Anda</span>' : 
+                        `<button onclick="toggleBan('${uid}', ${isBanned})" class="px-2.5 py-1.5 rounded-lg ${banColor} text-white text-[10px] font-bold shadow">${banText}</button>`}
+                    `;
+                    feed.appendChild(item);
+                });
+            } catch (e) {
+                feed.innerHTML = `<div class="text-center text-rose-500 text-xs py-4">Gagal memuat: ${e.message}</div>`;
+            }
         }
 
-        function stopBackgroundKeepAlive() {
-            if (silentOscillator) { silentOscillator.stop(); silentOscillator.disconnect(); silentOscillator = null; }
-            if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
-            if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+        window.closeUserListModal = () => { $('user-list-modal').classList.add('hidden'); }
+
+        window.toggleBan = async (uid, currentStatus) => {
+            if (!isAdmin) return;
+            const action = currentStatus ? 'membuka blokir' : 'memblokir';
+            if (!confirm(`Yakin ingin ${action} akun ini?`)) return;
+            
+            try {
+                await updateDoc(doc(db, "users", uid), { isBanned: !currentStatus });
+                showToast(`Akun berhasil di${action}.`);
+                openUserListModal(); 
+            } catch (e) { alert("Gagal update: " + e.message); }
         }
 
-        async function triggerChatNotification() {
-            try { navigator.vibrate([200, 100, 200]); } catch(e) {}
-            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "16n"); setTimeout(() => synth.triggerAttackRelease("E5", "16n"), 150); } } catch(e) {}
+        // ================= TYPING INDICATOR =================
+        window.handleTyping = () => {
+            if (!currentUserUid) return;
+            const typingRef = doc(db, "typing_status", currentUserUid);
+            
+            setDoc(typingRef, { name: currentUsername, isTyping: true, lastUpdate: Date.now() }).catch(()=>{});
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                deleteDoc(typingRef).catch(()=>{});
+            }, 2000);
         }
 
+        function listenTypingStatus() {
+            onSnapshot(collection(db, "typing_status"), (snapshot) => {
+                const now = Date.now();
+                let typingUsers = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.isTyping && (now - data.lastUpdate < 3000) && docSnap.id !== currentUserUid) {
+                        typingUsers.push(data.name);
+                    }
+                });
+
+                const indicator = $('typing-indicator');
+                if (typingUsers.length > 0) {
+                    indicator.textContent = typingUsers.length === 1 ? `${typingUsers[0]} mengetik...` : `Beberapa orang mengetik...`;
+                    indicator.classList.remove('hidden');
+                } else {
+                    indicator.classList.add('hidden');
+                }
+            });
+        }
+
+        // ================= CHAT & PAGINATION =================
+        function initFirebaseChat() {
+            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snapshot) => {
+                const feed = $('chat-feed');
+                if (!snapshot.empty) {
+                    lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
+                }
+
+                let chats = [];
+                let isNewMessage = false;
+                
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" && change.doc.data().senderUid !== currentUserUid) {
+                        isNewMessage = true;
+                    }
+                });
+
+                if(isNewMessage && feed.innerHTML !== '') triggerChatNotification();
+
+                snapshot.forEach((docSnap) => chats.push({ id: docSnap.id, ...docSnap.data() }));
+                chats.reverse();
+
+                feed.innerHTML = `
+                    <div class="flex justify-center mb-2">
+                        <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
+                    </div>
+                `;
+
+                chats.forEach(data => renderMessageBubble(data, feed));
+                
+                // Hanya scroll ke bawah jika kita bukan sedang memuat pesan lama
+                if(!isLoadingMore) {
+                    feed.scrollTop = feed.scrollHeight;
+                }
+                lucide.createIcons();
+            });
+        }
+
+        window.loadMoreChats = async () => {
+            if (isLoadingMore || !lastVisibleChatDoc) return;
+            isLoadingMore = true;
+            const btn = $('btn-load-more');
+            if(btn) btn.textContent = 'Memuat...';
+
+            try {
+                const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), startAfter(lastVisibleChatDoc), limit(20));
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    if(btn) btn.textContent = 'Tidak ada pesan lama';
+                    isLoadingMore = false;
+                    return;
+                }
+
+                lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
+                let oldChats = [];
+                snapshot.forEach(docSnap => oldChats.push({ id: docSnap.id, ...docSnap.data() }));
+                oldChats.reverse();
+
+                const feed = $('chat-feed');
+                const oldScrollHeight = feed.scrollHeight;
+
+                const tempDiv = document.createElement('div');
+                tempDiv.className = 'flex flex-col space-y-3';
+                oldChats.forEach(data => renderMessageBubble(data, tempDiv));
+                
+                const loadBtnContainer = feed.firstElementChild;
+                loadBtnContainer.insertAdjacentElement('afterend', tempDiv);
+
+                if(btn) btn.textContent = 'Muat Pesan Sebelumnya';
+                
+                feed.scrollTop = feed.scrollHeight - oldScrollHeight;
+
+            } catch(e) {
+                console.error("Gagal load more", e);
+                if(btn) btn.textContent = 'Gagal memuat';
+            }
+            isLoadingMore = false;
+        }
+
+        function renderMessageBubble(data, targetFeed) {
+            const isSelf = (data.senderUid === currentUserUid);
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'} mb-3`;
+            
+            if (data.isEmergency) {
+                wrapper.className = 'w-full my-1';
+                wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
+                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${escapeHTML(data.time || '')}</span></div>
+                    <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
+                    <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
+            } else if (isSelf) {
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
+                    <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-md border border-emerald-400/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
+            } else {
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
+                    <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
+            }
+            targetFeed.appendChild(wrapper);
+        }
+
+        async function sendChatToDB(text, opts = {}) {
+            if (!text) return;
+            if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
+            const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
+            $('chat-input').value = ''; 
+            
+            // Hapus status typing langsung
+            deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
+
+            try {
+                await addDoc(collection(db, "chats"), {
+                    senderUid: currentUserUid, sender: senderName, message: text,
+                    timestamp: Date.now(), time: getCurrentTime(),
+                    tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
+                    isEmergency: !!opts.isEmergency
+                });
+            } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
+        }
+
+        function sendSystemChat(text) { sendChatToDB(text); }
+        function submitChatForm(e) { e.preventDefault(); const val = $('chat-input').value.trim(); if (!val) return; sendChatToDB(val); }
+
+        // ================= VOICE (AGORA) & SISANYA =================
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
         let joinedSlotIndex = null;
@@ -719,7 +875,6 @@
         function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
         function verifyAdminPin() {
             const pin = $('admin-pin-input').value;
-            // Cek PIN 7454
             if (pin === ADMIN_PIN) {
                 $('admin-pin-section').classList.add('hidden');
                 $('admin-token-section').classList.remove('hidden');
@@ -759,31 +914,7 @@
                 });
                 onlineUserCount = count;
                 updateCounters();
-
-                if (onlineUserCount <= 1) {
-                    if (!hasClearedChatThisEmptySession) {
-                        clearAllChats();
-                        hasClearedChatThisEmptySession = true;
-                        showToast("Room kosong. Obrolan di-reset.");
-                    }
-                } else {
-                    hasClearedChatThisEmptySession = false;
-                }
             });
-        }
-
-        async function clearAllChats() {
-            try {
-                const snap = await getDocs(collection(db, "chats"));
-                if (!snap.empty) {
-                    const batch = writeBatch(db);
-                    snap.forEach(d => batch.delete(d.ref));
-                    await batch.commit();
-                    $('chat-feed').innerHTML = '';
-                    renderedChatIds.clear();
-                    lastKnownChatTs = 0;
-                }
-            } catch(e) { console.log("Gagal hapus chat:", e); }
         }
 
         function startHeartbeat() {
@@ -1173,84 +1304,63 @@
             lucide.createIcons();
         }
 
-        function initFirebaseChat() {
-            const q = query(collection(db, "chats"), limit(50));
-            onSnapshot(q, (snapshot) => {
-                const feed = $('chat-feed');
-                let isNewMessage = false;
-                let newChats = [];
-
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const data = { id: change.doc.id, ...change.doc.data() };
-                        const msgTs = (data.timestamp?.toMillis) ? data.timestamp.toMillis() : (data.timestamp || 0);
-                        
-                        if (msgTs > lastKnownChatTs) {
-                            if (data.senderUid !== currentUserUid && !data.isEmergency && lastKnownChatTs !== 0) {
-                                isNewMessage = true;
-                            }
-                            lastKnownChatTs = msgTs;
-                        }
-
-                        if (!renderedChatIds.has(data.id)) {
-                            newChats.push(data);
-                            renderedChatIds.add(data.id);
-                        }
-                    }
-                });
-
-                if (isNewMessage) triggerChatNotification();
-
-                if (newChats.length > 0) {
-                    newChats.sort((a, b) => {
-                        const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
-                        return getMs(a.timestamp) - getMs(b.timestamp);
-                    });
-
-                    const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 100;
-                    newChats.forEach(data => renderMessageBubble(data));
-                    if (isAtBottom) feed.scrollTop = feed.scrollHeight;
-                    lucide.createIcons();
-                }
-            }, (error) => { console.error("Chat Error:", error); });
+        let audioPrimed = false;
+        async function primeAudio() {
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
+            if (audioPrimed) return;
+            audioPrimed = true;
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
         }
 
-        function renderMessageBubble(data) {
-            const feed = $('chat-feed'); const wrapper = document.createElement('div');
-            const isSelf = (data.senderUid === currentUserUid);
-            wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
-            if (data.isEmergency) {
-                wrapper.className = 'w-full my-1';
-                wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
-                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${escapeHTML(data.time || '')}</span></div>
-                    <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
-                    <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
-            } else if (isSelf) {
-                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
-                    <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-md border border-emerald-400/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
-            } else {
-                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
-                    <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
-            }
-            feed.appendChild(wrapper);
-        }
+        document.addEventListener('pointerdown', primeAudio, { capture: true });
+        document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
+        document.addEventListener('click', primeAudio, { capture: true });
+        document.addEventListener('keydown', primeAudio, { capture: true });
 
-        async function sendChatToDB(text, opts = {}) {
-            if (!text) return;
-            if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
-            const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
-            $('chat-input').value = ''; // Kosongkan instan
+        if (window.AgoraRTC) { AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; }; }
+
+        function showUnlockBanner() { $('unlock-audio-banner').classList.remove('hidden'); lucide.createIcons(); }
+        function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
+        
+        async function doUnlockAudio() {
+            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200); } catch(e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
+            let played = 0;
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); played++; } catch(e) {} }
+            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
+            showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
+        }
+        window.doUnlockAudio = doUnlockAudio;
+
+        let keepAliveCtx = null;
+        let silentOscillator = null;
+
+        function startBackgroundKeepAlive() {
+            if (keepAliveCtx) return;
             try {
-                await addDoc(collection(db, "chats"), {
-                    senderUid: currentUserUid, sender: senderName, message: text,
-                    timestamp: Date.now(), time: getCurrentTime(),
-                    tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
-                    isEmergency: !!opts.isEmergency
-                });
-            } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                keepAliveCtx = new AudioContext();
+                silentOscillator = keepAliveCtx.createOscillator();
+                const gainNode = keepAliveCtx.createGain();
+                gainNode.gain.value = 0.0001; 
+                silentOscillator.connect(gainNode);
+                gainNode.connect(keepAliveCtx.destination);
+                silentOscillator.start();
+                if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' }); }
+            } catch(e) { console.log("KeepAlive error:", e); }
         }
-        function sendSystemChat(text) { sendChatToDB(text); }
-        function submitChatForm(e) { e.preventDefault(); const val = $('chat-input').value.trim(); if (!val) return; sendChatToDB(val); }
+
+        function stopBackgroundKeepAlive() {
+            if (silentOscillator) { silentOscillator.stop(); silentOscillator.disconnect(); silentOscillator = null; }
+            if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
+            if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+        }
+
+        async function triggerChatNotification() {
+            try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "16n"); setTimeout(() => synth.triggerAttackRelease("E5", "16n"), 150); } } catch(e) {}
+        }
 
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
         function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); }
@@ -1353,11 +1463,13 @@
                     if (!$('admin-modal').classList.contains('hidden')) closeAdminModal();
                     if (!$('admin-token-modal').classList.contains('hidden')) closeAdminTokenModal();
                     if (!$('diag-overlay').classList.contains('hidden')) toggleDiag();
+                    if (!$('user-list-modal').classList.contains('hidden')) closeUserListModal();
                 }
             });
             $('sos-modal').addEventListener('click', e => { if (e.target === $('sos-modal')) closeSosModal(); });
             $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
             $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
+            $('user-list-modal').addEventListener('click', e => { if (e.target === $('user-list-modal')) closeUserListModal(); });
             
             document.addEventListener('visibilitychange', async () => {
                 if (document.visibilityState === 'visible') {
