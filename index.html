@@ -318,7 +318,7 @@
         document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
         document.body.addEventListener('click', unlockAudioContext, { once: true });
 
-        // AUTOMATISASI LOGIN & SYNC SAAT HALAMAN DIBUKA (TANPA PERLU KLIK SOS)
+        // AUTOMATISASI LOGIN & SYNC (SEMUA LISTENER AKTIF SEJAK HALAMAN DIBUKA)
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
@@ -326,7 +326,7 @@
             fetchLatestAgoraToken(); 
             listenToActiveSlots(); 
             initFirebaseChat();
-            listenIncomingSos(); // Langsung aktif mendengarkan SOS masuk sejak awal
+            listenIncomingSos(); // Otomatis aktif mendengarkan SOS masuk tanpa harus klik tombol apapun
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
