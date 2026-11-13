@@ -350,7 +350,7 @@
                             isSpeaking: false, 
                             isMuted: false, 
                             mutedByAdmin: false,
-                            agoraUid: data.agoraUid // Sinkronisasi ID Agora
+                            agoraUid: data.agoraUid
                         };
                     }
                 });
@@ -630,9 +630,6 @@
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 
-                // Paksa Speaker Luar (Loudspeaker) Aktif di HP
-                await agoraClient.setAudioRoute(1);
-
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await agoraClient.publish([localAudioTrack]);
 
@@ -691,7 +688,6 @@
             if (joinedSlotIndex === null) return;
             
             if (localAudioTrack) { 
-                // MEMASTIKAN INDIKATOR MIC HILANG
                 localAudioTrack.stop(); 
                 localAudioTrack.close(); 
                 localAudioTrack = null; 
