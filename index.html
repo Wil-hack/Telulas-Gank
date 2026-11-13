@@ -1068,20 +1068,36 @@
             lucide.createIcons();
         }
 
+        // ============ PERBAIKAN CHAT ============
         function initFirebaseChat() {
-            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(50));
+            // Hapus orderBy, ambil 50 dokumen saja
+            const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
                 const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 60;
                 let chats = [];
                 snapshot.forEach((docSnap) => chats.push({ id: docSnap.id, ...docSnap.data() }));
-                chats.reverse();
+                
+                // Urutkan secara manual di HP warga
+                chats.sort((a, b) => {
+                    const getMs = (val) => {
+                        if (!val) return 0;
+                        if (typeof val.toMillis === 'function') return val.toMillis(); // Firestore Timestamp
+                        if (typeof val === 'number') return val; // Date.now()
+                        return 0;
+                    };
+                    return getMs(a.timestamp) - getMs(b.timestamp);
+                });
+
                 feed.innerHTML = '';
                 chats.forEach((data) => renderMessageBubble(data));
                 if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                 lucide.createIcons();
-            }, (error) => { alert("Gagal Memuat Chat: " + error.message); });
+            }, (error) => { 
+                console.error("Chat Error:", error); 
+            });
         }
+        // =======================================
 
         function renderMessageBubble(data) {
             const feed = $('chat-feed'); const wrapper = document.createElement('div');
@@ -1112,7 +1128,7 @@
                     senderUid: currentUserUid, 
                     sender: senderName, 
                     message: text,
-                    timestamp: Date.now(), // <--- KEMBALI KE DATE.NOW() AGAR LANGSUNG MUNCUL
+                    timestamp: Date.now(), 
                     time: getCurrentTime(),
                     tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
                     isEmergency: !!opts.isEmergency
@@ -1151,14 +1167,17 @@
             try {
                 await addDoc(collection(db, "sos_alerts"), {
                     senderUid: currentUserUid, reporter: reporterLabel,
-                    category: selectedSosCategory, timestamp: Date.now(), active: true // <--- KEMBALI KE DATE.NOW()
+                    category: selectedSosCategory, timestamp: Date.now(), active: true 
                 });
                 await sendChatToDB(`🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}. Segera merapat!`, { isEmergency: true });
                 showToast("SOS Berhasil Dikirim!");
             } catch (e) { alert("Gagal Kirim SOS: " + e.message); }
         }
+        
+        // ============ PERBAIKAN SOS LISTENER ============
         function listenIncomingSos() {
-            const q = query(collection(db, "sos_alerts"), orderBy("timestamp", "desc"), limit(10));
+            // Hapus orderBy untuk menghindari bentrok tipe data
+            const q = query(collection(db, "sos_alerts"), limit(20)); 
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type !== "added") return;
@@ -1166,7 +1185,15 @@
                     const docId = change.doc.id;
                     if (data.senderUid === currentUserUid) return;
                     if (processedSosIds.includes(docId)) return;
-                    const timeDiff = Date.now() - (data.timestamp || 0);
+                    
+                    const getMs = (val) => {
+                        if (!val) return 0;
+                        if (typeof val.toMillis === 'function') return val.toMillis();
+                        if (typeof val === 'number') return val;
+                        return 0;
+                    };
+                    const timeDiff = Date.now() - getMs(data.timestamp);
+                    
                     if (timeDiff > 60000) return;
                     processedSosIds.push(docId);
                     if (processedSosIds.length > 100) processedSosIds.shift();
@@ -1174,6 +1201,8 @@
                 });
             });
         }
+        // ================================================
+
         function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
 
         let toastTimer;
