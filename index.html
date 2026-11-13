@@ -61,7 +61,6 @@
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
         .focus-ring:focus-visible { outline: 2px solid #10b981; }
 
-        /* Animasi Tombol Paksa Suara */
         @keyframes pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
@@ -80,6 +79,9 @@
 
     <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
+        <!-- Container Tersembunyi untuk Audio -->
+        <div id="remote-audios-container" class="hidden"></div>
+
         <!-- HEADER -->
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -131,7 +133,6 @@
                 </button>
             </div>
 
-            <!-- Compact Audio Control Bar -->
             <div id="audio-control-bar" class="hidden mt-2 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2 min-w-0">
                     <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
@@ -144,7 +145,6 @@
                 </div>
                 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <!-- TOMBOL PENTING: PAKSA SUARA -->
                     <button type="button" id="btn-force-audio" onclick="forceAudioPlay()" class="btn-pulse px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95" title="Klik jika tidak mendengar suara">
                         <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
                         <span>Dengar</span>
@@ -221,7 +221,7 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Klik "Izinkan" untuk Mikrofon).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Pastikan Mikrofon diizinkan).</p>
             
             <div class="space-y-3 mb-5">
                 <div class="relative">
@@ -314,6 +314,9 @@
         let localAudioTrack = null;
         let localAgoraUid = null; 
         let isAudioUnlocked = false;
+        
+        // Menyimpan elemen audio jarak jauh
+        let remoteAudioElements = {};
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -649,10 +652,33 @@
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await agoraClient.publish([localAudioTrack]);
 
+                // ========================================================
+                // TRIK PAMUNGKAS: PANCING SUARA PAKAI HTML5 AUDIO
+                // ========================================================
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
                     if (mediaType === "audio") {
-                        user.audioTrack.play().catch(e => console.log("Autoplay diblokir, tunggu klik user."));
+                        // 1. Buat tag <audio> manual
+                        let audioEl = document.getElementById(`remote-audio-${user.uid}`);
+                        if (!audioEl) {
+                            audioEl = document.createElement('audio');
+                            audioEl.id = `remote-audio-${user.uid}`;
+                            audioEl.autoplay = true;
+                            // Sembunyikan elemen
+                            audioEl.style.display = 'none';
+                            document.getElementById('remote-audios-container').appendChild(audioEl);
+                            remoteAudioElements[user.uid] = audioEl;
+                        }
+
+                        // 2. Ambil jalur suara dari Agora, lalu masukkan ke tag <audio>
+                        const mediaStream = new MediaStream([user.audioTrack.getMediaStreamTrack()]);
+                        audioEl.srcObject = mediaStream;
+                        
+                        // 3. Paksa Putar
+                        audioEl.play().catch(e => {
+                            console.log("Autoplay diblokir browser, menunggu interaksi.");
+                            $('btn-force-audio').classList.remove('hidden'); // Munculkan tombol kuning
+                        });
                     }
                 });
 
@@ -674,7 +700,7 @@
 
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
-                isAudioUnlocked = false; // Reset status audio
+                isAudioUnlocked = false; 
 
                 await setDoc(doc(db, "active_slots", currentUserUid), {
                     slotId: index, uid: currentUserUid, agoraUid: localAgoraUid,
@@ -690,10 +716,10 @@
                 };
 
                 $('audio-control-bar').classList.remove('hidden');
-                $('btn-force-audio').classList.remove('hidden'); // Munculkan tombol dengar
+                $('btn-force-audio').classList.remove('hidden'); 
                 updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
-                showToast(`Suara Terhubung! Klik "Dengar" jika sunyi.`);
+                showToast(`Terhubung!`);
                 await requestWakeLock();
 
             } catch (err) {
@@ -703,26 +729,21 @@
         }
 
         // ==========================================
-        // FUNGSI PAKSA SUARA KELUAR
+        // FUNGSI TOMBOL DENGAR (FORCE AUDIO)
         // ==========================================
         function forceAudioPlay() {
-            if (!agoraClient) return;
-            
             let playedCount = 0;
-            agoraClient.remoteUsers.forEach(user => {
-                if (user.audioTrack) {
-                    user.audioTrack.play();
-                    playedCount++;
-                }
+            Object.values(remoteAudioElements).forEach(audioEl => {
+                audioEl.play().then(() => playedCount++).catch(e => console.log(e));
             });
 
             isAudioUnlocked = true;
-            $('btn-force-audio').classList.add('hidden'); // Sembunyikan tombol setelah diklik
-            showToast(playedCount > 0 ? "Suara diaktifkan!" : "Menunggu warga lain bicara...");
+            $('btn-force-audio').classList.add('hidden');
+            showToast(playedCount > 0 ? "Suara diaktifkan!" : "Tidak ada suara baru. Tunggu warga bicara.");
         }
 
         // ==========================================
-        // FUNGSI KELUAR INSTAN (ANTI MACET)
+        // FUNGSI KELUAR INSTAN
         // ==========================================
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
@@ -735,12 +756,17 @@
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
             $('btn-force-audio').classList.add('hidden');
+            
+            // Hapus semua elemen audio
+            Object.values(remoteAudioElements).forEach(a => a.remove());
+            remoteAudioElements = {};
+
             renderVoiceGrid();
             showToast('Keluar dari ruang suara');
             sendSystemChat('Anda keluar dari ruang suara.');
             releaseWakeLock();
 
-            // 2. Bersihkan Hardware & Server di Background
+            // 2. Bersihkan Hardware & Server
             try {
                 if (localAudioTrack) { 
                     localAudioTrack.stop(); 
@@ -770,8 +796,7 @@
         
         function toggleSpeaker() { 
             isSpeakerOn = !isSpeakerOn; 
-            const allAudios = document.querySelectorAll('audio'); 
-            allAudios.forEach(a => { a.muted = !isSpeakerOn; });
+            Object.values(remoteAudioElements).forEach(a => { a.muted = !isSpeakerOn; });
             updateAudioControlUI(); showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); 
         }
 
