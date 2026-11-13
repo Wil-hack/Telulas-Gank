@@ -59,14 +59,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
-        .focus-ring:focus-visible { outline: 2px solid #10b981; }
-
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-        .btn-pulse { animation: pulse-ring 2s infinite; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
@@ -140,11 +132,6 @@
                 </div>
                 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" id="btn-force-audio" onclick="forceAudioPlay()" class="btn-pulse hidden px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95" title="Klik jika tidak mendengar suara">
-                        <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
-                        <span>Dengar</span>
-                    </button>
-
                     <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
                     <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
                     <button type="button" onclick="leaveSlot()" class="px-2.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/35 text-xs font-semibold active:scale-95"><i data-lucide="phone-off" class="w-3.5 h-3.5"></i></button>
@@ -347,7 +334,7 @@
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
 
         const initialOccupants = [
-            { name:'Pak RT 01',  role:'Pos Kamling', initials:'R1', gradient:'from-emerald-500 to-teal-700', isSpeaking:true,  isMuted:false, mutedByAdmin:false },
+            { name:'Pak RT 01',  role:'Pos Kamling', initials:'R1', gradient:'from-emerald-500 to-teal-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Mas Dimas',  role:'RT 01',       initials:'MD', gradient:'from-sky-500 to-indigo-700',   isSpeaking:false, isMuted:false, mutedByAdmin:false },
             { name:'Pak RT 02',  role:'Pos Ronda',   initials:'R2', gradient:'from-amber-500 to-orange-700', isSpeaking:false, isMuted:true,  mutedByAdmin:true  },
             { name:'Wildan',     role:'RT 02',       initials:'WL', gradient:'from-indigo-500 to-purple-700', isSpeaking:false, isMuted:false, mutedByAdmin:false },
@@ -375,7 +362,6 @@
         window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
         window.toggleTargetMute = toggleTargetMute; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
         window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm; window.sendQuickChat = sendQuickChat;
-        window.forceAudioPlay = forceAudioPlay;
         window.openAdminTokenModal = openAdminTokenModal; window.closeAdminTokenModal = closeAdminTokenModal;
         window.verifyAdminPin = verifyAdminPin; window.saveAgoraToken = saveAgoraToken;
 
@@ -639,7 +625,7 @@
             if (!AGORA_TOKEN) {
                 await fetchLatestAgoraToken();
                 if (!AGORA_TOKEN) {
-                    return alert("Token Agora belum diatur oleh Admin.");
+                    return alert("Token Agora belum diatur oleh Admin. Buka menu admin (ikon menara) dan masukkan Token.");
                 }
             }
 
@@ -647,17 +633,7 @@
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 
-                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
-                
-                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-                    encoderConfig: "speech_standard",
-                    AEC: true,
-                    AGC: true,
-                    ANS: true
-                });
-                
-                await agoraClient.publish([localAudioTrack]);
-
+                // EVENT: User lain mempublikasikan audio, otomatis subscribe dan play
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
                     if (mediaType === "audio" && user.audioTrack) {
@@ -672,6 +648,17 @@
                         delete remoteAudioTracks[user.uid];
                     }
                 });
+
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
+                
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+                    encoderConfig: "speech_standard",
+                    AEC: true,
+                    AGC: true,
+                    ANS: true
+                });
+                
+                await agoraClient.publish([localAudioTrack]);
 
                 agoraClient.enableAudioVolumeIndicator();
                 agoraClient.on("volume-indicator", volumes => {
@@ -706,7 +693,6 @@
                 };
 
                 $('audio-control-bar').classList.remove('hidden');
-                $('btn-force-audio').classList.add('hidden'); 
                 updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
                 showToast(`Terhubung ke Saluran Suara!`);
@@ -718,19 +704,6 @@
             }
         }
 
-        function forceAudioPlay() {
-            let count = 0;
-            Object.values(remoteAudioTracks).forEach(track => {
-                try {
-                    track.play();
-                    count++;
-                } catch (e) {
-                    console.error("Gagal play track:", e);
-                }
-            });
-            showToast(count > 0 ? "Audio berhasil diputar ke speaker!" : "Belum ada suara masuk dari warga lain.");
-        }
-
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
 
@@ -740,7 +713,6 @@
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
-            $('btn-force-audio').classList.add('hidden');
             remoteAudioTracks = {};
 
             renderVoiceGrid();
