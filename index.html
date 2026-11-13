@@ -80,7 +80,7 @@
                 <div class="flex items-center gap-2 min-w-0">
                     <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
                     <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide">Nguling RW 13</span>
-                    <span id="voice-counter" class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-bold border border-emerald-500/25 shrink-0">0/5</span>
+                    <span id="voice-counter" class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-bold border border-emerald-500/25 shrink-0">0/20</span>
                     <span id="admin-hint" class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 ml-1"></span>
                 </div>
                 <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
@@ -88,7 +88,7 @@
                 </span>
             </div>
 
-            <div class="voice-scroll max-h-[225px] overflow-y-auto pr-1 -mr-1">
+            <div class="voice-scroll max-h-[300px] overflow-y-auto pr-1 -mr-1">
                 <div id="voice-grid" class="grid grid-cols-3 gap-2 pb-1 transition-all duration-300"></div>
             </div>
 
@@ -182,6 +182,7 @@
         </div>
     </div>
 
+    <!-- MODAL ADMIN PESERTA -->
     <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 text-center relative overflow-hidden animate-sheet-up">
             <div class="flex justify-center mb-2"><div id="admin-target-avatar" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">W</div></div>
@@ -189,6 +190,9 @@
             <p id="admin-target-status" class="text-xs text-slate-400 mb-4">Status Peserta</p>
             <div class="space-y-2">
                 <button type="button" id="admin-toggle-btn" onclick="toggleTargetMute()" class="w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg">Bisukan Peserta</button>
+                <button type="button" id="admin-kick-btn" onclick="kickTarget()" class="w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-red-800 hover:bg-red-700 text-white shadow-lg border border-red-500/50">
+                    <i data-lucide="user-x" class="w-4 h-4"></i> Tendang (Kick)
+                </button>
                 <button type="button" onclick="closeAdminModal()" class="w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
             </div>
         </div>
@@ -314,8 +318,9 @@
         let lastKnownChatTs = 0;
         let hasClearedChatThisEmptySession = false;
 
-        const MAX_SLOTS = 5;
-        const SLOT_TIMEOUT_MS = 90000;
+        const MAX_SLOTS = 20;
+        // PERCEPAT PEMBERSIHAN SLOT NYANGKUT (30 DETIK)
+        const SLOT_TIMEOUT_MS = 30000; 
 
         const $ = id => document.getElementById(id);
 
@@ -435,7 +440,6 @@
         }
         window.doUnlockAudio = doUnlockAudio;
 
-        // ============ BACKGROUND AUDIO KEEP ALIVE ============
         let keepAliveCtx = null;
         let silentOscillator = null;
 
@@ -450,7 +454,6 @@
                 silentOscillator.connect(gainNode);
                 gainNode.connect(keepAliveCtx.destination);
                 silentOscillator.start();
-
                 if ('mediaSession' in navigator) {
                     navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' });
                 }
@@ -462,7 +465,6 @@
             if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
             if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
         }
-        // ====================================================================
 
         async function triggerChatNotification() {
             try { navigator.vibrate([200, 100, 200]); } catch(e) {}
@@ -505,7 +507,7 @@
         window.dismissPushBanner = dismissPushBanner; window.stopSosSiren = stopSosSiren; window.shareToWhatsApp = shareToWhatsApp;
         window.toggleMic = toggleMic; window.toggleSpeaker = toggleSpeaker;
         window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
-        window.toggleTargetMute = toggleTargetMute; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
+        window.toggleTargetMute = toggleTargetMute; window.kickTarget = kickTarget; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
         window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm;
         window.openAdminTokenModal = openAdminTokenModal; window.closeAdminTokenModal = closeAdminTokenModal;
         window.verifyAdminPin = verifyAdminPin; window.saveAgoraToken = saveAgoraToken;
@@ -516,9 +518,18 @@
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
+                const now = Date.now();
+                
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const slotId = data.slotId;
+                    
+                    // VALIDASI: JIKA DATA LEBIH DARI 30 DETIK, HAPUS DARI DB
+                    if (!data.lastSeen || (now - data.lastSeen > SLOT_TIMEOUT_MS)) {
+                        deleteDoc(docSnap.ref).catch(() => {});
+                        return;
+                    }
+
                     if (slotId >= 0 && slotId < MAX_SLOTS) {
                         voiceSlots[slotId] = {
                             id: slotId, occupied: true, isSelf: (data.uid === currentUserUid),
@@ -530,7 +541,18 @@
                         };
                     }
                 });
-                if (joinedSlotIndex !== null && voiceSlots[joinedSlotIndex]) voiceSlots[joinedSlotIndex].isSelf = true;
+                
+                if (joinedSlotIndex !== null) {
+                    if (voiceSlots[joinedSlotIndex] && voiceSlots[joinedSlotIndex].occupied) {
+                        voiceSlots[joinedSlotIndex].isSelf = true;
+                    } else {
+                        if (localAudioTrack) {
+                            leaveSlot(true);
+                            showToast("Anda telah ditendang oleh Admin.");
+                        }
+                    }
+                }
+
                 if (joinedSlotIndex !== null && localAudioTrack) {
                     const mySlot = voiceSlots[joinedSlotIndex];
                     if (mySlot && mySlot.occupied) {
@@ -591,7 +613,9 @@
             updateStatus();
             setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 30000);
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
-            window.addEventListener('beforeunload', () => { setDoc(userDocRef, { lastSeen: 0 }, { merge: true }); });
+            const cleanup = () => { try { deleteDoc(userDocRef); } catch(e) {} };
+            window.addEventListener('beforeunload', cleanup);
+            window.addEventListener('pagehide', cleanup);
         }
 
         function listenToOnlineUsers() {
@@ -605,7 +629,6 @@
                 onlineUserCount = count;
                 updateCounters();
 
-                // JIKA TIDAK ADA ORANG LAIN (0 ATAU 1), HAPUS SEMUA CHAT
                 if (onlineUserCount <= 1) {
                     if (!hasClearedChatThisEmptySession) {
                         clearAllChats();
@@ -637,8 +660,9 @@
             setInterval(async () => {
                 if (joinedSlotIndex === null || !currentUserUid) return;
                 try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true }); } catch(e) {}
-            }, 20000);
+            }, 10000); // Heartbeat lebih cepat (10 detik) agar tidak dianggap mati
         }
+        
         function startStaleCleanup() {
             setInterval(async () => {
                 try {
@@ -652,7 +676,7 @@
                         }
                     }
                 } catch(e) {}
-            }, 60000);
+            }, 15000); // Cek setiap 15 detik
         }
 
         function updateCounters() {
@@ -726,6 +750,7 @@
             $('admin-modal').classList.remove('hidden');
         }
         function closeAdminModal() { $('admin-modal').classList.add('hidden'); targetAdminSlotIndex = null; }
+        
         function updateAdminModalUI() {
             const targetSlot = voiceSlots[targetAdminSlotIndex];
             if (!targetSlot) return;
@@ -748,6 +773,7 @@
             }
             lucide.createIcons();
         }
+        
         async function toggleTargetMute() {
             if (targetAdminSlotIndex === null) return;
             const targetSlot = voiceSlots[targetAdminSlotIndex];
@@ -762,6 +788,17 @@
                 }
                 closeAdminModal();
             } catch (e) { alert("Gagal mute: " + e.message); }
+        }
+
+        async function kickTarget() {
+            if (targetAdminSlotIndex === null) return;
+            const targetSlot = voiceSlots[targetAdminSlotIndex];
+            if (!targetSlot) return;
+            try {
+                await deleteDoc(doc(db, "active_slots", `slot_${targetAdminSlotIndex}`));
+                showToast(`${targetSlot.name} telah ditendang.`);
+                closeAdminModal();
+            } catch (e) { alert("Gagal kick: " + e.message); }
         }
 
         function openJoinModal(index) {
@@ -858,7 +895,6 @@
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "speech_standard", AEC: true, AGC: true, ANS: true });
                 await agoraClient.publish([localAudioTrack]);
 
-                // MULAI TRIK BACKGROUND AUDIO
                 startBackgroundKeepAlive();
 
                 agoraClient.enableAudioVolumeIndicator();
@@ -915,7 +951,7 @@
             }, 1000);
         }
 
-        async function leaveSlot() {
+        async function leaveSlot(isKicked = false) {
             if (joinedSlotIndex === null) return;
             const prevIndex = joinedSlotIndex;
             const leavingName = userProfile.name;
@@ -931,14 +967,18 @@
             stopBackgroundKeepAlive();
 
             renderVoiceGrid();
-            showToast('Keluar dari ruang suara');
-            sendSystemChat(`📴 ${leavingName} keluar dari ruang suara.`);
+            
+            if (!isKicked) {
+                showToast('Keluar dari ruang suara');
+                sendSystemChat(`📴 ${leavingName} keluar dari ruang suara.`);
+            }
+            
             releaseWakeLock();
 
             try {
                 if (localAudioTrack) { localAudioTrack.stop(); localAudioTrack.close(); localAudioTrack = null; }
                 if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
-                await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
+                if (!isKicked) await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
             } catch (e) {}
         }
 
@@ -999,7 +1039,6 @@
             lucide.createIcons();
         }
 
-        // ============ CHAT INSTAN & OPTIMASI ============
         function initFirebaseChat() {
             const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
