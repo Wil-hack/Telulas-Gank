@@ -208,7 +208,7 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Klik "Izinkan" untuk Mikrofon).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Pastikan Mikrofon diizinkan).</p>
             
             <div class="space-y-3 mb-5">
                 <div class="relative">
@@ -325,19 +325,22 @@
         });
 
         // ==========================================
-        // SINKRONISASI SLOT SUARA
+        // SINKRONISASI SLOT SUARA (REAL-TIME)
         // ==========================================
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
+                // 1. Reset Grid ke kondisi awal
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
                     return { id:i, occupied:false };
                 });
 
+                // 2. Isi Dummy Data (Hiasan)
                 initialOccupants.forEach((occ, i) => {
                     voiceSlots[i] = { id:i, occupied:true, isSelf:false, ...occ };
                 });
 
+                // 3. Timpa dengan data asli dari Firebase
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const slotId = data.slotId;
@@ -357,6 +360,7 @@
                     }
                 });
 
+                // 4. Pastikan Diri Sendiri Tampil
                 if (joinedSlotIndex !== null && voiceSlots[joinedSlotIndex]) {
                     voiceSlots[joinedSlotIndex].isSelf = true;
                 }
@@ -648,7 +652,7 @@
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
 
-                // Simpan ke Firebase
+                // Simpan ke Firebase agar sinkron
                 await setDoc(doc(db, "active_slots", currentUserUid), {
                     slotId: index,
                     uid: currentUserUid,
@@ -671,6 +675,7 @@
 
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
+            
             if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
             if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
 
