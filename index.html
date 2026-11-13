@@ -76,7 +76,6 @@
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
                 
-                <!-- TOMBOL RAHASIA ADMIN -->
                 <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </button>
@@ -299,6 +298,7 @@
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
         let localAudioTrack = null;
+        let localAgoraUid = null; // Menyimpan ID Agora (angka)
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -324,23 +324,17 @@
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
-        // ==========================================
-        // SINKRONISASI SLOT SUARA (REAL-TIME)
-        // ==========================================
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
-                // 1. Reset Grid ke kondisi awal
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
                     return { id:i, occupied:false };
                 });
 
-                // 2. Isi Dummy Data (Hiasan)
                 initialOccupants.forEach((occ, i) => {
                     voiceSlots[i] = { id:i, occupied:true, isSelf:false, ...occ };
                 });
 
-                // 3. Timpa dengan data asli dari Firebase
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const slotId = data.slotId;
@@ -360,7 +354,6 @@
                     }
                 });
 
-                // 4. Pastikan Diri Sendiri Tampil
                 if (joinedSlotIndex !== null && voiceSlots[joinedSlotIndex]) {
                     voiceSlots[joinedSlotIndex].isSelf = true;
                 }
@@ -369,9 +362,6 @@
             });
         }
 
-        // ==========================================
-        // FUNGSI ADMIN
-        // ==========================================
         window.openAdminTokenModal = async () => {
             document.getElementById('admin-token-modal').classList.remove('hidden');
             document.getElementById('admin-pin-section').classList.remove('hidden');
@@ -635,31 +625,66 @@
             }
 
             try {
-                // FIX UID_CONFLICT: Gunakan UID Acak Baru (Number) setiap kali join
-                const randomAgoraUid = Math.floor(Math.random() * 100000000);
-
+                // FIX UID_CONFLICT
+                localAgoraUid = Math.floor(Math.random() * 100000000);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, randomAgoraUid);
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await agoraClient.publish([localAudioTrack]);
 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
-                    if (mediaType === "audio") user.audioTrack.play();
+                    if (mediaType === "audio") {
+                        // PANGGIL PLAY AGAR SUARA KELUAR
+                        user.audioTrack.play();
+                    }
+                });
+
+                // FIX VOLUME INDICATOR: Agar avatar menyala jika ada yang bicara
+                agoraClient.enableAudioVolumeIndicator();
+                agoraClient.on("volume-indicator", volumes => {
+                    volumes.forEach(volume => {
+                        if (volume.level > 5) { 
+                            // Cari slot yang sesuai dengan volume.uid
+                            // Note: Agora menggunakan `uid` dalam bentuk angka (localAgoraUid).
+                            // Kita cocokkan dengan slot yang ada.
+                            const speakingSlot = voiceSlots.find(s => s.uid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
+                            if (speakingSlot && !speakingSlot.isSpeaking) {
+                                speakingSlot.isSpeaking = true;
+                                renderVoiceGrid();
+                            }
+                        } else {
+                            const silentSlot = voiceSlots.find(s => s.uid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
+                            if (silentSlot && silentSlot.isSpeaking) {
+                                silentSlot.isSpeaking = false;
+                                renderVoiceGrid();
+                            }
+                        }
+                    });
                 });
 
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
 
-                // Simpan ke Firebase agar sinkron
+                // Simpan ke Firebase
                 await setDoc(doc(db, "active_slots", currentUserUid), {
                     slotId: index,
                     uid: currentUserUid,
+                    agoraUid: localAgoraUid,
                     name: name,
                     location: location,
                     isMuted: false
                 });
+
+                // Update UI slot lokal agar langsung pakai agoraUid
+                voiceSlots[index] = { 
+                    id: index, occupied: true, isSelf: true, 
+                    name: name, role: location, initials: name.substring(0, 2).toUpperCase(), 
+                    gradient: 'from-emerald-400 to-emerald-600', 
+                    isSpeaking: false, isMuted: false, mutedByAdmin: false,
+                    uid: localAgoraUid
+                };
 
                 $('audio-control-bar').classList.remove('hidden');
                 updateAudioControlUI(); 
@@ -669,7 +694,7 @@
 
             } catch (err) {
                 console.error("Agora Error:", err);
-                alert("GAGAL SUARA: " + err.message + "\n\nPastikan Mikrofon diizinkan & Token benar.");
+                alert("GAGAL SUARA: " + err.message);
             }
         }
 
@@ -851,7 +876,9 @@
 
         function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
 
-        function startAmbientVoiceSimulation() { setInterval(() => { const slotsToRender = isVoiceGridExpanded ? voiceSlots : voiceSlots.slice(0, DEFAULT_VISIBLE); const candidates = slotsToRender.filter(s => s.occupied && !s.isSelf && !s.isMuted).map(s => s.id); if (candidates.length === 0) return; const speakerIdx = candidates[Math.floor(Math.random() * candidates.length)]; let changed = false; voiceSlots.forEach(slot => { if (slot.occupied && !slot.isSelf && !slot.isMuted) { const shouldSpeak = (slot.id === speakerIdx); if (slot.isSpeaking !== shouldSpeak) { slot.isSpeaking = shouldSpeak; changed = true; } } }); if (changed) renderVoiceGrid(); }, 3000); }
+        function startAmbientVoiceSimulation() { 
+            // Fungsi ini sekarang digantikan oleh enableAudioVolumeIndicator() dari Agora
+        }
 
         let toastTimer;
         function showToast(message) { const toast = $('toast'); $('toast-msg').textContent = message; toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0'); clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400); }
@@ -860,7 +887,7 @@
         function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
         window.addEventListener('load', () => {
-            renderVoiceGrid(); startAmbientVoiceSimulation(); initFirebaseChat(); listenIncomingSos(); lucide.createIcons();
+            renderVoiceGrid(); initFirebaseChat(); listenIncomingSos(); lucide.createIcons();
             const holdBtn = $('hold-sos-btn');
             holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
             holdBtn.addEventListener('touchend', cancelHoldSos);
