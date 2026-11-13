@@ -49,6 +49,9 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
+
+        @keyframes pulseUnlock { 0%,100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 50% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); } }
+        #unlock-audio-banner button { animation: pulseUnlock 1.6s infinite; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
@@ -259,6 +262,14 @@
         </div>
     </div>
 
+    <!-- TOMBOL AKTIFKAN SUARA (SATUPAM AUDIO) -->
+    <div id="unlock-audio-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[400px]">
+        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95">
+            <i data-lucide="volume-2" class="w-5 h-5"></i>
+            <span>🔊 Ketuk untuk Aktifkan Suara</span>
+        </button>
+    </div>
+
     <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
         <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span>
@@ -302,16 +313,14 @@
 
         const $ = id => document.getElementById(id);
 
-        // ============ PRIME AUDIO (KUNCI LIVE SUARA TANPA PENCET SOS) ============
+        // ============ PRIME AUDIO (pemanasan ringan di setiap gesture) ============
         let audioPrimed = false;
         async function primeAudio() {
-            // Setiap gesture, retry play semua remote track yang mungkin tertunda
             for (const uid in remoteAudioTracks) {
                 try { await remoteAudioTracks[uid].play(); } catch (e) {}
             }
             if (audioPrimed) return;
             audioPrimed = true;
-            // 1) Tone: mainkan tone super singkat (silent) => "memanaskan" izin audio browser
             try {
                 if (typeof Tone !== 'undefined') {
                     await Tone.start();
@@ -320,33 +329,67 @@
                     synth.triggerAttackRelease("C4", 0.01);
                 }
             } catch (e) {}
-            // 2) Resume AudioContext Agora bila tersedia
             try {
-                if (window.AgoraRTC && typeof AgoraRTC.resumeAudioContext === 'function') {
-                    await AgoraRTC.resumeAudioContext();
-                }
+                if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext();
             } catch (e) {}
-            // 3) Retry semua remote track
             for (const uid in remoteAudioTracks) {
                 try { await remoteAudioTracks[uid].play(); } catch (e) {}
             }
         }
 
-        // Pasang listener di fase capture agar tidak bisa dicegat
         document.addEventListener('pointerdown', primeAudio, { capture: true });
         document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
         document.addEventListener('click', primeAudio, { capture: true });
         document.addEventListener('keydown', primeAudio, { capture: true });
 
-        // Handler resmi Agora bila autoplay diblokir
         if (window.AgoraRTC) {
             AgoraRTC.onAutoplayFailed = () => {
-                showToast("Ketuk layar sekali untuk mengaktifkan suara");
-                audioPrimed = false; // paksa prime ulang pada tap berikutnya
+                showUnlockBanner();
+                audioPrimed = false;
             };
         }
 
-        // ============ LOGIN & INIT ============
+        // ============ BANNER AKTIFKAN SUARA (SATUPAM) ============
+        function showUnlockBanner() {
+            $('unlock-audio-banner').classList.remove('hidden');
+            lucide.createIcons();
+        }
+        function hideUnlockBanner() {
+            $('unlock-audio-banner').classList.add('hidden');
+        }
+        async function doUnlockAudio() {
+            // 1. Tone audible — kunci "satpam" browser
+            try {
+                await Tone.start();
+                const synth = new Tone.Synth().toDestination();
+                synth.volume.value = -30;
+                synth.triggerAttackRelease("C5", "16n");
+            } catch(e) { console.warn('Tone err', e); }
+
+            // 2. Resume Agora AudioContext
+            try {
+                if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext();
+            } catch(e) { console.warn('Agora resume err', e); }
+
+            // 3. Re-play semua remote track
+            let played = 0;
+            for (const uid in remoteAudioTracks) {
+                try {
+                    await remoteAudioTracks[uid].play();
+                    played++;
+                } catch(e) { console.warn('retry play err:', uid, e); }
+            }
+
+            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) {
+                hideUnlockBanner();
+            }
+            showToast(played > 0 ? `🔊 Suara aktif (${played} peserta)` : '🔊 Audio siap. Tunggu peserta bicara.');
+        }
+        window.showUnlockBanner = showUnlockBanner;
+        window.hideUnlockBanner = hideUnlockBanner;
+        window.doUnlockAudio = doUnlockAudio;
+
+        // ============ LOGIN ============
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
@@ -382,7 +425,7 @@
 
         const countJoined = () => voiceSlots.filter(s => s.occupied).length;
 
-        // ============ SLOTS LISTENER ============
+        // ============ SLOT LISTENER ============
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
@@ -412,7 +455,6 @@
                     voiceSlots[joinedSlotIndex].isSelf = true;
                 }
 
-                // Sinkron mute admin untuk diri sendiri
                 if (joinedSlotIndex !== null && localAudioTrack) {
                     const mySlot = voiceSlots[joinedSlotIndex];
                     if (mySlot && mySlot.occupied) {
@@ -596,7 +638,7 @@
             lucide.createIcons();
         }
 
-        // ============ ADMIN MODAL ============
+        // ============ ADMIN MODAL PESERTA ============
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
             const targetSlot = voiceSlots[slotId];
@@ -666,7 +708,6 @@
         function closeJoinModal() { $('join-modal').classList.add('hidden'); $('custom-loc-input').blur(); pendingJoinSlotIndex = null; }
 
         function confirmJoin() {
-            // PANGGIL PRIME AUDIO DULU — gesture ini yang "memanaskan" izin audio browser
             primeAudio();
             const nameVal = $('user-name-input').value.trim();
             const locVal = $('custom-loc-input').value.trim();
@@ -728,9 +769,10 @@
                             remoteAudioTracks[user.uid] = user.audioTrack;
                             try {
                                 await user.audioTrack.play();
+                                hideUnlockBanner();
                             } catch (playErr) {
-                                // Autoplay diblokir → nanti di-retry oleh primeAudio saat tap
-                                console.warn("play gagal (akan retry):", playErr);
+                                console.warn("autoplay blocked:", playErr);
+                                showUnlockBanner();
                             }
                         }
                     } catch (e) {
@@ -747,14 +789,14 @@
 
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
 
-                // Subscribe ke user yang SUDAH ada di channel (safety net)
+                // Subscribe ke user yang SUDAH ada (safety net)
                 agoraClient.remoteUsers.forEach(async (user) => {
                     if (user.hasAudio) {
                         try {
                             await agoraClient.subscribe(user, "audio");
                             if (user.audioTrack) {
                                 remoteAudioTracks[user.uid] = user.audioTrack;
-                                try { await user.audioTrack.play(); } catch(e) {}
+                                try { await user.audioTrack.play(); } catch(e) { showUnlockBanner(); }
                             }
                         } catch(e) {}
                     }
@@ -789,8 +831,15 @@
                 showToast(`Terhubung ke Saluran Suara!`);
                 await requestWakeLock();
 
-                // Prime sekali lagi setelah join — jaga-jaga kalau track datang belakangan
-                setTimeout(() => { primeAudio(); }, 800);
+                // Tampilkan banner preventif setelah join (apakah ada peserta atau tidak)
+                setTimeout(() => {
+                    if (Object.keys(remoteAudioTracks).length === 0) {
+                        showUnlockBanner();
+                    } else {
+                        const anyBlocked = Object.values(remoteAudioTracks).some(t => !t.isPlaying);
+                        if (anyBlocked) showUnlockBanner();
+                    }
+                }, 1500);
 
             } catch (err) {
                 console.error("Agora Error:", err);
@@ -804,6 +853,7 @@
             const prevIndex = joinedSlotIndex;
             const leavingName = userProfile.name;
 
+            hideUnlockBanner();
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
