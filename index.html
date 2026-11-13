@@ -76,7 +76,7 @@
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
                 
-                <!-- TOMBOL RAHASIA ADMIN (Logo Radio) -->
+                <!-- TOMBOL RAHASIA ADMIN -->
                 <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </button>
@@ -189,7 +189,6 @@
                 <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
                 <textarea id="new-agora-token" rows="3" class="w-full bg-slate-900/95 text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
                 
-                <!-- Indikator Token Tersimpan -->
                 <p class="text-[9px] text-slate-500 mb-3">Token aktif saat ini: <span id="current-token-display" class="text-emerald-400 font-mono">Belum ada</span></p>
 
                 <button type="button" onclick="saveAgoraToken()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1">
@@ -282,7 +281,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, limit, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -320,10 +319,59 @@
             setupPresence(); 
             listenToOnlineUsers(); 
             fetchLatestAgoraToken(); 
+            listenToActiveSlots(); // PANGGIL FUNGSI SINKRONISASI SLOT
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
+        // ==========================================
+        // FUNGSI SINKRONISASI SLOT (REAL-TIME)
+        // ==========================================
+        function listenToActiveSlots() {
+            const slotsCol = collection(db, "active_slots");
+            onSnapshot(slotsCol, (snapshot) => {
+                // Reset semua slot ke kondisi kosong
+                voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
+                    return { id:i, occupied:false };
+                });
+
+                // Isi slot dengan data statis (hiasan)
+                initialOccupants.forEach((occ, i) => {
+                    voiceSlots[i] = { id:i, occupied:true, isSelf:false, ...occ };
+                });
+
+                // Timpa dengan data real dari database
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const slotId = data.slotId;
+                    if (slotId >= 0 && slotId < MAX_SLOTS) {
+                        voiceSlots[slotId] = {
+                            id: slotId,
+                            occupied: true,
+                            isSelf: (data.uid === currentUserUid),
+                            name: data.name,
+                            role: data.location,
+                            initials: data.name.substring(0, 2).toUpperCase(),
+                            gradient: 'from-emerald-400 to-emerald-600',
+                            isSpeaking: false, 
+                            isMuted: data.isMuted || false, 
+                            mutedByAdmin: false
+                        };
+                    }
+                });
+
+                // Jika user ini sedang join, pastikan UI-nya menampilkan 'Anda'
+                if (joinedSlotIndex !== null && voiceSlots[joinedSlotIndex]) {
+                    voiceSlots[joinedSlotIndex].isSelf = true;
+                }
+
+                renderVoiceGrid();
+            });
+        }
+
+        // ==========================================
+        // FUNGSI ADMIN
+        // ==========================================
         window.openAdminTokenModal = async () => {
             document.getElementById('admin-token-modal').classList.remove('hidden');
             document.getElementById('admin-pin-section').classList.remove('hidden');
@@ -343,11 +391,8 @@
                 document.getElementById('new-agora-token').value = AGORA_TOKEN;
                 
                 const disp = document.getElementById('current-token-display');
-                if (AGORA_TOKEN) {
-                    disp.textContent = AGORA_TOKEN.substring(0, 10) + "...";
-                } else {
-                    disp.textContent = "Belum ada / Kosong";
-                }
+                if (AGORA_TOKEN) disp.textContent = AGORA_TOKEN.substring(0, 10) + "...";
+                else disp.textContent = "Belum ada / Kosong";
             } else {
                 alert("PIN Admin Salah!");
             }
@@ -602,12 +647,18 @@
 
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
-                const initials = name.substring(0, 2).toUpperCase();
-                voiceSlots[index] = { id: index, occupied: true, isSelf: true, name: name, role: location, initials: initials, gradient: 'from-emerald-400 to-emerald-600', isSpeaking: false, isMuted: false, mutedByAdmin: false };
-                
-                if (index >= DEFAULT_VISIBLE && !isVoiceGridExpanded) toggleVoiceGrid();
+
+                // SIMPAN KE FIREBASE AGAR SINKRON
+                await setDoc(doc(db, "active_slots", currentUserUid), {
+                    slotId: index,
+                    uid: currentUserUid,
+                    name: name,
+                    location: location,
+                    isMuted: false
+                });
+
                 $('audio-control-bar').classList.remove('hidden');
-                updateAudioControlUI(); renderVoiceGrid();
+                updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
                 showToast(`Suara Agora Terhubung!`);
                 await requestWakeLock();
@@ -623,10 +674,14 @@
             if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
             if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
 
-            voiceSlots[joinedSlotIndex] = { id: joinedSlotIndex, occupied: false };
+            // HAPUS DARI FIREBASE
+            try {
+                await deleteDoc(doc(db, "active_slots", currentUserUid));
+            } catch (e) { console.error(e); }
+
             joinedSlotIndex = null; closeAdminModal();
             $('audio-control-bar').classList.add('hidden');
-            renderVoiceGrid(); sendSystemChat('Anda keluar dari ruang suara.');
+            sendSystemChat('Anda keluar dari ruang suara.');
             showToast('Keluar dari ruang suara'); releaseWakeLock();
         }
 
@@ -637,9 +692,7 @@
             if (joinedSlotIndex === null || !localAudioTrack) return; 
             isMicMuted = !isMicMuted; 
             localAudioTrack.setEnabled(!isMicMuted);
-            voiceSlots[joinedSlotIndex].isMuted = isMicMuted; 
-            if(isMicMuted) voiceSlots[joinedSlotIndex].isSpeaking = false; 
-            updateAudioControlUI(); renderVoiceGrid(); 
+            updateAudioControlUI(); 
             showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan'); 
         }
         
@@ -653,11 +706,7 @@
         function updateAudioControlUI() {
             const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
             const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
-            
-            // PERBAIKAN: Gunakan setAttribute untuk SVG
-            const badgeIcon = $('mic-badge-icon'); 
-            const badgeBg = $('mic-badge-bg');
-
+            const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
             if (isMicMuted) {
                 btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
                 micLabel.textContent = 'Mic Mute'; micLabel.className = 'text-xs font-bold text-rose-300 truncate';
@@ -671,7 +720,6 @@
                 badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
             }
-            
             if (isSpeakerOn) {
                 btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
                 spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
