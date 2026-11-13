@@ -47,6 +47,9 @@
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
+    <!-- AUDIO SIRENE (UNTUK BACKGROUND NOTIFIKASI) -->
+    <audio id="siren-audio" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop style="display:none;"></audio>
+
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
         <div class="absolute top-1/4 -right-28 w-72 h-72 bg-rose-900/10 rounded-full blur-3xl"></div>
@@ -88,7 +91,7 @@
                 </span>
             </div>
 
-            <div class="voice-scroll max-h-[300px] overflow-y-auto pr-1 -mr-1">
+            <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
                 <div id="voice-grid" class="grid grid-cols-3 gap-2 pb-1 transition-all duration-300"></div>
             </div>
 
@@ -319,7 +322,6 @@
         let hasClearedChatThisEmptySession = false;
 
         const MAX_SLOTS = 20;
-        // PERCEPAT PEMBERSIHAN SLOT NYANGKUT (30 DETIK)
         const SLOT_TIMEOUT_MS = 30000; 
 
         const $ = id => document.getElementById(id);
@@ -524,7 +526,6 @@
                     const data = docSnap.data();
                     const slotId = data.slotId;
                     
-                    // VALIDASI: JIKA DATA LEBIH DARI 30 DETIK, HAPUS DARI DB
                     if (!data.lastSeen || (now - data.lastSeen > SLOT_TIMEOUT_MS)) {
                         deleteDoc(docSnap.ref).catch(() => {});
                         return;
@@ -660,7 +661,7 @@
             setInterval(async () => {
                 if (joinedSlotIndex === null || !currentUserUid) return;
                 try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true }); } catch(e) {}
-            }, 10000); // Heartbeat lebih cepat (10 detik) agar tidak dianggap mati
+            }, 10000); 
         }
         
         function startStaleCleanup() {
@@ -676,7 +677,7 @@
                         }
                     }
                 } catch(e) {}
-            }, 15000); // Cek setiap 15 detik
+            }, 15000); 
         }
 
         function updateCounters() {
@@ -1129,9 +1130,55 @@
         function startHoldSos(e) { if (e) e.preventDefault(); resetHoldProgress(); const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); labelEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...`; lucide.createIcons(); const duration = 1500; const step = 30; holdInterval = setInterval(() => { holdProgressVal += (step / duration) * 100; progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`; if (holdProgressVal >= 100) { clearInterval(holdInterval); triggerEmergencyAlert(); } }, step); }
         function cancelHoldSos() { clearInterval(holdInterval); resetHoldProgress(); }
         function resetHoldProgress() { holdProgressVal = 0; const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); if (progressEl) progressEl.style.width = '0%'; if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik`; lucide.createIcons(); } }
-        async function playSirenTone() { try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {} }
-        function startSosSiren() { if (sosSirenInterval) clearInterval(sosSirenInterval); playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }
-        function stopSosSiren() { if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; showToast('Sirene SOS dihentikan.'); } }
+        
+        // ============ FUNGSI SIRENE BARU ============
+        async function playSirenTone() { 
+            try { 
+                if (typeof Tone !== 'undefined') { 
+                    await Tone.start(); 
+                    const synth = new Tone.Synth().toDestination(); 
+                    const now = Tone.now(); 
+                    synth.triggerAttackRelease("A5", "16n", now); 
+                    synth.triggerAttackRelease("E5", "16n", now + 0.2); 
+                } 
+            } catch (err) {} 
+        }
+        
+        function startSosSiren() { 
+            if (sosSirenInterval) clearInterval(sosSirenInterval); 
+            
+            // Menggunakan tag <audio> agar bisa tembus background
+            const sirenAudio = $('siren-audio');
+            if (sirenAudio) {
+                sirenAudio.volume = 1.0;
+                sirenAudio.play().catch(e => {
+                    // Jika gagal, fallback ke Tone.js
+                    playSirenTone(); 
+                    sosSirenInterval = setInterval(() => playSirenTone(), 1000); 
+                });
+            } else {
+                playSirenTone(); 
+                sosSirenInterval = setInterval(() => playSirenTone(), 1000); 
+            }
+
+            // Getaran paksa 3x putaran
+            try { navigator.vibrate([500, 200, 500, 200, 500, 200, 500]); } catch(e) {}
+        }
+
+        function stopSosSiren() { 
+            const sirenAudio = $('siren-audio');
+            if (sirenAudio) { 
+                sirenAudio.pause(); 
+                sirenAudio.currentTime = 0; 
+            }
+            if (sosSirenInterval) { 
+                clearInterval(sosSirenInterval); 
+                sosSirenInterval = null; 
+            } 
+            showToast('Sirene SOS dihentikan.'); 
+        }
+        // ============================================
+
         function showSosBanner(reporter, category) {
             $('push-category-text').textContent = category;
             $('push-reporter-text').textContent = reporter;
