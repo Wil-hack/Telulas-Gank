@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- LIBRARY AGORA RTC -->
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
 
     <script>
@@ -16,14 +18,22 @@
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { night: { 950:'#050911', 900:'#0a111e', 850:'#0f1829', 800:'#152238' } },
+                    colors: {
+                        night: { 950:'#050911', 900:'#0a111e', 850:'#0f1829', 800:'#152238' }
+                    },
                     animation: {
                         'banner-slide': 'bannerSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'sheet-up': 'sheetUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
-                        bannerSlide: { '0%': { transform: 'translate(-50%, -120%)', opacity: '0' }, '100%': { transform: 'translate(-50%, 0)', opacity: '1' } },
-                        sheetUp: { '0%': { transform: 'translateY(100%)', opacity: '0.4' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+                        bannerSlide: {
+                            '0%': { transform: 'translate(-50%, -120%)', opacity: '0' },
+                            '100%': { transform: 'translate(-50%, 0)', opacity: '1' },
+                        },
+                        sheetUp: {
+                            '0%': { transform: 'translateY(100%)', opacity: '0.4' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
                     }
                 }
             }
@@ -36,7 +46,7 @@
 
         .glass-header { background: rgba(10, 17, 30, 0.85); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
         .glass-panel { background: rgba(15, 24, 41, 0.78); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.07); }
-        .glass-card { background: linear-gradient(155deg, rgba(30, 41, 59, 0.52) 0%, rgba(15, 23, 42, 0.78) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.07); box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4); transition: all .2s; }
+        .glass-card { background: linear-gradient(155deg, rgba(30, 41, 59, 0.52) 0%, rgba(15, 23, 42, 0.78) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.07); box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4); }
         .glass-card-self { background: linear-gradient(155deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.88) 100%); border: 1px solid rgba(16, 185, 129, 0.45); box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); }
         .glass-card:active, .glass-card:hover { border-color: rgba(16, 185, 129, 0.5); transform: scale(0.98); }
         .glass-slot-empty { background: rgba(15, 23, 42, 0.35); border: 1.5px dashed rgba(148, 163, 184, 0.22); transition: all 0.2s; }
@@ -49,9 +59,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
-
-        @keyframes pulseUnlock { 0%,100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 50% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); } }
-        #unlock-audio-banner button { animation: pulseUnlock 1.6s infinite; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
@@ -107,6 +114,12 @@
                 <div id="voice-grid" class="grid grid-cols-3 gap-2 pb-1 transition-all duration-300"></div>
             </div>
 
+            <div class="mt-2 text-center">
+                <button id="btn-toggle-grid" onclick="toggleVoiceGrid()" type="button" class="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 transition-all flex items-center justify-center gap-1 mx-auto w-max">
+                    <i data-lucide="chevron-down" class="w-3 h-3"></i><span id="toggle-text">Lihat Semua 5 Slot</span>
+                </button>
+            </div>
+
             <div id="audio-control-bar" class="hidden mt-2 px-3 py-2 rounded-2xl glass-card-self flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2 min-w-0">
                     <div id="mic-badge-bg" class="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
@@ -119,7 +132,7 @@
                 </div>
                 
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95 disabled:opacity-40"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
+                    <button type="button" id="btn-mute" onclick="toggleMic()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
                     <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="p-2 rounded-xl bg-slate-800/90 border border-slate-600/60 active:scale-95"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
                     <button type="button" onclick="leaveSlot()" class="px-2.5 py-2 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/35 text-xs font-semibold active:scale-95"><i data-lucide="phone-off" class="w-3.5 h-3.5"></i></button>
                 </div>
@@ -262,14 +275,6 @@
         </div>
     </div>
 
-    <!-- TOMBOL AKTIFKAN SUARA (SATUPAM AUDIO) -->
-    <div id="unlock-audio-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[400px]">
-        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95">
-            <i data-lucide="volume-2" class="w-5 h-5"></i>
-            <span>🔊 Ketuk untuk Aktifkan Suara</span>
-        </button>
-    </div>
-
     <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
         <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span>
@@ -278,7 +283,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -292,8 +297,7 @@
 
         const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
         const AGORA_CHANNEL = "telulas-gank-rw13"; 
-        const ADMIN_PIN = "1234";
-
+        
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
         let localAudioTrack = null;
@@ -308,106 +312,38 @@
         let onlineUserCount = 0;
         let processedSosIds = [];
 
-        const MAX_SLOTS = 5;
-        const SLOT_TIMEOUT_MS = 90000;
-
-        const $ = id => document.getElementById(id);
-
-        // ============ PRIME AUDIO (pemanasan ringan di setiap gesture) ============
-        let audioPrimed = false;
-        async function primeAudio() {
-            for (const uid in remoteAudioTracks) {
-                try { await remoteAudioTracks[uid].play(); } catch (e) {}
-            }
-            if (audioPrimed) return;
-            audioPrimed = true;
-            try {
-                if (typeof Tone !== 'undefined') {
-                    await Tone.start();
-                    const synth = new Tone.Synth().toDestination();
-                    synth.volume.value = -Infinity;
-                    synth.triggerAttackRelease("C4", 0.01);
-                }
-            } catch (e) {}
-            try {
-                if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext();
-            } catch (e) {}
-            for (const uid in remoteAudioTracks) {
-                try { await remoteAudioTracks[uid].play(); } catch (e) {}
-            }
+        function unlockAudioContext() {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') Tone.start();
         }
+        document.body.addEventListener('touchstart', unlockAudioContext, { once: true });
+        document.body.addEventListener('click', unlockAudioContext, { once: true });
 
-        document.addEventListener('pointerdown', primeAudio, { capture: true });
-        document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
-        document.addEventListener('click', primeAudio, { capture: true });
-        document.addEventListener('keydown', primeAudio, { capture: true });
-
-        if (window.AgoraRTC) {
-            AgoraRTC.onAutoplayFailed = () => {
-                showUnlockBanner();
-                audioPrimed = false;
-            };
-        }
-
-        // ============ BANNER AKTIFKAN SUARA (SATUPAM) ============
-        function showUnlockBanner() {
-            $('unlock-audio-banner').classList.remove('hidden');
-            lucide.createIcons();
-        }
-        function hideUnlockBanner() {
-            $('unlock-audio-banner').classList.add('hidden');
-        }
-        async function doUnlockAudio() {
-            // 1. Tone audible — kunci "satpam" browser
-            try {
-                await Tone.start();
-                const synth = new Tone.Synth().toDestination();
-                synth.volume.value = -30;
-                synth.triggerAttackRelease("C5", "16n");
-            } catch(e) { console.warn('Tone err', e); }
-
-            // 2. Resume Agora AudioContext
-            try {
-                if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext();
-            } catch(e) { console.warn('Agora resume err', e); }
-
-            // 3. Re-play semua remote track
-            let played = 0;
-            for (const uid in remoteAudioTracks) {
-                try {
-                    await remoteAudioTracks[uid].play();
-                    played++;
-                } catch(e) { console.warn('retry play err:', uid, e); }
-            }
-
-            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) {
-                hideUnlockBanner();
-            }
-            showToast(played > 0 ? `🔊 Suara aktif (${played} peserta)` : '🔊 Audio siap. Tunggu peserta bicara.');
-        }
-        window.showUnlockBanner = showUnlockBanner;
-        window.hideUnlockBanner = hideUnlockBanner;
-        window.doUnlockAudio = doUnlockAudio;
-
-        // ============ LOGIN ============
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
             setupPresence(); 
             listenToOnlineUsers(); 
             fetchLatestAgoraToken(); 
             listenToActiveSlots(); 
-            startHeartbeat();
-            startStaleCleanup();
         }).catch((error) => {
             alert("GAGAL LOGIN FIREBASE: " + error.message);
         });
 
+        // 5 SLOT KOSONG (BEBAS DITEMPATI WARGA SECARA REAL-TIME)
+        const MAX_SLOTS = 5;
+        const DEFAULT_VISIBLE = 5;
+        let isVoiceGridExpanded = false;
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
-        let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
+
+        // TANPA DATA DUMMY AWAL, SEMUA KOSONG MENUNGGU WARGA JOIN
+        let initialOccupants = [];
+
+        let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
+            return { id:i, occupied:false };
+        });
+
         let joinedSlotIndex = null;
         let isMicMuted = false;
         let isSpeakerOn = true;
-        let wasMutedByAdmin = false;
         let selectedSosCategory = 'Maling / Pencurian';
         let pendingJoinSlotIndex = null;
         let wakeLock = null;
@@ -416,20 +352,19 @@
 
         window.openSosModal = openSosModal; window.closeSosModal = closeSosModal; window.selectSosCategory = selectSosCategory;
         window.dismissPushBanner = dismissPushBanner; window.stopSosSiren = stopSosSiren; window.shareToWhatsApp = shareToWhatsApp;
-        window.toggleMic = toggleMic; window.toggleSpeaker = toggleSpeaker;
+        window.toggleVoiceGrid = toggleVoiceGrid; window.toggleMic = toggleMic; window.toggleSpeaker = toggleSpeaker;
         window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
         window.toggleTargetMute = toggleTargetMute; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
         window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm; window.sendQuickChat = sendQuickChat;
         window.openAdminTokenModal = openAdminTokenModal; window.closeAdminTokenModal = closeAdminTokenModal;
         window.verifyAdminPin = verifyAdminPin; window.saveAgoraToken = saveAgoraToken;
 
-        const countJoined = () => voiceSlots.filter(s => s.occupied).length;
-
-        // ============ SLOT LISTENER ============
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
-                voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
+                voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => {
+                    return { id:i, occupied:false };
+                });
 
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
@@ -441,11 +376,11 @@
                             isSelf: (data.uid === currentUserUid),
                             name: data.name,
                             role: data.location,
-                            initials: (data.name || 'W').substring(0, 2).toUpperCase(),
+                            initials: data.name.substring(0, 2).toUpperCase(),
                             gradient: 'from-emerald-400 to-emerald-600',
-                            isSpeaking: false,
-                            isMuted: !!data.isMuted,
-                            mutedByAdmin: !!data.mutedByAdmin,
+                            isSpeaking: false, 
+                            isMuted: false, 
+                            mutedByAdmin: false,
                             agoraUid: data.agoraUid
                         };
                     }
@@ -455,50 +390,30 @@
                     voiceSlots[joinedSlotIndex].isSelf = true;
                 }
 
-                if (joinedSlotIndex !== null && localAudioTrack) {
-                    const mySlot = voiceSlots[joinedSlotIndex];
-                    if (mySlot && mySlot.occupied) {
-                        const nowMutedByAdmin = mySlot.mutedByAdmin === true;
-                        if (nowMutedByAdmin && !wasMutedByAdmin) {
-                            localAudioTrack.setEnabled(false);
-                            updateAudioControlUI();
-                            showToast("Anda dibisukan oleh Admin.");
-                        } else if (!nowMutedByAdmin && wasMutedByAdmin) {
-                            localAudioTrack.setEnabled(!isMicMuted);
-                            updateAudioControlUI();
-                            showToast("Admin mengaktifkan suara Anda.");
-                        }
-                        wasMutedByAdmin = nowMutedByAdmin;
-
-                        if (!nowMutedByAdmin && mySlot.isMuted !== isMicMuted) {
-                            isMicMuted = mySlot.isMuted;
-                            localAudioTrack.setEnabled(!isMicMuted);
-                            updateAudioControlUI();
-                        }
-                    }
-                }
-
                 renderVoiceGrid();
             });
         }
 
-        // ============ ADMIN TOKEN ============
         function openAdminTokenModal() {
             $('admin-token-modal').classList.remove('hidden');
             $('admin-pin-section').classList.remove('hidden');
             $('admin-token-section').classList.add('hidden');
             $('admin-pin-input').value = '';
         }
-        function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
+
+        function closeAdminTokenModal() {
+            $('admin-token-modal').classList.add('hidden');
+        }
 
         function verifyAdminPin() {
             const pin = $('admin-pin-input').value;
-            if (pin === ADMIN_PIN) {
+            if (pin === "1234") {
                 $('admin-pin-section').classList.add('hidden');
                 $('admin-token-section').classList.remove('hidden');
                 $('new-agora-token').value = AGORA_TOKEN;
                 const disp = $('current-token-display');
-                disp.textContent = AGORA_TOKEN ? AGORA_TOKEN.substring(0, 10) + "..." : "Belum ada / Kosong";
+                if (AGORA_TOKEN) disp.textContent = AGORA_TOKEN.substring(0, 10) + "...";
+                else disp.textContent = "Belum ada / Kosong";
             } else {
                 alert("PIN Admin Salah!");
             }
@@ -508,7 +423,7 @@
             const newToken = $('new-agora-token').value.trim();
             if (!newToken) return alert("Token tidak boleh kosong!");
             try {
-                await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() });
+                await setDoc(doc(db, "config", "agora"), { token: newToken });
                 AGORA_TOKEN = newToken;
                 showToast("Token berhasil diperbarui untuk semua warga!");
                 closeAdminTokenModal();
@@ -520,11 +435,14 @@
         async function fetchLatestAgoraToken() {
             try {
                 const docSnap = await getDoc(doc(db, "config", "agora"));
-                if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token;
-            } catch (e) { console.error("Gagal ambil token:", e); }
+                if (docSnap.exists() && docSnap.data().token) {
+                    AGORA_TOKEN = docSnap.data().token;
+                }
+            } catch (e) {
+                console.error("Gagal ambil token:", e);
+            }
         }
 
-        // ============ PRESENCE ============
         function setupPresence() {
             if (!currentUserUid) return;
             const userDocRef = doc(db, "presence", currentUserUid);
@@ -540,41 +458,17 @@
             onSnapshot(presenceCol, (snapshot) => {
                 const now = Date.now();
                 let count = 0;
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
                     if (data.lastSeen && (now - data.lastSeen < 65000)) count++;
                 });
                 onlineUserCount = count;
-                updateCounters();
+                updateCounters(); 
             });
         }
 
-        // ============ HEARTBEAT & CLEANUP ============
-        function startHeartbeat() {
-            setInterval(async () => {
-                if (joinedSlotIndex === null || !currentUserUid) return;
-                try {
-                    await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true });
-                } catch(e) {}
-            }, 20000);
-        }
-
-        function startStaleCleanup() {
-            setInterval(async () => {
-                try {
-                    const snap = await getDocs(collection(db, "active_slots"));
-                    const now = Date.now();
-                    for (const d of snap.docs) {
-                        const data = d.data();
-                        if (!data.lastSeen) continue;
-                        if (data.uid === currentUserUid) continue;
-                        if (now - data.lastSeen > SLOT_TIMEOUT_MS) {
-                            try { await deleteDoc(d.ref); } catch(e) {}
-                        }
-                    }
-                } catch(e) {}
-            }, 60000);
-        }
+        const $ = id => document.getElementById(id);
+        const countJoined = () => voiceSlots.filter(s => s.occupied).length;
 
         function updateCounters() {
             const n = countJoined();
@@ -582,17 +476,34 @@
             $('online-count-text').textContent = `${onlineUserCount} Warga Online`;
         }
 
+        function toggleVoiceGrid() {
+            isVoiceGridExpanded = !isVoiceGridExpanded;
+            const btnIcon = $('btn-toggle-grid').querySelector('svg');
+            const btnText = $('toggle-text');
+            const container = $('voice-grid').parentElement;
+            if (isVoiceGridExpanded) {
+                container.classList.replace('max-h-[225px]', 'max-h-[350px]');
+                btnIcon.setAttribute('data-lucide', 'chevron-up');
+                btnText.textContent = 'Sembunyikan Slot Lainnya';
+            } else {
+                container.classList.replace('max-h-[350px]', 'max-h-[225px]');
+                btnIcon.setAttribute('data-lucide', 'chevron-down');
+                btnText.textContent = `Lihat Semua ${MAX_SLOTS} Slot`;
+            }
+            renderVoiceGrid(); lucide.createIcons();
+        }
+
         function shareToWhatsApp() {
             const text = "Ayo gabung ronda malam Nguling RW 13 di *Telulas Gank*! Klik link ini: \n\n" + window.location.href;
             window.open("https://wa.me/?text=" + encodeURIComponent(text), '_blank');
         }
 
-        // ============ RENDER VOICE GRID ============
         function renderVoiceGrid() {
             const grid = $('voice-grid');
             grid.innerHTML = '';
+            const slotsToRender = isVoiceGridExpanded ? voiceSlots : voiceSlots.slice(0, DEFAULT_VISIBLE);
 
-            voiceSlots.forEach(slot => {
+            slotsToRender.forEach(slot => {
                 if (slot.occupied) {
                     const isAdminMuted = slot.isMuted && slot.mutedByAdmin;
                     const cardStyle = slot.isSelf ? 'glass-card-self' : (isAdminMuted ? 'glass-card border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'glass-card');
@@ -602,19 +513,17 @@
                     const adminBadge = slot.isSelf ? `<i data-lucide="crown" class="w-3 h-3 text-amber-400 absolute -top-1.5 left-1/2 -translate-x-1/2 bg-night-900 rounded-full p-0.5 border border-slate-700 z-10"></i>` : '';
                     const isClickable = (joinedSlotIndex !== null && !slot.isSelf);
                     const cursorClass = isClickable ? 'cursor-pointer' : '';
-                    const roleText = isAdminMuted
-                        ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>`
-                        : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${escapeHTML(slot.role || '')}</p>`;
+                    const roleText = isAdminMuted ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>` : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${slot.role}</p>`;
 
                     const card = document.createElement('div');
                     card.className = `${cardStyle} ${cursorClass} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
                     card.innerHTML = `
                         <div class="relative mb-1 mt-1">
                             ${activeRings} ${adminBadge}
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-md border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${escapeHTML(slot.initials || 'W')}</div>
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-md border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${slot.initials}</div>
                             <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10">${statusBadge}</span>
                         </div>
-                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">${slot.isSelf ? 'Anda' : escapeHTML(slot.name || 'Warga')}</p>
+                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">${slot.isSelf ? 'Anda' : slot.name}</p>
                         ${roleText}`;
                     
                     if (isClickable) card.onclick = () => openAdminModal(slot.id);
@@ -638,7 +547,6 @@
             lucide.createIcons();
         }
 
-        // ============ ADMIN MODAL PESERTA ============
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
             const targetSlot = voiceSlots[slotId];
@@ -650,22 +558,18 @@
             updateAdminModalUI();
             $('admin-modal').classList.remove('hidden');
         }
+
         function closeAdminModal() { $('admin-modal').classList.add('hidden'); targetAdminSlotIndex = null; }
 
         function updateAdminModalUI() {
             const targetSlot = voiceSlots[targetAdminSlotIndex];
             if (!targetSlot) return;
             const btn = $('admin-toggle-btn'); const statusTxt = $('admin-target-status');
-            if (targetSlot.mutedByAdmin) {
-                statusTxt.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin`;
-                statusTxt.className = 'text-[11px] text-purple-400 font-bold';
+            if (targetSlot.isMuted) {
+                statusTxt.innerHTML = targetSlot.mutedByAdmin ? `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin` : 'Sedang Dibisukan (Mandiri)';
+                statusTxt.className = targetSlot.mutedByAdmin ? 'text-[11px] text-purple-400 font-bold' : 'text-[11px] text-rose-400 font-semibold';
                 btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-emerald-600 text-white shadow-lg border border-emerald-400/40';
                 btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i> Aktifkan Suara Peserta`;
-            } else if (targetSlot.isMuted) {
-                statusTxt.textContent = 'Sedang Dibisukan (Mandiri)';
-                statusTxt.className = 'text-[11px] text-rose-400 font-semibold';
-                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg border border-rose-400/40';
-                btn.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4"></i> Bisukan Peserta Ini`;
             } else {
                 statusTxt.textContent = 'Sedang Aktif / Bicara';
                 statusTxt.className = 'text-[11px] text-emerald-400 font-semibold';
@@ -675,31 +579,21 @@
             lucide.createIcons();
         }
 
-        async function toggleTargetMute() {
+        function toggleTargetMute() {
             if (targetAdminSlotIndex === null) return;
             const targetSlot = voiceSlots[targetAdminSlotIndex];
-            const ref = doc(db, "active_slots", `slot_${targetAdminSlotIndex}`);
-            try {
-                if (targetSlot.mutedByAdmin) {
-                    await setDoc(ref, { mutedByAdmin: false }, { merge: true });
-                    showToast(`Suara ${targetSlot.name} diaktifkan kembali.`);
-                } else {
-                    await setDoc(ref, { mutedByAdmin: true }, { merge: true });
-                    showToast(`${targetSlot.name} dibisukan oleh Admin.`);
-                }
-                closeAdminModal();
-            } catch (e) {
-                alert("Gagal mute: " + e.message);
-            }
+            targetSlot.isMuted = !targetSlot.isMuted;
+            if (targetSlot.isMuted) { targetSlot.isSpeaking = false; targetSlot.mutedByAdmin = true; showToast(`${targetSlot.name} dibisukan oleh Admin.`); }
+            else { targetSlot.mutedByAdmin = false; showToast(`Suara ${targetSlot.name} diaktifkan kembali.`); }
+            updateAdminModalUI(); renderVoiceGrid();
         }
 
-        // ============ JOIN ============
         function openJoinModal(index) {
             if (joinedSlotIndex !== null) return showToast('Anda sudah terhubung.');
             if (voiceSlots[index].occupied) return;
             if (countJoined() >= MAX_SLOTS) return showToast('Ruang suara penuh.');
-            pendingJoinSlotIndex = index;
-            $('user-name-input').value = '';
+            pendingJoinSlotIndex = index; 
+            $('user-name-input').value = ''; 
             $('custom-loc-input').value = '';
             $('join-modal').classList.remove('hidden');
             setTimeout(() => $('user-name-input').focus(), 300);
@@ -708,27 +602,11 @@
         function closeJoinModal() { $('join-modal').classList.add('hidden'); $('custom-loc-input').blur(); pendingJoinSlotIndex = null; }
 
         function confirmJoin() {
-            primeAudio();
             const nameVal = $('user-name-input').value.trim();
             const locVal = $('custom-loc-input').value.trim();
             const finalName = nameVal || 'Warga';
-            const finalLoc = locVal || 'Ronda Keliling';
+            const finalLoc = locVal || 'Ronda Keliling'; 
             const index = pendingJoinSlotIndex; closeJoinModal(); executeJoin(index, finalName, finalLoc);
-        }
-
-        async function checkMicPermission() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Browser tidak mendukung mikrofon.");
-                return false;
-            }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                stream.getTracks().forEach(t => t.stop());
-                return true;
-            } catch (e) {
-                alert("Izin mikrofon ditolak. Pastikan membuka situs via HTTPS dan mengizinkan mikrofon.");
-                return false;
-            }
         }
 
         async function executeJoin(index, name, location) {
@@ -736,188 +614,154 @@
             if (!AGORA_APP_ID) return alert("App ID Agora belum dimasukkan.");
             if (!AGORA_TOKEN) {
                 await fetchLatestAgoraToken();
-                if (!AGORA_TOKEN) return alert("Token Agora belum diatur oleh Admin. Buka menu admin (ikon menara) dan masukkan Token.");
+                if (!AGORA_TOKEN) {
+                    return alert("Token Agora belum diatur oleh Admin. Buka menu admin (ikon menara) dan masukkan Token.");
+                }
             }
 
-            if (!await checkMicPermission()) return;
-
             try {
-                const slotRef = doc(db, "active_slots", `slot_${index}`);
-                const myAgoraUid = Math.floor(Math.random() * 100000000);
-                try {
-                    await runTransaction(db, async (tx) => {
-                        const snap = await tx.get(slotRef);
-                        if (snap.exists() && snap.data().occupied) throw new Error("SLOT_OCCUPIED");
-                        tx.set(slotRef, {
-                            slotId: index, uid: currentUserUid, agoraUid: myAgoraUid,
-                            name, location, isMuted: false, mutedByAdmin: false,
-                            occupied: true, lastSeen: Date.now()
-                        });
-                    });
-                } catch (e) {
-                    if (e.message === "SLOT_OCCUPIED") { showToast("Slot sudah diambil orang lain. Coba slot lain."); return; }
-                    throw e;
-                }
-
-                localAgoraUid = myAgoraUid;
+                localAgoraUid = Math.floor(Math.random() * 100000000);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-
+                
+                // EVENT: User lain mempublikasikan audio, otomatis subscribe dan play
                 agoraClient.on("user-published", async (user, mediaType) => {
-                    try {
-                        await agoraClient.subscribe(user, mediaType);
-                        if (mediaType === "audio" && user.audioTrack) {
-                            remoteAudioTracks[user.uid] = user.audioTrack;
-                            try {
-                                await user.audioTrack.play();
-                                hideUnlockBanner();
-                            } catch (playErr) {
-                                console.warn("autoplay blocked:", playErr);
-                                showUnlockBanner();
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("subscribe err:", e);
+                    await agoraClient.subscribe(user, mediaType);
+                    if (mediaType === "audio" && user.audioTrack) {
+                        remoteAudioTracks[user.uid] = user.audioTrack;
+                        user.audioTrack.play();
                     }
                 });
 
                 agoraClient.on("user-unpublished", (user, mediaType) => {
                     if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
-                        try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
+                        remoteAudioTracks[user.uid].stop();
                         delete remoteAudioTracks[user.uid];
                     }
                 });
 
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
-
-                // Subscribe ke user yang SUDAH ada (safety net)
-                agoraClient.remoteUsers.forEach(async (user) => {
-                    if (user.hasAudio) {
-                        try {
-                            await agoraClient.subscribe(user, "audio");
-                            if (user.audioTrack) {
-                                remoteAudioTracks[user.uid] = user.audioTrack;
-                                try { await user.audioTrack.play(); } catch(e) { showUnlockBanner(); }
-                            }
-                        } catch(e) {}
-                    }
-                });
-
+                
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
                     encoderConfig: "speech_standard",
-                    AEC: true, AGC: true, ANS: true
+                    AEC: true,
+                    AGC: true,
+                    ANS: true
                 });
+                
                 await agoraClient.publish([localAudioTrack]);
 
                 agoraClient.enableAudioVolumeIndicator();
                 agoraClient.on("volume-indicator", volumes => {
-                    let needsRender = false;
                     volumes.forEach(volume => {
                         const speakingSlot = voiceSlots.find(s => s.agoraUid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
                         if (speakingSlot) {
-                            if (volume.level > 5 && !speakingSlot.isSpeaking) { speakingSlot.isSpeaking = true; needsRender = true; }
-                            else if (volume.level <= 5 && speakingSlot.isSpeaking) { speakingSlot.isSpeaking = false; needsRender = true; }
+                            if (volume.level > 5 && !speakingSlot.isSpeaking) {
+                                speakingSlot.isSpeaking = true;
+                                renderVoiceGrid();
+                            } else if (volume.level <= 5 && speakingSlot.isSpeaking) {
+                                speakingSlot.isSpeaking = false;
+                                renderVoiceGrid();
+                            }
                         }
                     });
-                    if (needsRender) renderVoiceGrid();
                 });
 
                 userProfile.name = name; userProfile.location = location;
-                joinedSlotIndex = index;
-                isMicMuted = false; isSpeakerOn = true; wasMutedByAdmin = false;
+                joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
+
+                await setDoc(doc(db, "active_slots", currentUserUid), {
+                    slotId: index, uid: currentUserUid, agoraUid: localAgoraUid,
+                    name: name, location: location, isMuted: false
+                });
+
+                voiceSlots[index] = { 
+                    id: index, occupied: true, isSelf: true, 
+                    name: name, role: location, initials: name.substring(0, 2).toUpperCase(), 
+                    gradient: 'from-emerald-400 to-emerald-600', 
+                    isSpeaking: false, isMuted: false, mutedByAdmin: false,
+                    agoraUid: localAgoraUid
+                };
 
                 $('audio-control-bar').classList.remove('hidden');
-                updateAudioControlUI();
+                updateAudioControlUI(); 
                 sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
                 showToast(`Terhubung ke Saluran Suara!`);
                 await requestWakeLock();
 
-                // Tampilkan banner preventif setelah join (apakah ada peserta atau tidak)
-                setTimeout(() => {
-                    if (Object.keys(remoteAudioTracks).length === 0) {
-                        showUnlockBanner();
-                    } else {
-                        const anyBlocked = Object.values(remoteAudioTracks).some(t => !t.isPlaying);
-                        if (anyBlocked) showUnlockBanner();
-                    }
-                }, 1500);
-
             } catch (err) {
                 console.error("Agora Error:", err);
-                try { await deleteDoc(doc(db, "active_slots", `slot_${index}`)); } catch(e) {}
                 alert("GAGAL SUARA: " + err.message);
             }
         }
 
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
-            const prevIndex = joinedSlotIndex;
-            const leavingName = userProfile.name;
 
-            hideUnlockBanner();
+            const localUid = currentUserUid;
+            const prevIndex = joinedSlotIndex;
+
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
-            Object.values(remoteAudioTracks).forEach(t => { try { t.stop(); } catch(e){} });
             remoteAudioTracks = {};
-            wasMutedByAdmin = false;
 
             renderVoiceGrid();
             showToast('Keluar dari ruang suara');
-            sendSystemChat(`📴 ${leavingName} keluar dari ruang suara.`);
+            sendSystemChat('Anda keluar dari ruang suara.');
             releaseWakeLock();
 
             try {
-                if (localAudioTrack) { localAudioTrack.stop(); localAudioTrack.close(); localAudioTrack = null; }
-                if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
-                await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
-            } catch (e) { console.error("Error saat keluar:", e); }
+                if (localAudioTrack) { 
+                    localAudioTrack.stop(); 
+                    localAudioTrack.close(); 
+                    localAudioTrack = null; 
+                }
+                if (agoraClient) { 
+                    await agoraClient.leave(); 
+                    agoraClient = null; 
+                }
+                await deleteDoc(doc(db, "active_slots", localUid));
+            } catch (e) {
+                console.error("Error saat keluar:", e);
+            }
         }
 
         async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
         function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); }
 
-        async function toggleMic() {
-            if (joinedSlotIndex === null || !localAudioTrack) return;
-            const mySlot = voiceSlots[joinedSlotIndex];
-            if (mySlot && mySlot.mutedByAdmin) { showToast("Admin membisukan Anda. Hubungi admin."); return; }
-            isMicMuted = !isMicMuted;
+        function toggleMic() { 
+            if (joinedSlotIndex === null || !localAudioTrack) return; 
+            isMicMuted = !isMicMuted; 
             localAudioTrack.setEnabled(!isMicMuted);
-            updateAudioControlUI();
-            showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan');
-            try {
-                await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { isMuted: isMicMuted }, { merge: true });
-            } catch(e) {}
+            updateAudioControlUI(); 
+            showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan'); 
         }
-
-        function toggleSpeaker() {
-            isSpeakerOn = !isSpeakerOn;
+        
+        function toggleSpeaker() { 
+            isSpeakerOn = !isSpeakerOn; 
             Object.values(remoteAudioTracks).forEach(track => {
-                try { isSpeakerOn ? track.play() : track.stop(); } catch(e) {}
+                if (!isSpeakerOn) {
+                    track.stop();
+                } else {
+                    track.play();
+                }
             });
-            updateAudioControlUI();
-            showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan');
+            updateAudioControlUI(); 
+            showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan'); 
         }
 
         function updateAudioControlUI() {
             const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
             const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
             const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
-            const mySlot = joinedSlotIndex !== null ? voiceSlots[joinedSlotIndex] : null;
-            const forcedMute = !!(mySlot && mySlot.mutedByAdmin);
-
-            if (isMicMuted || forcedMute) {
-                btnMute.innerHTML = `<i data-lucide="${forcedMute ? 'shield-alert' : 'mic-off'}" class="w-4 h-4 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}"></i>`;
-                btnMute.disabled = forcedMute;
-                micLabel.textContent = forcedMute ? 'Mute Admin' : 'Mic Mute';
-                micLabel.className = forcedMute ? 'text-xs font-bold text-purple-300 truncate' : 'text-xs font-bold text-rose-300 truncate';
-                badgeIcon.setAttribute('data-lucide', forcedMute ? 'shield-alert' : 'mic-off');
-                badgeIcon.setAttribute('class', `w-3.5 h-3.5 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}`);
-                badgeBg.className = forcedMute
-                    ? 'w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shrink-0'
-                    : 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
+            
+            if (isMicMuted) {
+                btnMute.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4 text-rose-400"></i>`;
+                micLabel.textContent = 'Mic Mute'; micLabel.className = 'text-xs font-bold text-rose-300 truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic-off'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-rose-400');
+                badgeBg.className = 'w-7 h-7 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0';
             } else {
                 btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
-                btnMute.disabled = false;
                 micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
                 badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
                 badgeBg.className = 'w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0';
@@ -933,23 +777,22 @@
             lucide.createIcons();
         }
 
-        // ============ CHAT ============
         function initFirebaseChat() {
-            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(50));
+            const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
-                const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 60;
+                const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight <= 50;
                 let chats = [];
-                snapshot.forEach((docSnap) => chats.push({ id: docSnap.id, ...docSnap.data() }));
-                chats.reverse();
+                snapshot.forEach((docSnap) => { chats.push({ id: docSnap.id, ...docSnap.data() }); });
+                chats.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                 feed.innerHTML = '';
-                chats.forEach((data) => renderMessageBubble(data));
+                chats.forEach((data) => renderMessageBubble(data, isAtBottom));
                 if (isAtBottom) feed.scrollTop = feed.scrollHeight;
                 lucide.createIcons();
             }, (error) => { alert("Gagal Memuat Chat: " + error.message); });
         }
 
-        function renderMessageBubble(data) {
+        function renderMessageBubble(data, isAtBottom) {
             const feed = $('chat-feed'); const wrapper = document.createElement('div');
             const isSelf = (data.senderUid === currentUserUid);
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
@@ -957,41 +800,34 @@
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
                 wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
-                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${escapeHTML(data.time || '')}</span></div>
+                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${data.time}</span></div>
                     <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
                     <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
             } else if (isSelf) {
-                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${data.time}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
                     <div class="max-w-[82%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-md border border-emerald-400/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
             } else {
-                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender)}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${data.time}</span></div>
                     <div class="max-w-[86%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
             }
             feed.appendChild(wrapper);
         }
 
-        async function sendChatToDB(text, opts = {}) {
+        async function sendChatToDB(text, isEmergency = false) {
             if (!text) return;
             if (!currentUserUid) return alert("Tunggu, sedang menghubungkan ke server...");
             const senderName = joinedSlotIndex !== null ? userProfile.name : 'Warga';
             try {
                 await addDoc(collection(db, "chats"), {
-                    senderUid: currentUserUid,
-                    sender: senderName,
-                    message: text,
-                    timestamp: Date.now(),
-                    time: getCurrentTime(),
-                    tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
-                    isEmergency: !!opts.isEmergency
+                    senderUid: currentUserUid, sender: senderName, message: text, timestamp: Date.now(), time: getCurrentTime(), tag: joinedSlotIndex !== null ? userProfile.location : 'Warga', isEmergency: isEmergency
                 });
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
 
-        function sendSystemChat(text) { sendChatToDB(text); }
+        function sendSystemChat(text) { sendChatToDB(text, false); }
         function submitChatForm(e) { e.preventDefault(); const input = $('chat-input'); const val = input.value.trim(); if (!val) return; sendChatToDB(val); input.value = ''; }
         function sendQuickChat(text) { sendChatToDB(text); }
 
-        // ============ SOS ============
         let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
         function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); setTimeout(() => { const btn = document.querySelector('.sos-cat-btn'); if (btn) btn.focus(); }, 50); }
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
@@ -1008,68 +844,64 @@
         function startSosSiren() { if (sosSirenInterval) clearInterval(sosSirenInterval); playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }
         function stopSosSiren() { if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; showToast('Sirene SOS dihentikan.'); } }
 
-        function showSosBanner(reporter, category) {
-            $('push-category-text').textContent = category;
-            $('push-reporter-text').textContent = reporter;
-            $('push-notification-preview').classList.remove('hidden');
-            startSosSiren();
-            lucide.createIcons();
+        function showSosUI(reporter, category) {
+            $('push-category-text').textContent = category; $('push-reporter-text').textContent = reporter;
+            $('push-notification-preview').classList.remove('hidden'); startSosSiren();
+            const feed = $('chat-feed'); const wrapper = document.createElement('div'); wrapper.className = 'w-full my-1';
+            wrapper.innerHTML = `<div class="w-full p-3 rounded-2xl bg-rose-950/75 border border-rose-500/55 shadow-md">
+                <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> PERINGATAN SOS</span><span class="text-[10px] text-rose-300/70">${getCurrentTime()}</span></div>
+                <p class="text-xs font-semibold text-white">DARURAT (${escapeHTML(category)}) oleh ${escapeHTML(reporter)}. Segera merapat!</p>
+                <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
+            feed.appendChild(wrapper); feed.scrollTop = feed.scrollHeight; lucide.createIcons();
         }
 
         async function triggerEmergencyAlert() {
             closeSosModal();
             let reporterLabel = 'Warga (Belum Join)';
-            if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
-            showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory);
+            if (joinedSlotIndex !== null) { reporterLabel = `${userProfile.name} (${userProfile.location})`; }
+            showSosUI(`Anda (${reporterLabel})`, selectedSosCategory);
+            
             try {
-                await addDoc(collection(db, "sos_alerts"), {
-                    senderUid: currentUserUid,
-                    reporter: reporterLabel,
-                    category: selectedSosCategory,
-                    timestamp: Date.now(),
-                    active: true
+                await addDoc(collection(db, "sos_alerts"), { 
+                    senderUid: currentUserUid, 
+                    reporter: reporterLabel, 
+                    category: selectedSosCategory, 
+                    timestamp: Date.now(), 
+                    active: true 
                 });
-                await sendChatToDB(`🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}. Segera merapat!`, { isEmergency: true });
                 showToast("SOS Berhasil Dikirim!");
             } catch (e) { alert("Gagal Kirim SOS: " + e.message); }
         }
 
         function listenIncomingSos() {
-            const q = query(collection(db, "sos_alerts"), orderBy("timestamp", "desc"), limit(10));
+            const q = query(collection(db, "sos_alerts"), limit(10));
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
-                    if (change.type !== "added") return;
-                    const data = change.doc.data();
-                    const docId = change.doc.id;
-                    if (data.senderUid === currentUserUid) return;
-                    if (processedSosIds.includes(docId)) return;
-                    const timeDiff = Date.now() - (data.timestamp || 0);
-                    if (timeDiff > 60000) return;
-                    processedSosIds.push(docId);
-                    if (processedSosIds.length > 100) processedSosIds.shift();
-                    showSosBanner(data.reporter, data.category);
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        const docId = change.doc.id;
+                        if (data.senderUid === currentUserUid) return;
+                        if (processedSosIds.includes(docId)) return;
+                        const timeDiff = Date.now() - (data.timestamp || 0);
+                        if (timeDiff > 30000) return; 
+                        processedSosIds.push(docId);
+                        if (processedSosIds.length > 100) processedSosIds.shift(); 
+                        showSosUI(data.reporter, data.category);
+                    }
                 });
             });
         }
 
         function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
 
-        // ============ UTILS ============
         let toastTimer;
-        function showToast(message) {
-            const toast = $('toast'); $('toast-msg').textContent = message;
-            toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400);
-        }
+        function showToast(message) { const toast = $('toast'); $('toast-msg').textContent = message; toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0'); clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400); }
+
         function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
-        function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
+        function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
         window.addEventListener('load', () => {
-            renderVoiceGrid();
-            initFirebaseChat();
-            listenIncomingSos();
-            lucide.createIcons();
+            renderVoiceGrid(); initFirebaseChat(); listenIncomingSos(); lucide.createIcons();
             const holdBtn = $('hold-sos-btn');
             holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
             holdBtn.addEventListener('touchend', cancelHoldSos);
@@ -1078,20 +910,11 @@
             holdBtn.addEventListener('mouseup', cancelHoldSos);
             holdBtn.addEventListener('mouseleave', cancelHoldSos);
 
-            document.addEventListener('keydown', e => {
-                if (e.key === 'Escape') {
-                    if (!$('sos-modal').classList.contains('hidden')) closeSosModal();
-                    if (!$('join-modal').classList.contains('hidden')) closeJoinModal();
-                    if (!$('admin-modal').classList.contains('hidden')) closeAdminModal();
-                    if (!$('admin-token-modal').classList.contains('hidden')) closeAdminTokenModal();
-                }
-            });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('sos-modal').classList.contains('hidden')) closeSosModal(); if (!$('join-modal').classList.contains('hidden')) closeJoinModal(); if (!$('admin-modal').classList.contains('hidden')) closeAdminModal(); if (!$('admin-token-modal').classList.contains('hidden')) closeAdminTokenModal(); } });
             $('sos-modal').addEventListener('click', e => { if (e.target === $('sos-modal')) closeSosModal(); });
             $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
             $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
-            document.addEventListener('visibilitychange', async () => {
-                if (document.visibilityState === 'visible' && joinedSlotIndex !== null) await requestWakeLock();
-            });
+            document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && joinedSlotIndex !== null) await requestWakeLock(); });
         });
     </script>
 </body>
