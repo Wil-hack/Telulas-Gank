@@ -245,7 +245,6 @@
                 <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
                 
                 <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
-                    <!-- TOMBOL DAFTAR WARGA -->
                     <button type="button" onclick="openUserListModal()" class="w-full py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-600/30 transition">
                         <i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga
                     </button>
@@ -398,8 +397,8 @@
         const ADMIN_PIN = "7454";
         const ADMIN_USERNAME = "wildan jaka"; 
         
-        // KOSONGKAN SAJA JIKA TIDAK PAKAI FCM / TIDAK PUNYA VAPID KEY
-        const VAPID_KEY = "VAPID_KEY_DISINI"; 
+        // VAPID KEY SUDAH DIPASANG
+        const VAPID_KEY = "BLOeL5qHPVUIEQGFa0vQAC9NqHuF64EHvWim3vPJQ5nqvUGtu8YLlkxTRzm90SqgNczTSb0uv9cr7soVpXOurfM"; 
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -697,7 +696,6 @@
 
                 chats.forEach(data => renderMessageBubble(data, feed));
                 
-                // Hanya scroll ke bawah jika kita bukan sedang memuat pesan lama
                 if(!isLoadingMore) {
                     feed.scrollTop = feed.scrollHeight;
                 }
@@ -774,7 +772,6 @@
             const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
             $('chat-input').value = ''; 
             
-            // Hapus status typing langsung
             deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
 
             try {
