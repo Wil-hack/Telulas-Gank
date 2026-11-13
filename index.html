@@ -298,7 +298,7 @@
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
         let localAudioTrack = null;
-        let localAgoraUid = null; // Menyimpan ID Agora (angka)
+        let localAgoraUid = null; 
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -349,7 +349,8 @@
                             gradient: 'from-emerald-400 to-emerald-600',
                             isSpeaking: false, 
                             isMuted: false, 
-                            mutedByAdmin: false
+                            mutedByAdmin: false,
+                            agoraUid: data.agoraUid // Sinkronisasi ID Agora
                         };
                     }
                 });
@@ -620,44 +621,38 @@
             if (!AGORA_TOKEN) {
                 await fetchLatestAgoraToken();
                 if (!AGORA_TOKEN) {
-                    return alert("Token Agora belum diatur oleh Admin. Mohon tunggu atau hubungi Admin.");
+                    return alert("Token Agora belum diatur oleh Admin.");
                 }
             }
 
             try {
-                // FIX UID_CONFLICT
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 
+                // Paksa Speaker Luar (Loudspeaker) Aktif di HP
+                await agoraClient.setAudioRoute(1);
+
                 localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
                 await agoraClient.publish([localAudioTrack]);
 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     await agoraClient.subscribe(user, mediaType);
                     if (mediaType === "audio") {
-                        // PANGGIL PLAY AGAR SUARA KELUAR
                         user.audioTrack.play();
                     }
                 });
 
-                // FIX VOLUME INDICATOR: Agar avatar menyala jika ada yang bicara
                 agoraClient.enableAudioVolumeIndicator();
                 agoraClient.on("volume-indicator", volumes => {
                     volumes.forEach(volume => {
-                        if (volume.level > 5) { 
-                            // Cari slot yang sesuai dengan volume.uid
-                            // Note: Agora menggunakan `uid` dalam bentuk angka (localAgoraUid).
-                            // Kita cocokkan dengan slot yang ada.
-                            const speakingSlot = voiceSlots.find(s => s.uid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
-                            if (speakingSlot && !speakingSlot.isSpeaking) {
+                        const speakingSlot = voiceSlots.find(s => s.agoraUid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
+                        if (speakingSlot) {
+                            if (volume.level > 5 && !speakingSlot.isSpeaking) {
                                 speakingSlot.isSpeaking = true;
                                 renderVoiceGrid();
-                            }
-                        } else {
-                            const silentSlot = voiceSlots.find(s => s.uid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
-                            if (silentSlot && silentSlot.isSpeaking) {
-                                silentSlot.isSpeaking = false;
+                            } else if (volume.level <= 5 && speakingSlot.isSpeaking) {
+                                speakingSlot.isSpeaking = false;
                                 renderVoiceGrid();
                             }
                         }
@@ -667,23 +662,17 @@
                 userProfile.name = name; userProfile.location = location;
                 joinedSlotIndex = index; isMicMuted = false; isSpeakerOn = true;
 
-                // Simpan ke Firebase
                 await setDoc(doc(db, "active_slots", currentUserUid), {
-                    slotId: index,
-                    uid: currentUserUid,
-                    agoraUid: localAgoraUid,
-                    name: name,
-                    location: location,
-                    isMuted: false
+                    slotId: index, uid: currentUserUid, agoraUid: localAgoraUid,
+                    name: name, location: location, isMuted: false
                 });
 
-                // Update UI slot lokal agar langsung pakai agoraUid
                 voiceSlots[index] = { 
                     id: index, occupied: true, isSelf: true, 
                     name: name, role: location, initials: name.substring(0, 2).toUpperCase(), 
                     gradient: 'from-emerald-400 to-emerald-600', 
                     isSpeaking: false, isMuted: false, mutedByAdmin: false,
-                    uid: localAgoraUid
+                    agoraUid: localAgoraUid
                 };
 
                 $('audio-control-bar').classList.remove('hidden');
@@ -701,7 +690,12 @@
         async function leaveSlot() {
             if (joinedSlotIndex === null) return;
             
-            if (localAudioTrack) { localAudioTrack.close(); localAudioTrack = null; }
+            if (localAudioTrack) { 
+                // MEMASTIKAN INDIKATOR MIC HILANG
+                localAudioTrack.stop(); 
+                localAudioTrack.close(); 
+                localAudioTrack = null; 
+            }
             if (agoraClient) { await agoraClient.leave(); agoraClient = null; }
 
             try {
@@ -875,10 +869,6 @@
         }
 
         function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
-
-        function startAmbientVoiceSimulation() { 
-            // Fungsi ini sekarang digantikan oleh enableAudioVolumeIndicator() dari Agora
-        }
 
         let toastTimer;
         function showToast(message) { const toast = $('toast'); $('toast-msg').textContent = message; toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0'); clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400); }
