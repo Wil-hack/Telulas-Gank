@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Telulas Gank - Ronda Nguling RW 13</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font tambahan untuk judul yang lebih kece -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
@@ -13,7 +14,10 @@
         tailwind.config = {
             darkMode: 'class',
             theme: { extend: {
-                fontFamily: { sans: ['Inter', 'sans-serif'] },
+                fontFamily: { 
+                    sans: ['Inter', 'sans-serif'],
+                    title: ['Outfit', 'sans-serif']
+                },
                 colors: { night: { 950:'#050911', 900:'#0a111e', 850:'#0f1829', 800:'#152238' } },
                 animation: { 'banner-slide': 'bannerSlide 0.45s cubic-bezier(0.16,1,0.3,1) forwards', 'sheet-up': 'sheetUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards' },
                 keyframes: {
@@ -43,11 +47,17 @@
         .vol-bar { height: 2px; background: #10b981; transition: width 0.1s; border-radius: 99px; }
         @keyframes pulseUnlock { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); } 50% { box-shadow: 0 0 0 14px rgba(245,158,11,0); } }
         #unlock-audio-banner button { animation: pulseUnlock 1.6s infinite; }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #34d399, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
-    <!-- AUDIO SIRENE (UNTUK BACKGROUND NOTIFIKASI) -->
     <audio id="siren-audio" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop style="display:none;"></audio>
 
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -56,7 +66,55 @@
         <div class="absolute -bottom-28 left-1/3 w-96 h-96 bg-teal-900/20 rounded-full blur-3xl"></div>
     </div>
 
-    <div id="app-shell" class="relative z-10 w-full max-w-md h-[100dvh] flex flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
+    <!-- ================= LAYAR LOGIN / REGISTER (KUNCI APLIKASI) ================= -->
+    <div id="auth-screen" class="fixed inset-0 z-[200] bg-night-950 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden animate-sheet-up">
+            
+            <div class="flex flex-col items-center justify-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 mb-3">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                </div>
+                <h1 class="text-3xl font-title font-black tracking-tight text-gradient">Telulas Gank</h1>
+                <p class="text-[11px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Ronda Nguling RW 13</p>
+            </div>
+
+            <!-- FORM LOGIN -->
+            <div id="form-login">
+                <div class="space-y-3">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div>
+                        <input type="text" id="login-username" placeholder="Username Anda" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div>
+                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
+                    </div>
+                </div>
+                <button type="button" onclick="doLogin()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition">Masuk Aplikasi</button>
+                <p class="text-center text-xs text-slate-400 mt-5">Belum punya akun? <button onclick="toggleAuth('register')" class="text-emerald-400 font-bold hover:underline">Daftar Warga</button></p>
+            </div>
+
+            <!-- FORM REGISTER -->
+            <div id="form-register" class="hidden">
+                <div class="space-y-3">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div>
+                        <input type="text" id="reg-username" placeholder="Buat Username" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div>
+                        <input type="password" id="reg-password" placeholder="Buat Password" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition">
+                    </div>
+                </div>
+                <button type="button" onclick="doRegister()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition">Daftar Akun</button>
+                <p class="text-center text-xs text-slate-400 mt-5">Sudah punya akun? <button onclick="toggleAuth('login')" class="text-emerald-400 font-bold hover:underline">Masuk di sini</button></p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= APLIKASI UTAMA ================= -->
+    <div id="app-shell" class="hidden relative z-10 w-full max-w-md h-[100dvh] flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -64,7 +122,8 @@
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </button>
                 <div class="min-w-0 flex items-center gap-2">
-                    <h1 class="font-extrabold text-lg text-white truncate">Telulas Gank</h1>
+                    <h1 class="font-title font-black text-xl tracking-tight text-gradient drop-shadow-sm truncate">Telulas Gank</h1>
+                    <span id="role-badge" class="hidden px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">Warga</span>
                 </div>
             </div>
             
@@ -166,10 +225,14 @@
                 <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora. (PIN: 1234)</p>
                 <input type="password" id="admin-pin-input" placeholder="Masukkan PIN (1234)" class="w-full bg-slate-900/95 text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl border border-slate-700/80 focus:outline-none focus:border-amber-500/70 mb-3 transition">
                 <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
-                <div class="pt-3 border-t border-slate-700/60">
-                    <p class="text-[10px] text-center text-slate-500 mb-2">Warga tidak bisa dengar/bicara?</p>
+                
+                <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
                     <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition">
-                        <i data-lucide="life-buoy" class="w-4 h-4"></i> Buka Bantuan Suara (Diagnostik)
+                        <i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara (Diagnostik)
+                    </button>
+                    <!-- TOMBOL LOGOUT TERSEMBUNYI -->
+                    <button type="button" onclick="doLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-500/30 transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun (Logout)
                     </button>
                 </div>
             </div>
@@ -208,15 +271,15 @@
                 <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
             </div>
-            <p class="text-xs text-slate-400 text-center mb-4">Isi nama dan lokasi. (Pastikan Mikrofon diizinkan).</p>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi lokasi anda. (Pastikan Mikrofon diizinkan).</p>
             <div class="space-y-3 mb-5">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div>
-                    <input type="text" id="user-name-input" placeholder="Nama Anda" autocomplete="off" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
+                    <input type="text" id="user-name-input" placeholder="Nama Anda" class="w-full bg-slate-800/50 text-sm text-slate-400 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/50 cursor-not-allowed" readonly>
                 </div>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="map-pin" class="w-5 h-5 text-slate-500"></i></div>
-                    <input type="text" id="custom-loc-input" placeholder="Lokasi Anda" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
+                    <input type="text" id="custom-loc-input" placeholder="Lokasi Anda (Cth: RT 01)" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner">
                 </div>
             </div>
             <div class="flex gap-2">
@@ -286,7 +349,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
@@ -300,6 +363,7 @@
         const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
         const AGORA_CHANNEL = "telulas-gank-rw13"; 
         const ADMIN_PIN = "1234";
+        const ADMIN_USERNAME = "wildan jaka"; // Akan dicocokkan dengan lowercase
 
         try { AgoraRTC.setLogLevel(0); } catch(e) {}
 
@@ -314,6 +378,8 @@
         const auth = getAuth(app);
 
         let currentUserUid = null;
+        let currentUsername = '';
+        let isAdmin = false;
         let onlineUserCount = 0;
         let processedSosIds = [];
         
@@ -325,6 +391,116 @@
         const SLOT_TIMEOUT_MS = 30000; 
 
         const $ = id => document.getElementById(id);
+
+        // ================= SISTEM LOGIN & AUTH =================
+        window.toggleAuth = (mode) => {
+            if (mode === 'register') {
+                $('form-login').classList.add('hidden');
+                $('form-register').classList.remove('hidden');
+            } else {
+                $('form-register').classList.add('hidden');
+                $('form-login').classList.remove('hidden');
+            }
+        }
+
+        window.doLogin = async () => {
+            const user = $('login-username').value.trim();
+            const pass = $('login-password').value.trim();
+            if (!user || !pass) return alert("Username dan Password wajib diisi!");
+
+            // Format dummy email: hilangkan spasi, jadikan lowercase
+            const dummyEmail = `${user.toLowerCase().replace(/\s/g, '')}@telulas.local`;
+
+            try {
+                await signInWithEmailAndPassword(auth, dummyEmail, pass);
+                // onAuthStateChanged akan menangani sisanya
+            } catch (error) {
+                alert("Login Gagal: Username tidak ditemukan atau Password salah.");
+            }
+        }
+
+        window.doRegister = async () => {
+            const user = $('reg-username').value.trim();
+            const pass = $('reg-password').value.trim();
+
+            if (!user || !pass) return alert("Semua kolom wajib diisi!");
+            if (pass.length < 6) return alert("Password minimal 6 karakter!");
+
+            const dummyEmail = `${user.toLowerCase().replace(/\s/g, '')}@telulas.local`;
+
+            try {
+                const userCred = await createUserWithEmailAndPassword(auth, dummyEmail, pass);
+                
+                // Simpan nama asli (dengan spasi & huruf besar) ke database
+                await setDoc(doc(db, "users", userCred.user.uid), {
+                    username: user,
+                    createdAt: Date.now()
+                });
+
+                alert(`Pendaftaran Berhasil! Selamat datang ${user}.`);
+                
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("Username sudah terdaftar! Silakan gunakan nama lain atau langsung Login.");
+                } else {
+                    alert("Gagal Daftar: " + error.message);
+                }
+            }
+        }
+
+        window.doLogout = async () => {
+            if(confirm("Yakin ingin keluar dari aplikasi?")) {
+                await signOut(auth);
+                location.reload();
+            }
+        }
+
+        // Listener Status Login
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                
+                // Ambil data user dari Firestore
+                const userDoc = await getDoc(doc(db, "users", currentUserUid));
+                if (userDoc.exists()) {
+                    currentUsername = userDoc.data().username;
+                    
+                    // Cek apakah dia Admin
+                    isAdmin = (currentUsername.toLowerCase() === ADMIN_USERNAME);
+                    
+                    $('role-badge').textContent = isAdmin ? 'Admin' : 'Warga';
+                    $('role-badge').classList.remove('hidden');
+                    if(isAdmin) {
+                        $('role-badge').className = 'px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30';
+                    }
+
+                    // Tampilkan Aplikasi, Sembunyikan Login
+                    $('auth-screen').classList.add('hidden');
+                    $('app-shell').classList.remove('hidden');
+                    $('app-shell').classList.add('flex');
+
+                    // Mulai koneksi
+                    setupPresence(); 
+                    listenToOnlineUsers(); 
+                    fetchLatestAgoraToken(); 
+                    listenToActiveSlots(); 
+                    initFirebaseChat();
+                    listenIncomingSos();
+                    startHeartbeat();
+                    startStaleCleanup();
+                    lucide.createIcons();
+
+                } else {
+                    signOut(auth); // Jika data terhapus tapi masih login
+                }
+            } else {
+                // Belum login
+                $('app-shell').classList.add('hidden');
+                $('app-shell').classList.remove('flex');
+                $('auth-screen').classList.remove('hidden');
+            }
+        });
+        // ========================================================
 
         function vlog(...args) {
             console.log("[VOICE]", ...args);
@@ -338,11 +514,7 @@
         }
 
         let diagOpen = false;
-        function toggleDiag() {
-            diagOpen = !diagOpen;
-            $('diag-overlay').classList.toggle('hidden', !diagOpen);
-            if (diagOpen) updateDiagUI();
-        }
+        function toggleDiag() { diagOpen = !diagOpen; $('diag-overlay').classList.toggle('hidden', !diagOpen); if (diagOpen) updateDiagUI(); }
         window.toggleDiag = toggleDiag;
 
         function setCheck(id, ok, val) {
@@ -373,26 +545,13 @@
         setInterval(updateDiagUI, 1000);
 
         async function testSpeakerTone() {
-            try {
-                await Tone.start();
-                const synth = new Tone.Synth().toDestination();
-                synth.volume.value = -8;
-                synth.triggerAttackRelease("C5", "8n");
-                setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 250);
-                setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 500);
-                showToast("🔔 Test tone diputar. Dengar beep?");
-            } catch(e) { alert("Tone error: " + e.message); }
+            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -8; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 250); setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 500); showToast("🔔 Test tone diputar. Dengar beep?"); } catch(e) { alert("Tone error: " + e.message); }
         }
         window.testSpeakerTone = testSpeakerTone;
 
         async function forceRepublish() {
             if (!agoraClient || !localAudioTrack) { alert("Belum join!"); return; }
-            try {
-                await agoraClient.unpublish([localAudioTrack]);
-                await new Promise(r => setTimeout(r, 500));
-                await agoraClient.publish([localAudioTrack]);
-                showToast("Mic di-republish");
-            } catch(e) { alert("Gagal: " + e.message); }
+            try { await agoraClient.unpublish([localAudioTrack]); await new Promise(r => setTimeout(r, 500)); await agoraClient.publish([localAudioTrack]); showToast("Mic di-republish"); } catch(e) { alert("Gagal: " + e.message); }
         }
         window.forceRepublish = forceRepublish;
 
@@ -401,14 +560,7 @@
             for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
             if (audioPrimed) return;
             audioPrimed = true;
-            try {
-                if (typeof Tone !== 'undefined') {
-                    await Tone.start();
-                    const synth = new Tone.Synth().toDestination();
-                    synth.volume.value = -Infinity;
-                    synth.triggerAttackRelease("C4", 0.01);
-                }
-            } catch (e) {}
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
             try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
         }
 
@@ -417,26 +569,16 @@
         document.addEventListener('click', primeAudio, { capture: true });
         document.addEventListener('keydown', primeAudio, { capture: true });
 
-        if (window.AgoraRTC) {
-            AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; };
-        }
+        if (window.AgoraRTC) { AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; }; }
 
         function showUnlockBanner() { $('unlock-audio-banner').classList.remove('hidden'); lucide.createIcons(); }
         function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
         
         async function doUnlockAudio() {
-            try {
-                await Tone.start();
-                const synth = new Tone.Synth().toDestination();
-                synth.volume.value = -10;
-                synth.triggerAttackRelease("C5", "8n");
-                setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200);
-            } catch(e) {}
+            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200); } catch(e) {}
             try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
             let played = 0;
-            for (const uid in remoteAudioTracks) {
-                try { await remoteAudioTracks[uid].play(); played++; } catch(e) {}
-            }
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); played++; } catch(e) {} }
             if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
             showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
         }
@@ -456,9 +598,7 @@
                 silentOscillator.connect(gainNode);
                 gainNode.connect(keepAliveCtx.destination);
                 silentOscillator.start();
-                if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' });
-                }
+                if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' }); }
             } catch(e) { console.log("KeepAlive error:", e); }
         }
 
@@ -470,28 +610,8 @@
 
         async function triggerChatNotification() {
             try { navigator.vibrate([200, 100, 200]); } catch(e) {}
-            try {
-                if (typeof Tone !== 'undefined') {
-                    await Tone.start();
-                    const synth = new Tone.Synth().toDestination();
-                    synth.volume.value = -10;
-                    synth.triggerAttackRelease("C5", "16n");
-                    setTimeout(() => synth.triggerAttackRelease("E5", "16n"), 150);
-                }
-            } catch(e) {}
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "16n"); setTimeout(() => synth.triggerAttackRelease("E5", "16n"), 150); } } catch(e) {}
         }
-
-        signInAnonymously(auth).then((userCredential) => {
-            currentUserUid = userCredential.user.uid;
-            setupPresence(); 
-            listenToOnlineUsers(); 
-            fetchLatestAgoraToken(); 
-            listenToActiveSlots(); 
-            startHeartbeat();
-            startStaleCleanup();
-        }).catch((error) => {
-            alert("GAGAL LOGIN FIREBASE: " + error.message);
-        });
 
         let userProfile = { name: 'Warga', location: 'Ronda' }; 
         let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
@@ -573,12 +693,7 @@
             });
         }
 
-        function openAdminTokenModal() {
-            $('admin-token-modal').classList.remove('hidden');
-            $('admin-pin-section').classList.remove('hidden');
-            $('admin-token-section').classList.add('hidden');
-            $('admin-pin-input').value = '';
-        }
+        function openAdminTokenModal() { $('admin-token-modal').classList.remove('hidden'); $('admin-pin-section').classList.remove('hidden'); $('admin-token-section').classList.add('hidden'); $('admin-pin-input').value = ''; }
         function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
         function verifyAdminPin() {
             const pin = $('admin-pin-input').value;
@@ -593,24 +708,16 @@
         async function saveAgoraToken() {
             const newToken = $('new-agora-token').value.trim();
             if (!newToken) return alert("Token tidak boleh kosong!");
-            try {
-                await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() });
-                AGORA_TOKEN = newToken;
-                showToast("Token berhasil diperbarui!");
-                closeAdminTokenModal();
-            } catch (e) { alert("Gagal simpan token: " + e.message); }
+            try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token berhasil diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
         }
         async function fetchLatestAgoraToken() {
-            try {
-                const docSnap = await getDoc(doc(db, "config", "agora"));
-                if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token;
-            } catch (e) {}
+            try { const docSnap = await getDoc(doc(db, "config", "agora")); if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token; } catch (e) {}
         }
 
         function setupPresence() {
             if (!currentUserUid) return;
             const userDocRef = doc(db, "presence", currentUserUid);
-            const updateStatus = () => setDoc(userDocRef, { lastSeen: Date.now() }, { merge: true }).catch(console.error);
+            const updateStatus = () => setDoc(userDocRef, { lastSeen: Date.now(), username: currentUsername }, { merge: true }).catch(console.error);
             updateStatus();
             setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 30000);
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
@@ -649,7 +756,6 @@
                     const batch = writeBatch(db);
                     snap.forEach(d => batch.delete(d.ref));
                     await batch.commit();
-                    
                     $('chat-feed').innerHTML = '';
                     renderedChatIds.clear();
                     lastKnownChatTs = 0;
@@ -672,9 +778,7 @@
                     for (const d of snap.docs) {
                         const data = d.data();
                         if (!data.lastSeen || data.uid === currentUserUid) continue;
-                        if (now - data.lastSeen > SLOT_TIMEOUT_MS) {
-                            try { await deleteDoc(d.ref); } catch(e) {}
-                        }
+                        if (now - data.lastSeen > SLOT_TIMEOUT_MS) { try { await deleteDoc(d.ref); } catch(e) {} }
                     }
                 } catch(e) {}
             }, 15000); 
@@ -741,6 +845,13 @@
 
         function openAdminModal(slotId) {
             if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
+            
+            // PENGECEKAN ADMIN DI SINI
+            if (!isAdmin) {
+                showToast("Hanya Admin (Wildan Jaka) yang bisa mengontrol.");
+                return;
+            }
+
             const targetSlot = voiceSlots[slotId];
             if (!targetSlot.occupied) return;
             targetAdminSlotIndex = slotId;
@@ -807,17 +918,17 @@
             if (voiceSlots[index].occupied) return;
             if (countJoined() >= MAX_SLOTS) return showToast('Ruang suara penuh.');
             pendingJoinSlotIndex = index;
-            $('user-name-input').value = '';
+            $('user-name-input').value = currentUsername; // Otomatis dari login
             $('custom-loc-input').value = '';
             $('join-modal').classList.remove('hidden');
-            setTimeout(() => $('user-name-input').focus(), 300);
+            setTimeout(() => $('custom-loc-input').focus(), 300);
         }
         function closeJoinModal() { $('join-modal').classList.add('hidden'); $('custom-loc-input').blur(); pendingJoinSlotIndex = null; }
         function confirmJoin() {
             primeAudio();
             const nameVal = $('user-name-input').value.trim();
             const locVal = $('custom-loc-input').value.trim();
-            const finalName = nameVal || 'Warga';
+            const finalName = nameVal || currentUsername || 'Warga';
             const finalLoc = locVal || 'Ronda Keliling';
             const index = pendingJoinSlotIndex; closeJoinModal(); executeJoin(index, finalName, finalLoc);
         }
@@ -1105,7 +1216,7 @@
         async function sendChatToDB(text, opts = {}) {
             if (!text) return;
             if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
-            const senderName = joinedSlotIndex !== null ? userProfile.name : 'Warga';
+            const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
             $('chat-input').value = ''; // Kosongkan instan
             try {
                 await addDoc(collection(db, "chats"), {
@@ -1131,53 +1242,22 @@
         function cancelHoldSos() { clearInterval(holdInterval); resetHoldProgress(); }
         function resetHoldProgress() { holdProgressVal = 0; const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); if (progressEl) progressEl.style.width = '0%'; if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik`; lucide.createIcons(); } }
         
-        // ============ FUNGSI SIRENE BARU ============
-        async function playSirenTone() { 
-            try { 
-                if (typeof Tone !== 'undefined') { 
-                    await Tone.start(); 
-                    const synth = new Tone.Synth().toDestination(); 
-                    const now = Tone.now(); 
-                    synth.triggerAttackRelease("A5", "16n", now); 
-                    synth.triggerAttackRelease("E5", "16n", now + 0.2); 
-                } 
-            } catch (err) {} 
-        }
+        async function playSirenTone() { try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {} }
         
         function startSosSiren() { 
             if (sosSirenInterval) clearInterval(sosSirenInterval); 
-            
-            // Menggunakan tag <audio> agar bisa tembus background
             const sirenAudio = $('siren-audio');
-            if (sirenAudio) {
-                sirenAudio.volume = 1.0;
-                sirenAudio.play().catch(e => {
-                    // Jika gagal, fallback ke Tone.js
-                    playSirenTone(); 
-                    sosSirenInterval = setInterval(() => playSirenTone(), 1000); 
-                });
-            } else {
-                playSirenTone(); 
-                sosSirenInterval = setInterval(() => playSirenTone(), 1000); 
-            }
-
-            // Getaran paksa 3x putaran
+            if (sirenAudio) { sirenAudio.volume = 1.0; sirenAudio.play().catch(e => { playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }); } 
+            else { playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }
             try { navigator.vibrate([500, 200, 500, 200, 500, 200, 500]); } catch(e) {}
         }
 
         function stopSosSiren() { 
             const sirenAudio = $('siren-audio');
-            if (sirenAudio) { 
-                sirenAudio.pause(); 
-                sirenAudio.currentTime = 0; 
-            }
-            if (sosSirenInterval) { 
-                clearInterval(sosSirenInterval); 
-                sosSirenInterval = null; 
-            } 
+            if (sirenAudio) { sirenAudio.pause(); sirenAudio.currentTime = 0; }
+            if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; } 
             showToast('Sirene SOS dihentikan.'); 
         }
-        // ============================================
 
         function showSosBanner(reporter, category) {
             $('push-category-text').textContent = category;
@@ -1188,7 +1268,7 @@
         }
         async function triggerEmergencyAlert() {
             closeSosModal();
-            let reporterLabel = 'Warga (Belum Join)';
+            let reporterLabel = currentUsername;
             if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
             showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory);
             try {
@@ -1235,9 +1315,6 @@
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
         window.addEventListener('load', () => {
-            renderVoiceGrid();
-            initFirebaseChat();
-            listenIncomingSos();
             lucide.createIcons();
             const holdBtn = $('hold-sos-btn');
             holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
