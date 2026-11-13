@@ -47,6 +47,9 @@
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
+    <!-- AUDIO BISU UNTUK MENIPU BROWSER AGAR TETAP AKTIF DI BACKGROUND -->
+    <audio id="silent-audio" loop playsinline style="display:none;" src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
+
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
         <div class="absolute top-1/4 -right-28 w-72 h-72 bg-rose-900/10 rounded-full blur-3xl"></div>
@@ -341,7 +344,7 @@
         let currentUserUid = null;
         let onlineUserCount = 0;
         let processedSosIds = [];
-        let lastKnownChatTs = 0; // Untuk deteksi chat baru
+        let lastKnownChatTs = 0; 
 
         const MAX_SLOTS = 5;
         const SLOT_TIMEOUT_MS = 90000;
@@ -504,7 +507,6 @@
         window.hideUnlockBanner = hideUnlockBanner;
         window.doUnlockAudio = doUnlockAudio;
 
-        // ============ FUNGSI NOTIFIKASI CHAT ============
         async function triggerChatNotification() {
             try { navigator.vibrate([200, 100, 200]); } catch(e) {}
             try {
@@ -517,7 +519,6 @@
                 }
             } catch(e) {}
         }
-        // ================================================
 
         signInAnonymously(auth).then((userCredential) => {
             currentUserUid = userCredential.user.uid;
@@ -937,6 +938,13 @@
                 await agoraClient.publish([localAudioTrack]);
                 vlog("JOIN: mic published");
 
+                // TRICK: Putar audio bisu agar tidak di-suspend HP
+                const silentAudio = $('silent-audio');
+                if (silentAudio) {
+                    silentAudio.volume = 0.01; // Sangat kecil, hampir tidak terdengar
+                    silentAudio.play().catch(e => console.log("Gagal play silent audio", e));
+                }
+
                 agoraClient.enableAudioVolumeIndicator();
                 agoraClient.on("volume-indicator", volumes => {
                     let needsRender = false;
@@ -1012,6 +1020,10 @@
             remoteAudioTracks = {};
             wasMutedByAdmin = false;
 
+            // Hentikan audio bisu karena sudah keluar dari room
+            const silentAudio = $('silent-audio');
+            if (silentAudio) silentAudio.pause();
+
             renderVoiceGrid();
             showToast('Keluar dari ruang suara');
             sendSystemChat(`📴 ${leavingName} keluar dari ruang suara.`);
@@ -1084,7 +1096,6 @@
             lucide.createIcons();
         }
 
-        // ============ PERBAIKAN CHAT & NOTIFIKASI ============
         function initFirebaseChat() {
             const q = query(collection(db, "chats"), limit(50));
             onSnapshot(q, (snapshot) => {
@@ -1103,7 +1114,6 @@
                     return getMs(a.timestamp) - getMs(b.timestamp);
                 });
 
-                // Cek apakah ada chat baru masuk dari orang lain
                 let isNewMessage = false;
                 chats.forEach(data => {
                     const msgTs = (data.timestamp?.toMillis) ? data.timestamp.toMillis() : (data.timestamp || 0);
@@ -1125,7 +1135,6 @@
                 console.error("Chat Error:", error); 
             });
         }
-        // ======================================================
 
         function renderMessageBubble(data) {
             const feed = $('chat-feed'); const wrapper = document.createElement('div');
@@ -1240,7 +1249,6 @@
         function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
-        // ============ SINKRONISASI SUARA SAAT MINIMIZE ============
         window.addEventListener('load', () => {
             renderVoiceGrid();
             initFirebaseChat();
@@ -1267,20 +1275,22 @@
             $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
             $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
             
-            // SINKRONISASI SAAT MINIMIZE / KEMBALI KE APLIKASI
             document.addEventListener('visibilitychange', async () => {
                 if (document.visibilityState === 'visible') {
                     if (joinedSlotIndex !== null) {
                         await requestWakeLock();
-                        // Paksa Agora agar bersuara kembali
                         try {
                             if (window.AgoraRTC?.resumeAudioContext) {
                                 await AgoraRTC.resumeAudioContext();
                             }
+                            // Paksa putar ulang audio bisu dan audio warga
+                            const silentAudio = $('silent-audio');
+                            if (silentAudio) silentAudio.play().catch(e=>{});
+                            
                             for (const uid in remoteAudioTracks) {
                                 try { await remoteAudioTracks[uid].play(); } catch(e) {}
                             }
-                        } catch(e) { console.log("Gagal resume audio saat balik ke app", e); }
+                        } catch(e) { console.log("Gagal resume audio", e); }
                     }
                 }
             });
