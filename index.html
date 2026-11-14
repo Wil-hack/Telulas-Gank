@@ -261,7 +261,7 @@
         </section>
     </div>
 
-    <!-- SISA MODAL DLL TETAP SAMA -->
+    <!-- MODAL DIAGNOSTIC (BANTUAN SUARA) -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -278,6 +278,10 @@
                 <div id="remote-list" class="text-xs text-slate-400 space-y-1 mt-2"></div>
             </div>
             <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔔 Test Speaker</button>
+            
+            <!-- TOMBOL BARU UNTUK TES NOTIFIKASI -->
+            <button onclick="testLocalNotif()" class="w-full bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">📱 Test Notif HP</button>
+            
             <button onclick="forceRepublish()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔄 Force Re-Publish Mic</button>
             <button onclick="doUnlockAudio()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔊 Force Play Remote Audio</button>
             <div class="bg-slate-900 rounded-xl p-3 text-xs text-slate-300 font-mono max-h-48 overflow-y-auto" id="diag-log"></div>
@@ -839,7 +843,6 @@
                     isEmergency: !!opts.isEmergency
                 });
 
-                // PERBAIKAN: Kirim notifikasi untuk SEMUA pesan (termasuk SOS)
                 const usersSnap = await getDocs(collection(db, "users"));
                 let tokens = [];
                 usersSnap.forEach(u => {
@@ -1718,6 +1721,30 @@
                     alert("Library Tone.js belum termuat.");
                 }
             } catch(e) { alert("Gagal memutar suara: " + e.message); }
+        };
+
+        window.testLocalNotif = async () => {
+            try {
+                if (!('serviceWorker' in navigator)) {
+                    return alert("Browser ini tidak mendukung Service Worker.");
+                }
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    return alert("Izin notifikasi ditolak! Buka pengaturan situs di Chrome dan izinkan notifikasi.");
+                }
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification('Tes Notifikasi Telulas Gank', {
+                    body: 'Hore! Kalau notif ini muncul, berarti Service Worker (sw.js) sudah bekerja dengan baik.',
+                    icon: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
+                    vibrate: [200, 100, 200, 100, 200],
+                    tag: 'tes-lokal'
+                });
+                showToast("Notifikasi tes dikirim!");
+                const log = $('diag-log');
+                log.innerHTML = `[TEST] Notifikasi lokal dipicu.\n` + log.innerHTML;
+            } catch (error) {
+                alert("Gagal memunculkan notifikasi: " + error.message);
+            }
         };
 
         window.forceRepublish = async () => {
