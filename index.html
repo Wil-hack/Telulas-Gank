@@ -60,7 +60,8 @@
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
-    <audio id="siren-audio" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop style="display:none;"></audio>
+    <!-- AUDIO SIRENE BARU (LEBIH KERAS & MENDESAK) -->
+    <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop style="display:none;"></audio>
 
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-28 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
@@ -408,7 +409,7 @@
         const ADMIN_USERNAME = "wildan jaka"; 
         
         const VAPID_KEY = "BLOeL5qHPVUIEQGFa0vQAC9NqHuF64EHvWim3vPJQ5nqvUGtu8YLlkxTRzm90SqgNczTSb0uv9cr7soVpXOurfM"; 
-        const CLOUDFLARE_WORKER_URL = "https://jolly-dream-a7d9.willdan60.workers.dev/"; // URL Worker Anda
+        const CLOUDFLARE_WORKER_URL = "https://jolly-dream-a7d9.willdan60.workers.dev/";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -792,9 +793,6 @@
                     isEmergency: !!opts.isEmergency
                 });
 
-                // ========================================================
-                // KIRIM NOTIFIKASI VIA CLOUDFLARE WORKER
-                // ========================================================
                 if (!opts.isEmergency) { 
                     const usersSnap = await getDocs(collection(db, "users"));
                     let tokens = [];
@@ -1413,15 +1411,37 @@
         function startSosSiren() { 
             if (sosSirenInterval) clearInterval(sosSirenInterval); 
             const sirenAudio = $('siren-audio');
-            if (sirenAudio) { sirenAudio.volume = 1.0; sirenAudio.play().catch(e => { playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }); } 
-            else { playSirenTone(); sosSirenInterval = setInterval(() => playSirenTone(), 1000); }
-            try { navigator.vibrate([500, 200, 500, 200, 500, 200, 500]); } catch(e) {}
+            
+            // Fungsi Putar Audio & Getar
+            const playAndVibrate = () => {
+                if (sirenAudio) { 
+                    sirenAudio.volume = 1.0; 
+                    sirenAudio.play().catch(e => { 
+                        // Fallback jika audio diblokir browser
+                        playSirenTone(); 
+                    }); 
+                } else { 
+                    playSirenTone(); 
+                }
+                // Getar kuat berulang (1 detik nyala, 0.5 detik mati)
+                try { navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]); } catch(e) {}
+            };
+
+            // Panggil langsung
+            playAndVibrate();
+
+            // Paksa ulang setiap 3 detik untuk memastikan tidak mati (terutama jika di-background)
+            sosSirenInterval = setInterval(playAndVibrate, 3000);
         }
 
         function stopSosSiren() { 
             const sirenAudio = $('siren-audio');
             if (sirenAudio) { sirenAudio.pause(); sirenAudio.currentTime = 0; }
             if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; } 
+            
+            // Hentikan getaran
+            try { navigator.vibrate(0); } catch(e) {}
+
             showToast('Sirene SOS dihentikan.'); 
         }
 
