@@ -314,7 +314,7 @@
         </button>
     </div>
 
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
+    <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
         <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span></div>
     </div>
 
@@ -469,13 +469,13 @@
             }
 
             try {
-                // Bersihkan client lama jika ada (mencegah UID Conflict)
                 if (agoraClient) {
                     try { await agoraClient.leave(); } catch(e){}
                     agoraClient = null;
                 }
 
-                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                // PERUBAHAN: Gunakan mode "live"
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
                 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     try {
@@ -502,7 +502,6 @@
                     }
                 });
 
-                // Generate UID baru setiap kali join untuk mencegah conflict
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
@@ -1068,7 +1067,6 @@
             try {
                 const slotRef = doc(db, "active_slots", `slot_${index}`);
                 
-                // PERBAIKAN: Generate UID baru secara paksa untuk mencegah UID_CONFLICT
                 let myAgoraUid = Math.floor(Math.random() * 100000000);
                 localAgoraUid = myAgoraUid;
 
@@ -1093,7 +1091,8 @@
                     agoraClient = null;
                 }
 
-                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                // PERUBAHAN: Gunakan mode "live"
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     try {
@@ -1123,15 +1122,15 @@
                 while (retries < 3) {
                     try {
                         await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
-                        break; // Berhasil join
+                        break; 
                     } catch (err) {
                         if (err.message.includes('UID_CONFLICT') || err.code === 'UID_CONFLICT') {
                             retries++;
                             console.log("UID conflict, retrying with new UID...");
-                            localAgoraUid = Math.floor(Math.random() * 100000000); // Ganti UID
+                            localAgoraUid = Math.floor(Math.random() * 100000000);
                             if (agoraClient) { try { await agoraClient.leave(); } catch(e){} }
                         } else {
-                            throw err; // Error lain (misal token invalid)
+                            throw err;
                         }
                     }
                 }
