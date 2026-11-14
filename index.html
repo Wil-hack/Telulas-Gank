@@ -53,7 +53,7 @@
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[500] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
         <h1 class="text-3xl font-black text-white text-center px-4">DARURAT SOS!</h1>
-        <p class="text-lg text-white/80 mt-2 text-center px-4">Ketuk layar ini untuk membunyikan sirene!</p>
+        <p class="text-lg text-white/80 mt-2 text-center px-4 font-bold">KETUK LAYAR INI UNTUK MEMBUNYIKAN SIRENE!</p>
     </div>
 
     <div id="auth-screen" class="fixed inset-0 z-[200] bg-night-950 flex flex-col items-center justify-center p-4">
@@ -474,7 +474,6 @@
                     agoraClient = null;
                 }
 
-                // PERUBAHAN: Gunakan mode "live"
                 agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
                 
                 agoraClient.on("user-published", async (user, mediaType) => {
@@ -1085,13 +1084,11 @@
                     throw e;
                 }
 
-                // Bersihkan client lama
                 if (agoraClient) {
                     try { await agoraClient.leave(); } catch(e){}
                     agoraClient = null;
                 }
 
-                // PERUBAHAN: Gunakan mode "live"
                 agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 
                 agoraClient.on("user-published", async (user, mediaType) => {
@@ -1117,7 +1114,6 @@
                     }
                 });
 
-                // LOGIKA RETRY UNTUK UID CONFLICT
                 let retries = 0;
                 while (retries < 3) {
                     try {
@@ -1240,7 +1236,6 @@
             try {
                 if (localAudioTrack) { localAudioTrack.stop(); localAudioTrack.close(); localAudioTrack = null; }
                 
-                // Kembalikan ke role Audience (Live Pendengar)
                 if (agoraClient) {
                     await agoraClient.unpublish();
                     await agoraClient.setClientRole("audience");
@@ -1314,6 +1309,18 @@
             for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
             if (audioPrimed) return;
             audioPrimed = true;
+            
+            // Pemanasan Sirene (Unlock Audio Element)
+            const sirenAudio = $('siren-audio');
+            if (sirenAudio) {
+                sirenAudio.volume = 0;
+                sirenAudio.play().then(() => {
+                    sirenAudio.pause();
+                    sirenAudio.currentTime = 0;
+                    sirenAudio.volume = 1.0; // Kembalikan volume
+                }).catch(e => console.log("Siren prime error", e));
+            }
+
             try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
             try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
         }
@@ -1381,7 +1388,7 @@
         
         async function playSirenTone() { try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {} }
         
-        function startSosSiren() { 
+        function startSosSiren(isSelf = false) { 
             if (sosSirenInterval) clearInterval(sosSirenInterval); 
             const sirenAudio = $('siren-audio');
             const forceOverlay = $('force-siren-overlay');
@@ -1390,10 +1397,10 @@
                 if (sirenAudio) { 
                     sirenAudio.volume = 1.0; 
                     sirenAudio.play().then(() => {
-                        forceOverlay.classList.add('hidden');
+                        if (isSelf) forceOverlay.classList.add('hidden');
                     }).catch(e => { 
                         playSirenTone(); 
-                        forceOverlay.classList.remove('hidden'); 
+                        if (!isSelf) forceOverlay.classList.remove('hidden'); 
                     }); 
                 } else { 
                     playSirenTone(); 
@@ -1408,7 +1415,7 @@
         window.unlockAndPlaySiren = () => {
             primeAudio();
             $('force-siren-overlay').classList.add('hidden');
-            startSosSiren();
+            startSosSiren(true);
         }
 
         function stopSosSiren() { 
@@ -1420,18 +1427,19 @@
             showToast('Sirene SOS dihentikan.'); 
         }
 
-        function showSosBanner(reporter, category) {
+        function showSosBanner(reporter, category, isSelf = false) {
             $('push-category-text').textContent = category;
             $('push-reporter-text').textContent = reporter;
             $('push-notification-preview').classList.remove('hidden');
-            startSosSiren();
+            startSosSiren(isSelf);
             lucide.createIcons();
         }
+        
         async function triggerEmergencyAlert() {
             closeSosModal();
             let reporterLabel = currentUsername;
             if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
-            showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory);
+            showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory, true);
             try {
                 await addDoc(collection(db, "sos_alerts"), {
                     senderUid: currentUserUid, reporter: reporterLabel,
@@ -1458,7 +1466,7 @@
                     if (timeDiff > 60000) return;
                     processedSosIds.push(docId);
                     if (processedSosIds.length > 100) processedSosIds.shift();
-                    showSosBanner(data.reporter, data.category);
+                    showSosBanner(data.reporter, data.category, false);
                 });
             });
         }
