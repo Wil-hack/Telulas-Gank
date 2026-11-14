@@ -31,83 +31,82 @@
         ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
         ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
         
-        /* --- GLASSMORPHISM & SHADOWS --- */
+        /* --- GLASSMORPHISM (Lebih Clean) --- */
         .glass-header { 
             background: rgba(10,17,30,0.95); 
             backdrop-filter: blur(18px); 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.08); 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
         .glass-panel { 
             background: rgba(15,24,41,0.85); 
             backdrop-filter: blur(16px); 
             border: 1px solid rgba(255,255,255,0.05); 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
         }
         .glass-card { 
-            background: linear-gradient(155deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%); 
+            background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); 
             backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 6px 20px 0 rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); 
             transition: all .2s; 
         }
         .glass-card-self { 
-            background: linear-gradient(155deg, rgba(16,185,129,0.25) 0%, rgba(15,23,42,0.95) 100%); 
-            border: 1px solid rgba(16,185,129,0.6); 
-            box-shadow: 0 0 20px rgba(16,185,129,0.3), inset 0 1px 2px rgba(16,185,129,0.4); 
+            background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); 
+            border: 1px solid rgba(16,185,129,0.4); 
+            box-shadow: 0 4px 15px rgba(16,185,129,0.15); 
         }
         .glass-card:active, .glass-card:hover { 
-            border-color: rgba(16,185,129,0.7); 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 25px 0 rgba(0,0,0,0.6), 0 0 15px rgba(16,185,129,0.2), inset 0 1px 1px rgba(255,255,255,0.15); 
+            border-color: rgba(16,185,129,0.5); 
+            transform: translateY(-1px); 
+            box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
         }
         
-        /* --- KOTAK GABUNG (INSET SHADOW LEBIH TEBAL) --- */
+        /* --- KOTAK GABUNG (Lebih Soft) --- */
         .glass-slot-empty { 
-            background: #0d1522; 
-            border: 1.5px dashed rgba(148,163,184,0.3); 
+            background: rgba(15,23,42,0.5); 
+            border: 1.5px dashed rgba(148,163,184,0.2); 
             transition: all 0.2s; 
-            /* Bayangan masuk (tenggelam) */
-            box-shadow: inset 3px 3px 8px rgba(0,0,0,0.8), inset -1px -1px 3px rgba(255,255,255,0.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
         }
         .glass-slot-empty:hover, .glass-slot-empty:active { 
-            background: rgba(16,185,129,0.1); 
-            border-color: rgba(16,185,129,0.8); 
-            box-shadow: inset 2px 2px 10px rgba(16,185,129,0.3);
+            background: rgba(16,185,129,0.08); 
+            border-color: rgba(16,185,129,0.5); 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
             transform: scale(0.98);
         }
 
-        /* --- NEUMORPHISM (Tombol 3D) --- */
-        .btn-neumorph {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            box-shadow: 3px 3px 8px #050911, -3px -3px 8px #1e293b, inset 1px 1px 2px rgba(255,255,255,0.05);
+        /* --- SOFT NEUMORPHISM (Tombol Elegan) --- */
+        .btn-soft {
+            background: #1e293b;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.1s;
+            transition: all 0.15s;
         }
-        .btn-neumorph:active {
-            box-shadow: inset 4px 4px 10px #050911, inset -2px -2px 6px #1e293b;
+        .btn-soft:active {
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
             transform: scale(0.95);
+            background: #0f172a;
         }
         
-        /* --- GLOW & GRADIENTS --- */
+        /* --- GLOW & GRADIENTS (Dikurangi) --- */
         .text-gradient { 
             background: linear-gradient(to right, #34d399, #38bdf8, #34d399); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 2px 4px rgba(52,211,153,0.3));
+            filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2));
         }
         .btn-sos-glow {
             background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
-            box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.3);
-            border: 1px solid rgba(244, 63, 94, 0.6);
+            box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3);
+            border: 1px solid rgba(244, 63, 94, 0.5);
         }
-        .btn-sos-glow:active { transform: scale(0.95); box-shadow: 0 0 8px rgba(244, 63, 94, 0.7); }
+        .btn-sos-glow:active { transform: scale(0.95); box-shadow: 0 1px 5px rgba(244, 63, 94, 0.5); }
         
-        /* --- KOTAK DARURAT SOS (GLOW MERAH) --- */
         .alert-sos-box {
-            background: linear-gradient(180deg, rgba(159, 18, 57, 0.9) 0%, rgba(76, 5, 25, 0.95) 100%);
-            border: 1px solid rgba(244, 63, 94, 0.7);
-            box-shadow: 0 8px 25px -5px rgba(225, 29, 72, 0.5), inset 0 0 20px rgba(225, 29, 72, 0.3);
+            background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%);
+            border: 1px solid rgba(244, 63, 94, 0.5);
+            box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2);
         }
 
         /* --- ANIMATIONS --- */
@@ -117,7 +116,7 @@
         
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
-        .vol-bar { height: 3px; background: linear-gradient(to right, #10b981, #34d399); transition: width 0.1s; border-radius: 99px; box-shadow: 0 0 5px rgba(52,211,153,0.5); }
+        .vol-bar { height: 3px; background: linear-gradient(to right, #10b981, #34d399); transition: width 0.1s; border-radius: 99px; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
@@ -133,7 +132,7 @@
     <div id="auth-screen" class="fixed inset-0 z-[200] bg-night-950 flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden animate-sheet-up">
             <div class="flex flex-col items-center justify-center mb-6">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400/30 mb-3">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 mb-3">
                     <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
                 </div>
                 <h1 class="text-3xl font-title font-black tracking-tight text-gradient">Telulas Gank</h1>
@@ -141,18 +140,18 @@
             </div>
             <div id="form-login">
                 <div class="space-y-3">
-                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="login-username" placeholder="Username Anda" class="w-full bg-[#0a111e] text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 transition"></div>
-                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="login-password" placeholder="Password" class="w-full bg-[#0a111e] text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 transition"><button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="login-username" placeholder="Username Anda" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner"></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="login-password" placeholder="Password" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner"><button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
                 </div>
-                <button type="button" onclick="doLogin()" class="w-full mt-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-[0_5px_15px_rgba(16,185,129,0.3)] border border-emerald-400/30 transition active:scale-95">Masuk Aplikasi</button>
+                <button type="button" onclick="doLogin()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition active:scale-95">Masuk Aplikasi</button>
                 <p class="text-center text-xs text-slate-400 mt-5">Belum punya akun? <button onclick="toggleAuth('register')" class="text-emerald-400 font-bold hover:underline">Daftar Warga</button></p>
             </div>
             <div id="form-register" class="hidden">
                 <div class="space-y-3">
-                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="reg-username" placeholder="Buat Username" class="w-full bg-[#0a111e] text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 transition"></div>
-                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="reg-password" placeholder="Buat Password (Min. 6 Karakter)" class="w-full bg-[#0a111e] text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 transition"><button type="button" onclick="togglePasswordVisibility('reg-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="reg-username" placeholder="Buat Username" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner"></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="reg-password" placeholder="Buat Password (Min. 6 Karakter)" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner"><button type="button" onclick="togglePasswordVisibility('reg-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
                 </div>
-                <button type="button" onclick="doRegister()" class="w-full mt-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm shadow-[0_5px_15px_rgba(16,185,129,0.3)] border border-emerald-400/30 transition active:scale-95">Daftar Akun</button>
+                <button type="button" onclick="doRegister()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition active:scale-95">Daftar Akun</button>
                 <p class="text-center text-xs text-slate-400 mt-5">Sudah punya akun? <button onclick="toggleAuth('login')" class="text-emerald-400 font-bold hover:underline">Masuk di sini</button></p>
             </div>
         </div>
@@ -160,96 +159,95 @@
 
     <div id="app-shell" class="hidden relative z-10 w-full max-w-md h-[100dvh] flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
-        <!-- BANNER SOS AKTIF -->
-        <div id="sos-active-banner" class="hidden bg-rose-600 text-white text-xs font-bold text-center py-1.5 animate-pulse z-30 shrink-0 border-b border-rose-400">
+        <div id="sos-active-banner" class="hidden bg-rose-600 text-white text-xs font-bold text-center py-1.5 animate-pulse z-30 shrink-0">
             🚨 OBROLAN DIJEDA KARENA DARURAT SOS 🚨
         </div>
 
-        <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
-            <div class="flex items-center gap-2.5 min-w-0">
-                <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.3)] border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin & Bantuan">
+        <!-- HEADER YANG SUDAH DIRAPIKAN -->
+        <header class="glass-header px-4 py-3 flex items-center justify-between shrink-0 z-20">
+            <div class="flex items-center gap-2 min-w-0">
+                <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin & Bantuan">
                     <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
                 </button>
                 <div class="min-w-0 flex items-center gap-2">
-                    <h1 class="font-title font-black text-xl tracking-tight text-gradient drop-shadow-sm truncate">Telulas Gank</h1>
-                    <span id="role-badge" class="hidden px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">Warga</span>
+                    <h1 class="font-title font-black text-lg tracking-tight text-gradient drop-shadow-sm truncate">Telulas Gank</h1>
+                    <span id="role-badge" class="hidden px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30">Admin</span>
                 </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-                <button type="button" onclick="shareToWhatsApp()" class="p-2 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 border border-slate-700 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.4)] transition active:scale-95">
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="shareToWhatsApp()" class="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition active:scale-95 flex items-center justify-center shadow-sm">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
                 </button>
-                <!-- TOMBOL SOS DENGAN EFEK GRADIENT & GLOW -->
-                <button type="button" onclick="openSosModal()" class="btn-sos-glow px-3.5 py-2 rounded-full text-white font-bold text-xs tracking-wider flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i data-lucide="alert-circle" class="w-4 h-4 text-white"></i><span>SOS</span>
+                <button type="button" onclick="openSosModal()" class="btn-sos-glow px-3.5 py-1.5 rounded-full text-white font-bold text-xs tracking-wider flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-white"></i><span>SOS</span>
                 </button>
             </div>
         </header>
 
-        <section class="px-3.5 pt-3 pb-2.5 shrink-0 bg-gradient-to-b from-night-900/70 to-transparent border-b border-slate-800/70">
-            <div class="flex items-center justify-between mb-3">
+        <section class="px-4 pt-3 pb-2.5 shrink-0 bg-gradient-to-b from-night-900/70 to-transparent border-b border-slate-800/70">
+            <div class="flex items-center justify-between mb-2.5">
                 <div class="flex items-center gap-2 min-w-0">
-                    <i data-lucide="radio" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-                    <span class="text-[12px] font-bold text-slate-200 uppercase tracking-wide">Nguling RW 13</span>
-                    <span id="voice-counter" class="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 shrink-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">0/20</span>
-                    <span id="admin-hint" class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 ml-1"></span>
+                    <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+                    <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide truncate">Nguling RW 13</span>
+                    <span id="voice-counter" class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 text-[9px] font-bold border border-emerald-500/20 shrink-0">0/20</span>
                 </div>
-                <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0 bg-slate-800/50 px-2 py-1 rounded-md border border-slate-700/50">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_5px_rgba(52,211,153,0.8)]"></span><span id="online-count-text">0 Warga Online</span>
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5 shrink-0 bg-slate-800/40 px-2 py-1 rounded-md border border-slate-700/50">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="online-count-text">0 Warga</span>
                 </span>
             </div>
 
-            <div id="live-listener-bar" class="hidden mb-3 px-3 py-2 rounded-xl bg-sky-900/40 border border-sky-500/40 flex items-center justify-between shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
+            <div id="live-listener-bar" class="hidden mb-2.5 px-3 py-2 rounded-xl bg-sky-900/30 border border-sky-500/30 flex items-center justify-between shadow-sm">
                 <div class="flex items-center gap-2">
                     <i data-lucide="headphones" class="w-4 h-4 text-sky-400 animate-pulse"></i>
-                    <span class="text-xs font-bold text-sky-300">Mode Pendengar (Live)</span>
+                    <span class="text-xs font-bold text-sky-300">Mode Pendengar</span>
                 </div>
-                <button onclick="doUnlockAudio()" class="px-3 py-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-[10px] font-bold rounded-lg shadow-[0_2px_8px_rgba(2,132,199,0.4)] border border-sky-400/30 transition active:scale-95">Aktifkan Suara</button>
+                <button onclick="doUnlockAudio()" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold rounded-lg transition active:scale-95">Aktifkan Suara</button>
             </div>
 
             <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
                 <div id="voice-grid" class="grid grid-cols-3 gap-2.5 pb-1 transition-all duration-300"></div>
             </div>
 
-            <!-- PANEL MIC AKTIF DENGAN EFEK SHADOW DALAM & TOMBOL TIMBUL -->
-            <div id="audio-control-bar" class="hidden mt-3 px-3.5 py-3 rounded-2xl bg-gradient-to-br from-[#1e293b] to-[#0f172a] border border-slate-700/80 shadow-[inset_0_2px_15px_rgba(0,0,0,0.6),0_8px_15px_rgba(0,0,0,0.4)] flex items-center justify-between gap-2 transition-all duration-300">
+            <!-- PANEL MIC DENGAN TOMBOL ELEGAN (SOFT UI) -->
+            <div id="audio-control-bar" class="hidden mt-3 px-3 py-2.5 rounded-2xl bg-[#0f1829] border border-slate-700/80 shadow-md flex items-center justify-between gap-2 transition-all duration-300">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div id="mic-badge-bg" class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                    <div id="mic-badge-bg" class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
                         <i id="mic-badge-icon" data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
                     </div>
                     <div class="min-w-0">
                         <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
-                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/85 truncate">Speaker: Aktif</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/80 truncate">Speaker: Aktif</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" id="btn-mute" onclick="toggleMic()" class="btn-neumorph p-2.5 rounded-xl disabled:opacity-40"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
-                    <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="btn-neumorph p-2.5 rounded-xl"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
-                    <button type="button" onclick="leaveSlot()" class="p-2.5 rounded-xl bg-gradient-to-br from-rose-500 to-red-700 text-white shadow-[0_0_12px_rgba(225,29,72,0.4)] border border-rose-400/30 text-xs font-semibold active:scale-95 transition"><i data-lucide="phone-off" class="w-4 h-4"></i></button>
+                    <!-- Tombol Soft UI, tidak lebay -->
+                    <button type="button" id="btn-mute" onclick="toggleMic()" class="btn-soft p-2 rounded-xl disabled:opacity-40"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
+                    <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="btn-soft p-2 rounded-xl"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
+                    <button type="button" onclick="leaveSlot()" class="p-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white shadow-sm border border-rose-500/50 text-xs font-semibold active:scale-95 transition"><i data-lucide="phone-off" class="w-4 h-4"></i></button>
                 </div>
             </div>
         </section>
 
         <section class="flex-1 flex flex-col min-h-0 bg-night-950/50">
-            <div class="px-3.5 py-2.5 flex items-center justify-between border-b border-slate-800/60 shrink-0 bg-night-900/50">
+            <div class="px-4 py-2 flex items-center justify-between border-b border-slate-800/60 shrink-0">
                 <div class="flex items-center gap-1.5">
-                    <i data-lucide="messages-square" class="w-4 h-4 text-slate-400"></i>
+                    <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
                     <span class="text-xs font-semibold text-slate-300">Obrolan Warga</span>
                     <span id="typing-indicator" class="text-[10px] text-emerald-400 italic hidden animate-pulse ml-2">Seseorang mengetik...</span>
                 </div>
-                <span class="text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">Real-time</span>
+                <span class="text-[9px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Real-time</span>
             </div>
-            <div id="chat-feed" class="flex-1 overflow-y-auto px-3.5 py-3 scroll-smooth flex flex-col">
+            <div id="chat-feed" class="flex-1 overflow-y-auto px-4 py-3 scroll-smooth flex flex-col">
                 <div class="flex justify-center mb-2">
-                    <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 shadow-[0_2px_5px_rgba(0,0,0,0.3)] hover:bg-slate-700 transition active:scale-95">Muat Pesan Sebelumnya</button>
+                    <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
                 </div>
             </div>
             <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
-                    <!-- INPUT CHAT DENGAN EFEK INSET SHADOW GELAP -->
-                    <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 bg-[#050911] text-sm text-white placeholder-slate-500 px-4 py-3 rounded-2xl border border-slate-700/80 shadow-[inset_3px_3px_10px_rgba(0,0,0,0.8),inset_-1px_-1px_3px_rgba(255,255,255,0.05)] focus:outline-none focus:border-emerald-500/70 focus:shadow-[inset_3px_3px_10px_rgba(0,0,0,0.8),0_0_10px_rgba(16,185,129,0.2)] transition">
-                    <!-- TOMBOL KIRIM DENGAN EFEK GLOW & 3D -->
-                    <button type="submit" class="p-3 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-[0_4px_15px_rgba(16,185,129,0.4),inset_0_2px_2px_rgba(255,255,255,0.3),inset_0_-2px_2px_rgba(0,0,0,0.3)] border border-emerald-300/40 active:scale-95 shrink-0 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
+                    <!-- Input chat dengan shadow-inner tipis -->
+                    <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 bg-slate-900/95 text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl border border-slate-700/80 shadow-inner focus:outline-none focus:border-emerald-500/70 transition">
+                    <!-- Tombol kirim flat elegan -->
+                    <button type="submit" class="p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm border border-emerald-500/40 active:scale-95 shrink-0 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </section>
@@ -279,7 +277,7 @@
     </div>
 
     <div id="admin-token-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-[0_10px_40px_rgba(0,0,0,0.8)] p-5 relative overflow-hidden animate-sheet-up">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 relative overflow-hidden animate-sheet-up">
             <div class="flex items-center justify-center gap-2 mb-3">
                 <div class="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/35 flex items-center justify-center"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
@@ -287,10 +285,10 @@
             <div id="admin-pin-section">
                 <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora.</p>
                 <div class="relative mb-4">
-                    <input type="password" id="admin-pin-input" placeholder="Masukkan PIN" class="w-full bg-[#050911] text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-amber-500/70 transition pr-12">
+                    <input type="password" id="admin-pin-input" placeholder="Masukkan PIN" class="w-full bg-slate-900/95 text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl border border-slate-700/80 focus:outline-none focus:border-amber-500/70 transition pr-12">
                     <button type="button" onclick="togglePasswordVisibility('admin-pin-input', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-amber-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button>
                 </div>
-                <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-xs shadow-[0_4px_15px_rgba(245,158,11,0.3)] mb-4">Buka Akses Admin</button>
+                <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
                 <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
                     <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition"><i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara</button>
                     <button type="button" onclick="doLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-500/30 transition"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun</button>
@@ -300,7 +298,7 @@
                 <button type="button" onclick="openUserListModal()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga</button>
                 <div class="pt-3 border-t border-slate-700/60">
                     <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
-                    <textarea id="new-agora-token" rows="3" class="w-full bg-[#050911] text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
+                    <textarea id="new-agora-token" rows="3" class="w-full bg-slate-900/95 text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
                     <p class="text-[9px] text-slate-500 mb-3">Token aktif saat ini: <span id="current-token-display" class="text-emerald-400 font-mono">Belum ada</span></p>
                     <button type="button" onclick="saveAgoraToken()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="save" class="w-4 h-4"></i> Simpan Token ke Server</button>
                 </div>
@@ -321,7 +319,7 @@
 
     <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 text-center relative overflow-hidden animate-sheet-up">
-            <div class="flex justify-center mb-2"><div id="admin-target-avatar" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold shadow-lg">W</div></div>
+            <div class="flex justify-center mb-2"><div id="admin-target-avatar" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">W</div></div>
             <h3 id="admin-target-name" class="text-base font-extrabold text-white tracking-tight">Nama Warga</h3>
             <p id="admin-target-status" class="text-xs text-slate-400 mb-4">Status Peserta</p>
             <div class="space-y-2">
@@ -341,12 +339,12 @@
             </div>
             <p class="text-xs text-slate-400 text-center mb-4">Isi lokasi anda. (Pastikan Mikrofon diizinkan).</p>
             <div class="space-y-3 mb-5">
-                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="user-name-input" placeholder="Nama Anda" class="w-full bg-slate-800/50 text-sm text-slate-400 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/50 cursor-not-allowed shadow-inner" readonly></div>
-                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="map-pin" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="custom-loc-input" placeholder="Lokasi Anda (Cth: RT 01)" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-[#050911] text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 shadow-[inset_2px_2px_8px_rgba(0,0,0,0.6)] focus:outline-none focus:border-emerald-500/70 transition"></div>
+                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="user-name-input" placeholder="Nama Anda" class="w-full bg-slate-800/50 text-sm text-slate-400 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/50 cursor-not-allowed" readonly></div>
+                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="map-pin" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="custom-loc-input" placeholder="Lokasi Anda (Cth: RT 01)" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full bg-slate-900/95 text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500/70 transition shadow-inner"></div>
             </div>
             <div class="flex gap-2">
-                <button type="button" onclick="closeJoinModal()" class="flex-1 py-3 rounded-2xl bg-slate-800/70 text-xs font-bold text-slate-400 border border-slate-700">Batal</button>
-                <button type="button" onclick="confirmJoin()" class="flex-[2] py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold shadow-[0_4px_15px_rgba(16,185,129,0.3)] border border-emerald-400/30">Gabung Suara</button>
+                <button type="button" onclick="closeJoinModal()" class="flex-1 py-3 rounded-2xl bg-slate-800/70 text-xs font-bold text-slate-400">Batal</button>
+                <button type="button" onclick="confirmJoin()" class="flex-[2] py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-lg">Gabung Suara</button>
             </div>
         </div>
     </div>
@@ -355,51 +353,51 @@
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 text-center relative overflow-hidden animate-sheet-up">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
             <div class="flex items-center justify-center gap-2 mb-1.5">
-                <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center shadow-[0_0_10px_rgba(244,63,94,0.3)]"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i></div>
+                <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Kirim Sinyal Darurat SOS</h3>
             </div>
             <p class="text-xs text-slate-400 mb-4">Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">Nguling RW 13</strong>.</p>
             <div class="grid grid-cols-2 gap-2 mt-4 text-left">
-                <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-3 rounded-2xl border border-rose-500/60 bg-rose-500/20 text-xs font-semibold text-white flex items-center gap-2 transition shadow-[0_0_10px_rgba(244,63,94,0.2)]"><span>🚨</span><span>Maling</span></button>
-                <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-3 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🔥</span><span>Kebakaran</span></button>
-                <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-3 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🚑</span><span>Medis</span></button>
-                <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-3 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🌊</span><span>Bencana</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition"><span>🚨</span><span>Maling</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🔥</span><span>Kebakaran</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🚑</span><span>Medis</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🌊</span><span>Bencana</span></button>
             </div>
             <div class="mt-5">
-                <button type="button" id="hold-sos-btn" class="relative w-full py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-bold text-xs tracking-wide overflow-hidden select-none shadow-[0_5px_20px_rgba(225,29,72,0.4),inset_0_2px_2px_rgba(255,255,255,0.2)] border border-rose-400/50 cursor-pointer">
-                    <div id="hold-progress" class="absolute inset-y-0 left-0 bg-red-950/85 w-0 pointer-events-none transition-none"></div>
-                    <span id="hold-btn-label" class="relative z-10 flex items-center justify-center gap-2"><i data-lucide="fingerprint" class="w-5 h-5"></i> Tahan 1.5 Detik</span>
+                <button type="button" id="hold-sos-btn" class="relative w-full py-3.5 rounded-2xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs tracking-wide overflow-hidden select-none shadow-md border border-rose-500/40 cursor-pointer">
+                    <div id="hold-progress" class="absolute inset-y-0 left-0 bg-red-950/75 w-0 pointer-events-none transition-none"></div>
+                    <span id="hold-btn-label" class="relative z-10 flex items-center justify-center gap-2"><i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik</span>
                 </button>
             </div>
-            <button type="button" onclick="closeSosModal()" class="mt-3 w-full py-2.5 rounded-2xl bg-slate-800/70 text-xs font-semibold text-slate-400 border border-slate-700">Batal</button>
+            <button type="button" onclick="closeSosModal()" class="mt-2.5 w-full py-2.5 rounded-2xl bg-slate-800/70 text-xs font-semibold text-slate-400">Batal</button>
         </div>
     </div>
 
     <div id="push-notification-preview" class="hidden fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-[410px] z-50 animate-banner-slide">
-        <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/80 shadow-[0_10px_30px_rgba(225,29,72,0.3)] p-4">
+        <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/70 shadow-lg p-3.5">
             <div class="flex items-start justify-between gap-2.5">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-700 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(244,63,94,0.5)]"><i data-lucide="bell-ring" class="w-5 h-5 text-white"></i></div>
+                    <div class="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center shrink-0"><i data-lucide="bell-ring" class="w-4 h-4 text-white"></i></div>
                     <div>
                         <div class="flex items-center gap-1.5"><span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">TELULAS GANK • DARURAT</span><span class="text-[10px] text-slate-500">Baru</span></div>
-                        <h4 class="text-sm font-extrabold text-white mt-1">SOS: <span id="push-category-text" class="text-rose-400">Maling</span></h4>
+                        <h4 class="text-xs font-extrabold text-white mt-1">SOS: <span id="push-category-text" class="text-rose-400">Maling</span></h4>
                         <p class="text-[11px] text-slate-300 mt-0.5">Oleh <strong id="push-reporter-text">Warga</strong>.</p>
                     </div>
                 </div>
-                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400 hover:bg-slate-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <button type="button" onclick="stopSosSiren()" class="mt-3 w-full py-2 rounded-lg bg-gradient-to-r from-rose-600 to-red-700 text-white text-[11px] font-bold transition flex justify-center gap-1.5 shadow-[0_2px_10px_rgba(225,29,72,0.4)] border border-rose-400/40"><i data-lucide="bell-off" class="w-4 h-4"></i> Hentikan Sirene</button>
+            <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 text-white text-[10px] font-bold transition flex justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button>
         </div>
     </div>
 
     <div id="unlock-audio-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[400px]">
-        <button type="button" onclick="doUnlockAudio()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-[0_5px_20px_rgba(245,158,11,0.4)] border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95 transition">
+        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95">
             <i data-lucide="volume-2" class="w-5 h-5"></i><span>🔊 Ketuk untuk Aktifkan Suara</span>
         </button>
     </div>
 
     <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
-        <div class="px-4 py-2.5 rounded-full bg-slate-900/95 border border-emerald-500/50 shadow-[0_5px_15px_rgba(0,0,0,0.5),0_0_10px_rgba(16,185,129,0.2)] flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span></div>
+        <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span></div>
     </div>
 
     <script type="module">
@@ -676,17 +674,17 @@
                     const isSelf = uid === currentUserUid;
 
                     const item = document.createElement('div');
-                    item.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 shadow-sm';
+                    item.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50';
                     item.innerHTML = `
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shadow-inner">${data.username.substring(0,2).toUpperCase()}</div>
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">${data.username.substring(0,2).toUpperCase()}</div>
                             <div>
                                 <p class="text-xs font-bold text-white">${escapeHTML(data.username)}</p>
                                 <p class="text-[9px] text-slate-400">${isBanned ? '<span class="text-rose-400">Diblokir</span>' : 'Aktif'}</p>
                             </div>
                         </div>
                         ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">Anda</span>' : 
-                        `<button onclick="toggleBan('${uid}', ${isBanned})" class="px-2.5 py-1.5 rounded-lg ${banColor} text-white text-[10px] font-bold shadow-md">${banText}</button>`}
+                        `<button onclick="toggleBan('${uid}', ${isBanned})" class="px-2.5 py-1.5 rounded-lg ${banColor} text-white text-[10px] font-bold shadow">${banText}</button>`}
                     `;
                     feed.appendChild(item);
                 });
@@ -754,7 +752,7 @@
 
                 feed.innerHTML = `
                     <div class="flex justify-center mb-2">
-                        <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700 shadow-[0_2px_5px_rgba(0,0,0,0.3)] hover:bg-slate-700 transition active:scale-95">Muat Pesan Sebelumnya</button>
+                        <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
                     </div>
                 `;
 
@@ -804,17 +802,16 @@
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'} mb-3`;
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
-                // KOTAK DARURAT DENGAN EFEK GLOWING MERAH & BAYANGAN TEBAL
-                wrapper.innerHTML = `<div class="alert-sos-box w-full p-4 rounded-2xl">
-                    <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/80 font-bold">${escapeHTML(data.time || '')}</span></div>
-                    <p class="text-xs font-semibold text-white leading-relaxed">${escapeHTML(data.message)}</p>
-                    <button onclick="stopSosSiren()" class="mt-3 w-full py-2 bg-gradient-to-r from-rose-600 to-red-700 text-white text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-[0_2px_10px_rgba(225,29,72,0.5)] border border-rose-400/40"><i data-lucide="bell-off" class="w-4 h-4"></i> Hentikan Sirene</button></div>`;
+                wrapper.innerHTML = `<div class="alert-sos-box w-full p-3.5 rounded-2xl">
+                    <div class="flex items-center justify-between mb-1"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/70">${escapeHTML(data.time || '')}</span></div>
+                    <p class="text-xs font-semibold text-white">${escapeHTML(data.message)}</p>
+                    <button onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 bg-rose-600/90 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 shadow-sm"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button></div>`;
             } else if (isSelf) {
                 wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
-                    <div class="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-[0_4px_10px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] border border-emerald-400/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-sm border border-emerald-500/30 leading-relaxed">${escapeHTML(data.message)}</div>`;
             } else {
-                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.5 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25 shadow-sm">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
-                    <div class="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.2 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
+                    <div class="max-w-[85%] px-3.5 py-2 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${escapeHTML(data.message)}</div>`;
             }
             targetFeed.appendChild(wrapper);
         }
@@ -1005,7 +1002,7 @@
         function updateCounters() {
             const n = countJoined();
             $('voice-counter').textContent = `${n}/${MAX_SLOTS}`;
-            $('online-count-text').textContent = `${onlineUserCount} Warga Online`;
+            $('online-count-text').textContent = `${onlineUserCount} Warga`;
         }
 
         function shareToWhatsApp() {
@@ -1019,42 +1016,42 @@
             voiceSlots.forEach(slot => {
                 if (slot.occupied) {
                     const isAdminMuted = slot.isMuted && slot.mutedByAdmin;
-                    const cardStyle = slot.isSelf ? 'glass-card-self' : (isAdminMuted ? 'glass-card border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'glass-card');
+                    const cardStyle = slot.isSelf ? 'glass-card-self' : (isAdminMuted ? 'glass-card border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.15)]' : 'glass-card');
                     const activeRings = (slot.isSpeaking && !slot.isMuted) ? `<div class="speaking-ring"></div><div class="speaking-ring-delay"></div>` : '';
                     const statusBadgeBg = isAdminMuted ? 'bg-purple-500' : (slot.isMuted ? 'bg-rose-500' : 'bg-emerald-500');
-                    const statusBadge = isAdminMuted ? `<i data-lucide="shield-alert" class="w-2.5 h-2.5 text-white"></i>` : (slot.isMuted ? `<i data-lucide="mic-off" class="w-2.5 h-2.5 text-white"></i>` : (slot.isSpeaking ? `<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>` : `<i data-lucide="volume-2" class="w-2.5 h-2.5 text-white"></i>`));
-                    const adminBadge = slot.isSelf ? `<i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400 absolute -top-2 left-1/2 -translate-x-1/2 bg-night-900 rounded-full p-0.5 border border-slate-600 z-10 shadow-md"></i>` : '';
+                    const statusBadge = isAdminMuted ? `<i data-lucide="shield-alert" class="w-2 h-2 text-white"></i>` : (slot.isMuted ? `<i data-lucide="mic-off" class="w-2 h-2 text-white"></i>` : (slot.isSpeaking ? `<span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>` : `<i data-lucide="volume-2" class="w-2 h-2 text-white"></i>`));
+                    const adminBadge = slot.isSelf ? `<i data-lucide="crown" class="w-3 h-3 text-amber-400 absolute -top-1.5 left-1/2 -translate-x-1/2 bg-night-900 rounded-full p-0.5 border border-slate-700 z-10 shadow-sm"></i>` : '';
                     const isClickable = (joinedSlotIndex !== null && !slot.isSelf);
                     const cursorClass = isClickable ? 'cursor-pointer' : '';
                     const roleText = isAdminMuted
-                        ? `<p class="text-[9px] text-purple-400 font-bold bg-purple-500/10 px-1.5 py-0.5 rounded mt-1 truncate max-w-full border border-purple-500/20">Mute Admin</p>`
-                        : `<p class="text-[9px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-1">${escapeHTML(slot.role || '')}</p>`;
-                    const volBar = slot.volumeLevel !== undefined ? `<div class="w-full mt-1.5 h-1 bg-slate-800 rounded-full overflow-hidden shadow-inner"><div class="vol-bar" style="width:${Math.min(100, slot.volumeLevel * 5)}%"></div></div>` : '';
+                        ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>`
+                        : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${escapeHTML(slot.role || '')}</p>`;
+                    const volBar = slot.volumeLevel !== undefined ? `<div class="w-full mt-1 h-0.5 bg-slate-800 rounded overflow-hidden"><div class="vol-bar" style="width:${Math.min(100, slot.volumeLevel * 5)}%"></div></div>` : '';
 
                     const card = document.createElement('div');
-                    card.className = `${cardStyle} ${cursorClass} rounded-2xl p-2.5 flex flex-col items-center justify-center relative transition-all duration-300`;
+                    card.className = `${cardStyle} ${cursorClass} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
                     card.innerHTML = `
-                        <div class="relative mb-1">
+                        <div class="relative mb-1 mt-1">
                             ${activeRings} ${adminBadge}
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-xs shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_2px_2px_rgba(255,255,255,0.3)] border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${escapeHTML(slot.initials || 'W')}</div>
-                            <span class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10 shadow-sm">${statusBadge}</span>
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-sm border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${escapeHTML(slot.initials || 'W')}</div>
+                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10">${statusBadge}</span>
                         </div>
-                        <p class="text-[11px] font-bold text-white truncate max-w-full text-center leading-tight mt-1">${slot.isSelf ? 'Anda' : escapeHTML(slot.name || 'Warga')}</p>
+                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">${slot.isSelf ? 'Anda' : escapeHTML(slot.name || 'Warga')}</p>
                         ${roleText}${volBar}`;
                     if (isClickable) card.onclick = () => openAdminModal(slot.id);
                     grid.appendChild(card);
                 } else {
                     const emptyBtn = document.createElement('button');
                     emptyBtn.type = 'button'; emptyBtn.onclick = () => openJoinModal(slot.id);
-                    emptyBtn.className = 'glass-slot-empty rounded-2xl p-2.5 flex flex-col items-center justify-center min-h-[90px] group cursor-pointer focus:outline-none';
-                    emptyBtn.innerHTML = `<div class="w-8 h-8 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500 border border-emerald-500/30 flex items-center justify-center mb-1.5 shadow-sm transition-colors"><i data-lucide="plus" class="w-4 h-4 text-emerald-400 group-hover:text-white"></i></div><span class="text-[11px] font-bold text-slate-400 group-hover:text-emerald-300 transition-colors">Gabung</span>`;
+                    emptyBtn.className = 'glass-slot-empty rounded-2xl p-2 flex flex-col items-center justify-center min-h-[85px] group cursor-pointer focus:outline-none';
+                    emptyBtn.innerHTML = `<div class="w-7 h-7 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500 border border-emerald-500/30 flex items-center justify-center mb-1 transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5 text-emerald-400 group-hover:text-white"></i></div><span class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-300 transition-colors">Gabung</span>`;
                     grid.appendChild(emptyBtn);
                 }
             });
             lucide.createIcons();
             updateCounters();
             if (joinedSlotIndex !== null) {
-                $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-400"></i> <span class="text-purple-300 font-bold">Mode Admin</span>`;
+                $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> <span class="text-purple-300">Mode Admin</span>`;
             } else {
                 $('admin-hint').innerHTML = ''; 
             }
@@ -1068,7 +1065,7 @@
             if (!targetSlot.occupied) return;
             targetAdminSlotIndex = slotId;
             $('admin-target-avatar').textContent = targetSlot.initials;
-            $('admin-target-avatar').className = `w-12 h-12 rounded-full bg-gradient-to-br ${targetSlot.gradient} flex items-center justify-center text-white font-bold text-sm shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_2px_2px_rgba(255,255,255,0.3)]`;
+            $('admin-target-avatar').className = `w-10 h-10 rounded-full bg-gradient-to-br ${targetSlot.gradient} flex items-center justify-center text-white font-bold text-xs shadow-inner`;
             $('admin-target-name').textContent = targetSlot.name;
             updateAdminModalUI();
             $('admin-modal').classList.remove('hidden');
@@ -1081,18 +1078,18 @@
             const btn = $('admin-toggle-btn'); const statusTxt = $('admin-target-status');
             if (targetSlot.mutedByAdmin) {
                 statusTxt.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin`;
-                statusTxt.className = 'text-[11px] text-purple-400 font-bold bg-purple-500/10 py-1 rounded-lg border border-purple-500/20 mt-1 inline-block px-3';
-                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_4px_15px_rgba(16,185,129,0.3)] border border-emerald-400/40 active:scale-95 transition';
+                statusTxt.className = 'text-[11px] text-purple-400 font-bold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-emerald-600 text-white shadow-lg border border-emerald-400/40';
                 btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i> Aktifkan Suara Peserta`;
             } else if (targetSlot.isMuted) {
                 statusTxt.textContent = 'Sedang Dibisukan (Mandiri)';
-                statusTxt.className = 'text-[11px] text-rose-400 font-semibold bg-rose-500/10 py-1 rounded-lg border border-rose-500/20 mt-1 inline-block px-3';
-                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_4px_15px_rgba(225,29,72,0.3)] border border-rose-400/40 active:scale-95 transition';
+                statusTxt.className = 'text-[11px] text-rose-400 font-semibold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg border border-rose-400/40';
                 btn.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4"></i> Bisukan Peserta Ini`;
             } else {
                 statusTxt.textContent = 'Sedang Aktif / Bicara';
-                statusTxt.className = 'text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 py-1 rounded-lg border border-emerald-500/20 mt-1 inline-block px-3';
-                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_4px_15px_rgba(225,29,72,0.3)] border border-rose-400/40 active:scale-95 transition';
+                statusTxt.className = 'text-[11px] text-emerald-400 font-semibold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg border border-rose-400/40';
                 btn.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4"></i> Bisukan Peserta Ini`;
             }
             lucide.createIcons();
@@ -1379,22 +1376,22 @@
                 micLabel.textContent = forcedMute ? 'Mute Admin' : 'Mic Mute';
                 micLabel.className = forcedMute ? 'text-xs font-bold text-purple-300 truncate' : 'text-xs font-bold text-rose-300 truncate';
                 badgeIcon.setAttribute('data-lucide', forcedMute ? 'shield-alert' : 'mic-off');
-                badgeIcon.setAttribute('class', `w-4 h-4 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}`);
+                badgeIcon.setAttribute('class', `w-3.5 h-3.5 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}`);
                 badgeBg.className = forcedMute
-                    ? 'w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                    : 'w-8 h-8 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(244,63,94,0.2)]';
+                    ? 'w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0'
+                    : 'w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0';
             } else {
                 btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
                 btnMute.disabled = false;
                 micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
-                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-4 h-4 text-emerald-400');
-                badgeBg.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.2)]';
+                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
+                badgeBg.className = 'w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0';
             }
             
             if (!isSosActive) {
                 if (isSpeakerOn) {
                     btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
-                    spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/85 truncate';
+                    spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/80 truncate';
                 } else {
                     btnSpeaker.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 text-slate-400"></i>`;
                     spkLabel.textContent = 'Speaker: Off'; spkLabel.className = 'text-[10px] text-slate-400 truncate';
@@ -1409,14 +1406,13 @@
             if (audioPrimed) return;
             audioPrimed = true;
             
-            // Pemanasan Sirene (Unlock Audio Element)
             const sirenAudio = $('siren-audio');
             if (sirenAudio) {
                 sirenAudio.volume = 0;
                 sirenAudio.play().then(() => {
                     sirenAudio.pause();
                     sirenAudio.currentTime = 0;
-                    sirenAudio.volume = 1.0; // Kembalikan volume
+                    sirenAudio.volume = 1.0;
                 }).catch(e => console.log("Siren prime error", e));
             }
 
@@ -1478,12 +1474,12 @@
         function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
         function selectSosCategory(btn, category) {
             selectedSosCategory = category;
-            document.querySelectorAll('.sos-cat-btn').forEach(el => { el.className = 'sos-cat-btn p-3 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition'; });
-            btn.className = 'sos-cat-btn p-3 rounded-2xl border border-rose-500/60 bg-rose-500/20 text-xs font-semibold text-white flex items-center gap-2 transition shadow-[0_0_10px_rgba(244,63,94,0.2)]';
+            document.querySelectorAll('.sos-cat-btn').forEach(el => { el.className = 'sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition'; });
+            btn.className = 'sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition';
         }
-        function startHoldSos(e) { if (e) e.preventDefault(); resetHoldProgress(); const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); labelEl.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Mengirim...`; lucide.createIcons(); const duration = 1500; const step = 30; holdInterval = setInterval(() => { holdProgressVal += (step / duration) * 100; progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`; if (holdProgressVal >= 100) { clearInterval(holdInterval); triggerEmergencyAlert(); } }, step); }
+        function startHoldSos(e) { if (e) e.preventDefault(); resetHoldProgress(); const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); labelEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...`; lucide.createIcons(); const duration = 1500; const step = 30; holdInterval = setInterval(() => { holdProgressVal += (step / duration) * 100; progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`; if (holdProgressVal >= 100) { clearInterval(holdInterval); triggerEmergencyAlert(); } }, step); }
         function cancelHoldSos() { clearInterval(holdInterval); resetHoldProgress(); }
-        function resetHoldProgress() { holdProgressVal = 0; const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); if (progressEl) progressEl.style.width = '0%'; if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-5 h-5"></i> Tahan 1.5 Detik`; lucide.createIcons(); } }
+        function resetHoldProgress() { holdProgressVal = 0; const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); if (progressEl) progressEl.style.width = '0%'; if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik`; lucide.createIcons(); } }
         
         async function playSirenTone() { try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {} }
         
@@ -1493,36 +1489,29 @@
             const forceOverlay = $('force-siren-overlay');
 
             if (!isSelf) {
-                // PASTIKAN OVERLAY MUNCUL
                 forceOverlay.classList.remove('hidden');
-                
-                // Getar berulang
                 const vibrateInterval = setInterval(() => {
                     try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
                 }, 3000);
                 try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
                 
-                // Coba putar audio
                 if (sirenAudio) {
                     sirenAudio.volume = 1.0; 
                     sirenAudio.play().then(() => {
                         forceOverlay.classList.add('hidden');
                         clearInterval(vibrateInterval);
-                        // Jika berhasil, buat interval putar ulang agar tidak mati
                         sosSirenInterval = setInterval(() => {
                             sirenAudio.play().catch(()=>{});
                             try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
                         }, 3000);
                     }).catch(e => {
-                        // Biarkan overlay tampil, user harus tap
-                        sosSirenInterval = vibrateInterval; // Simpan interval agar bisa di-clear saat stop
+                        sosSirenInterval = vibrateInterval; 
                     });
                 } else {
                     playSirenTone();
                     sosSirenInterval = vibrateInterval;
                 }
             } else {
-                // Pengirim SOS: langsung putar audio
                 const playAndVibrate = () => {
                     if (sirenAudio) { 
                         sirenAudio.volume = 1.0; 
@@ -1538,7 +1527,7 @@
         }
 
         window.unlockAndPlaySiren = () => {
-            primeAudio(); // Unlock AudioContext
+            primeAudio();
             $('force-siren-overlay').classList.add('hidden');
             
             if (sosSirenInterval) clearInterval(sosSirenInterval);
@@ -1562,18 +1551,15 @@
             isSosActive = false;
             clearTimeout(sosTimeout);
 
-            // 1. Matikan Sirene & Getar
             const sirenAudio = $('siren-audio');
             if (sirenAudio) { sirenAudio.pause(); sirenAudio.currentTime = 0; }
             if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; } 
             try { navigator.vibrate(0); } catch(e) {}
             
-            // 2. Sembunyikan UI SOS
             $('force-siren-overlay').classList.add('hidden');
             $('sos-active-banner').classList.add('hidden');
             $('push-notification-preview').classList.add('hidden');
 
-            // 3. Kembalikan Suara Obrolan (Agora)
             if (localAudioTrack && joinedSlotIndex !== null) {
                 localAudioTrack.setEnabled(!savedMicState);
             }
@@ -1582,7 +1568,6 @@
                 try { isSpeakerOn ? track.play() : track.stop(); } catch(e) {}
             });
             
-            // 4. Update UI Tombol
             updateAudioControlUI();
             $('btn-mute').disabled = false;
             $('btn-speaker').disabled = false;
@@ -1595,13 +1580,11 @@
             $('push-reporter-text').textContent = reporter;
             $('push-notification-preview').classList.remove('hidden');
             
-            // Simpan status audio saat ini jika belum dalam mode SOS
             if (!isSosActive) {
                 isSosActive = true;
                 savedMicState = isMicMuted;
                 savedSpeakerState = isSpeakerOn;
 
-                // Matikan suara Agora sementara
                 if (localAudioTrack && joinedSlotIndex !== null) {
                     localAudioTrack.setEnabled(false);
                 }
@@ -1609,21 +1592,17 @@
                     try { track.stop(); } catch(e) {}
                 });
 
-                // Tampilkan Banner Peringatan
                 $('sos-active-banner').classList.remove('hidden');
                 
-                // Disable tombol mute/speaker
                 $('btn-mute').disabled = true;
                 $('btn-speaker').disabled = true;
                 updateAudioControlUI();
 
-                // Auto Stop setelah 3 Menit (180000 ms)
                 sosTimeout = setTimeout(() => {
                     stopSosSiren();
                     showToast('Sirene SOS berhenti otomatis (Batas waktu).');
                 }, 180000);
             } else {
-                // Jika SOS baru masuk saat SOS sebelumnya masih aktif, reset timer auto-stop
                 clearTimeout(sosTimeout);
                 sosTimeout = setTimeout(() => {
                     stopSosSiren();
@@ -1651,7 +1630,6 @@
         }
         
         function listenIncomingSos() {
-            // FIX: Tambahkan orderBy agar mengambil SOS terbaru
             const q = query(collection(db, "sos_alerts"), orderBy("timestamp", "desc"), limit(10)); 
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
@@ -1664,7 +1642,7 @@
                     const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
                     const timeDiff = Date.now() - getMs(data.timestamp);
                     
-                    if (timeDiff > 300000) return; // 5 Menit
+                    if (timeDiff > 300000) return;
                     processedSosIds.push(docId);
                     if (processedSosIds.length > 100) processedSosIds.shift();
                     showSosBanner(data.reporter, data.category, false);
