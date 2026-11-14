@@ -50,7 +50,6 @@
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
 
-    <!-- OVERLAY PAKSA SIRENE -->
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[500] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
         <h1 class="text-3xl font-black text-white text-center px-4">DARURAT SOS!</h1>
@@ -120,7 +119,6 @@
                 </span>
             </div>
 
-            <!-- LIVE AUDIO INDICATOR UNTUK PENDENGAR -->
             <div id="live-listener-bar" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="headphones" class="w-4 h-4 text-sky-400 animate-pulse"></i>
@@ -174,8 +172,6 @@
         </section>
     </div>
 
-    <!-- SISA MODAL DIAGNOSTIC, ADMIN, SOS, DLL SAMA SEPERTI SEBELUMNYA -->
-    <!-- Demi efisiensi, pastikan Anda menyalin semua kode di atas ke file index.html Anda -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -473,36 +469,42 @@
             }
 
             try {
-                if (!agoraClient) {
-                    agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                    
-                    agoraClient.on("user-published", async (user, mediaType) => {
-                        try {
-                            await agoraClient.subscribe(user, mediaType);
-                            if (mediaType === "audio" && user.audioTrack) {
-                                remoteAudioTracks[user.uid] = user.audioTrack;
-                                try {
-                                    if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
-                                    user.audioTrack.setVolume(100);
-                                    await user.audioTrack.play();
-                                    hideUnlockBanner();
-                                    startAutoRetryPlay(user);
-                                } catch (playErr) {
-                                    showUnlockBanner(); startAutoRetryPlay(user);
-                                }
-                            }
-                        } catch (e) {}
-                    });
-
-                    agoraClient.on("user-unpublished", (user, mediaType) => {
-                        if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
-                            try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
-                            delete remoteAudioTracks[user.uid];
-                        }
-                    });
+                // Bersihkan client lama jika ada (mencegah UID Conflict)
+                if (agoraClient) {
+                    try { await agoraClient.leave(); } catch(e){}
+                    agoraClient = null;
                 }
 
+                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+                
+                agoraClient.on("user-published", async (user, mediaType) => {
+                    try {
+                        await agoraClient.subscribe(user, mediaType);
+                        if (mediaType === "audio" && user.audioTrack) {
+                            remoteAudioTracks[user.uid] = user.audioTrack;
+                            try {
+                                if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
+                                user.audioTrack.setVolume(100);
+                                await user.audioTrack.play();
+                                hideUnlockBanner();
+                                startAutoRetryPlay(user);
+                            } catch (playErr) {
+                                showUnlockBanner(); startAutoRetryPlay(user);
+                            }
+                        }
+                    } catch (e) {}
+                });
+
+                agoraClient.on("user-unpublished", (user, mediaType) => {
+                    if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                // Generate UID baru setiap kali join untuk mencegah conflict
                 localAgoraUid = Math.floor(Math.random() * 100000000);
+                
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 await agoraClient.setClientRole("audience");
                 isAudienceMode = true;
@@ -1066,12 +1068,9 @@
             try {
                 const slotRef = doc(db, "active_slots", `slot_${index}`);
                 
-                // PERBAIKAN: Gunakan localAgoraUid yang sudah ada (dari mode pendengar)
-                let myAgoraUid = localAgoraUid;
-                if (!myAgoraUid) {
-                    myAgoraUid = Math.floor(Math.random() * 100000000);
-                    localAgoraUid = myAgoraUid;
-                }
+                // PERBAIKAN: Generate UID baru secara paksa untuk mencegah UID_CONFLICT
+                let myAgoraUid = Math.floor(Math.random() * 100000000);
+                localAgoraUid = myAgoraUid;
 
                 try {
                     await runTransaction(db, async (tx) => {
@@ -1088,38 +1087,58 @@
                     throw e;
                 }
 
-                localAgoraUid = myAgoraUid;
-                
-                // Ganti role jadi Host (Pembicara)
-                if (agoraClient && isAudienceMode) {
-                    await agoraClient.setClientRole("host");
-                    isAudienceMode = false;
-                    $('live-listener-bar').classList.add('hidden');
-                } else {
-                    agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-                    agoraClient.on("user-published", async (user, mediaType) => {
-                        try {
-                            await agoraClient.subscribe(user, mediaType);
-                            if (mediaType === "audio" && user.audioTrack) {
-                                remoteAudioTracks[user.uid] = user.audioTrack;
-                                try {
-                                    if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
-                                    user.audioTrack.setVolume(100);
-                                    await user.audioTrack.play();
-                                    hideUnlockBanner();
-                                    startAutoRetryPlay(user);
-                                } catch (playErr) { showUnlockBanner(); startAutoRetryPlay(user); }
-                            }
-                        } catch (e) {}
-                    });
-                    agoraClient.on("user-unpublished", (user, mediaType) => {
-                        if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
-                            try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
-                            delete remoteAudioTracks[user.uid];
-                        }
-                    });
-                    await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
+                // Bersihkan client lama
+                if (agoraClient) {
+                    try { await agoraClient.leave(); } catch(e){}
+                    agoraClient = null;
                 }
+
+                agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+                agoraClient.on("user-published", async (user, mediaType) => {
+                    try {
+                        await agoraClient.subscribe(user, mediaType);
+                        if (mediaType === "audio" && user.audioTrack) {
+                            remoteAudioTracks[user.uid] = user.audioTrack;
+                            try {
+                                if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
+                                user.audioTrack.setVolume(100);
+                                await user.audioTrack.play();
+                                hideUnlockBanner();
+                                startAutoRetryPlay(user);
+                            } catch (playErr) { showUnlockBanner(); startAutoRetryPlay(user); }
+                        }
+                    } catch (e) {}
+                });
+
+                agoraClient.on("user-unpublished", (user, mediaType) => {
+                    if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                // LOGIKA RETRY UNTUK UID CONFLICT
+                let retries = 0;
+                while (retries < 3) {
+                    try {
+                        await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
+                        break; // Berhasil join
+                    } catch (err) {
+                        if (err.message.includes('UID_CONFLICT') || err.code === 'UID_CONFLICT') {
+                            retries++;
+                            console.log("UID conflict, retrying with new UID...");
+                            localAgoraUid = Math.floor(Math.random() * 100000000); // Ganti UID
+                            if (agoraClient) { try { await agoraClient.leave(); } catch(e){} }
+                        } else {
+                            throw err; // Error lain (misal token invalid)
+                        }
+                    }
+                }
+
+                await agoraClient.setClientRole("host");
+                isAudienceMode = false;
+                $('live-listener-bar').classList.add('hidden');
 
                 try { if (AgoraRTC.setParameter) await AgoraRTC.setParameter('AUDIO_PLAYBACK_DEVICE', 'speakerphone'); } catch(e) {}
 
