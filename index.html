@@ -50,7 +50,7 @@
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
 
-    <div id="force-siren-overlay" class="hidden fixed inset-0 z-[500] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
+    <div id="force-siren-overlay" class="hidden fixed inset-0 z-[9999] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
         <h1 class="text-3xl font-black text-white text-center px-4">DARURAT SOS!</h1>
         <p class="text-lg text-white/80 mt-2 text-center px-4 font-bold">KETUK LAYAR INI UNTUK MEMBUNYIKAN SIRENE!</p>
@@ -177,7 +177,7 @@
         </section>
     </div>
 
-    <!-- MODAL DIAGNOSTIC, ADMIN, DLL -->
+    <!-- SISA MODAL (DIAGNOSTIC, ADMIN, DLL) -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -1413,29 +1413,69 @@
             const sirenAudio = $('siren-audio');
             const forceOverlay = $('force-siren-overlay');
 
-            const playAndVibrate = () => {
-                if (sirenAudio) { 
+            if (!isSelf) {
+                // PASTIKAN OVERLAY MUNCUL
+                forceOverlay.classList.remove('hidden');
+                
+                // Getar berulang
+                const vibrateInterval = setInterval(() => {
+                    try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                }, 3000);
+                try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                
+                // Coba putar audio
+                if (sirenAudio) {
                     sirenAudio.volume = 1.0; 
                     sirenAudio.play().then(() => {
-                        if (isSelf) forceOverlay.classList.add('hidden');
-                    }).catch(e => { 
-                        playSirenTone(); 
-                        if (!isSelf) forceOverlay.classList.remove('hidden'); 
-                    }); 
-                } else { 
-                    playSirenTone(); 
+                        forceOverlay.classList.add('hidden');
+                        clearInterval(vibrateInterval);
+                        // Jika berhasil, buat interval putar ulang agar tidak mati
+                        sosSirenInterval = setInterval(() => {
+                            sirenAudio.play().catch(()=>{});
+                            try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                        }, 3000);
+                    }).catch(e => {
+                        // Biarkan overlay tampil, user harus tap
+                        sosSirenInterval = vibrateInterval; // Simpan interval agar bisa di-clear saat stop
+                    });
+                } else {
+                    playSirenTone();
+                    sosSirenInterval = vibrateInterval;
                 }
-                try { navigator.vibrate([1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]); } catch(e) {}
-            };
-
-            playAndVibrate();
-            sosSirenInterval = setInterval(playAndVibrate, 3000);
+            } else {
+                // Pengirim SOS: langsung putar audio
+                const playAndVibrate = () => {
+                    if (sirenAudio) { 
+                        sirenAudio.volume = 1.0; 
+                        sirenAudio.play().catch(() => playSirenTone()); 
+                    } else { 
+                        playSirenTone(); 
+                    }
+                    try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                };
+                playAndVibrate();
+                sosSirenInterval = setInterval(playAndVibrate, 3000);
+            }
         }
 
         window.unlockAndPlaySiren = () => {
-            primeAudio();
+            primeAudio(); // Unlock AudioContext
             $('force-siren-overlay').classList.add('hidden');
-            startSosSiren(true);
+            
+            if (sosSirenInterval) clearInterval(sosSirenInterval);
+            
+            const sirenAudio = $('siren-audio');
+            const playAndVibrate = () => {
+                if (sirenAudio) { 
+                    sirenAudio.volume = 1.0; 
+                    sirenAudio.play().catch(() => playSirenTone()); 
+                } else { 
+                    playSirenTone(); 
+                }
+                try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+            };
+            playAndVibrate();
+            sosSirenInterval = setInterval(playAndVibrate, 3000);
         }
 
         function stopSosSiren() { 
@@ -1503,6 +1543,13 @@
                     stopSosSiren();
                     showToast('Sirene SOS berhenti otomatis (Batas waktu).');
                 }, 180000);
+            } else {
+                // Jika SOS baru masuk saat SOS sebelumnya masih aktif, reset timer auto-stop
+                clearTimeout(sosTimeout);
+                sosTimeout = setTimeout(() => {
+                    stopSosSiren();
+                    showToast('Sirene SOS berhenti otomatis (Batas waktu).');
+                }, 180000);
             }
 
             startSosSiren(isSelf);
@@ -1525,7 +1572,8 @@
         }
         
         function listenIncomingSos() {
-            const q = query(collection(db, "sos_alerts"), limit(20)); 
+            // FIX: Tambahkan orderBy agar mengambil SOS terbaru
+            const q = query(collection(db, "sos_alerts"), orderBy("timestamp", "desc"), limit(10)); 
             onSnapshot(q, (snapshot) => {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type !== "added") return;
@@ -1537,7 +1585,7 @@
                     const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
                     const timeDiff = Date.now() - getMs(data.timestamp);
                     
-                    if (timeDiff > 300000) return; // Diperpanjang ke 5 Menit (300.000 ms)
+                    if (timeDiff > 300000) return; // 5 Menit
                     processedSosIds.push(docId);
                     if (processedSosIds.length > 100) processedSosIds.shift();
                     showSosBanner(data.reporter, data.category, false);
