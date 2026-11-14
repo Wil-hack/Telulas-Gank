@@ -62,30 +62,33 @@
             box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
         }
         
-        /* --- EFEK LUBANG (INSET SHADOW DALAM) UNTUK TOMBOL GABUNG --- */
+        /* --- EFEK LUBANG DENGAN GRADIENT UNTUK TOMBOL GABUNG --- */
         .glass-slot-empty { 
-            background: #080e17; /* Warna lebih gelap dari background utama */
+            /* Gradien gelap dari atas ke bawah */
+            background: linear-gradient(180deg, #04070d 0%, #0d1522 100%); 
             border: 1.5px dashed rgba(255,255,255,0.1); 
             transition: all 0.2s; 
-            /* Bayangan masuk yang tebal untuk efek lubang */
+            /* Bayangan masuk tebal untuk efek lubang */
             box-shadow: inset 0 6px 12px rgba(0,0,0,0.8), inset 0 -2px 5px rgba(255,255,255,0.03);
         }
         .glass-slot-empty:hover, .glass-slot-empty:active { 
-            background: rgba(16,185,129,0.08); 
+            /* Gradien hijau gelap saat ditekan */
+            background: linear-gradient(180deg, rgba(16,185,129,0.08) 0%, #0d1522 100%); 
             border-color: rgba(16,185,129,0.5); 
-            box-shadow: inset 0 6px 12px rgba(0,0,0,0.6), inset 0 0 10px rgba(16,185,129,0.2);
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.6), inset 0 0 10px rgba(16,185,129,0.15);
             transform: scale(0.98);
         }
 
-        /* --- EFEK LUBANG UNTUK INPUT CHAT --- */
+        /* --- EFEK LUBANG DENGAN GRADIENT UNTUK INPUT CHAT --- */
         .input-hole {
-            background: #050911;
-            /* Bayangan dalam tebal untuk efek lubang */
+            /* Gradien gelap untuk kolom ketik */
+            background: linear-gradient(180deg, #03060a 0%, #0a111e 100%);
             box-shadow: inset 0 5px 10px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
         .input-hole:focus {
+            background: linear-gradient(180deg, #050911 0%, #0f1829 100%);
             box-shadow: inset 0 5px 10px rgba(0,0,0,0.9), 0 0 0 2px rgba(16,185,129,0.3);
             border-color: rgba(16,185,129,0.5);
         }
@@ -256,7 +259,7 @@
             </div>
             <div class="p-3 glass-panel border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
-                    <!-- INPUT CHAT EFEK LUBANG -->
+                    <!-- INPUT CHAT EFEK LUBANG GRADIENT -->
                     <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
                     <button type="submit" class="p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm border border-emerald-500/40 active:scale-95 shrink-0 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </form>
