@@ -39,7 +39,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
         
-        /* Background Gradien di belakang area suara (menu gabung) */
+        /* Background Gradien di belakang area suara */
         .bg-voice-area {
             background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%);
         }
@@ -49,12 +49,6 @@
             background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%);
         }
 
-        .glass-panel { 
-            background: rgba(15,24,41,0.85); 
-            backdrop-filter: blur(16px); 
-            border: 1px solid rgba(255,255,255,0.05); 
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
-        }
         .glass-card { 
             background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); 
             backdrop-filter: blur(12px); 
@@ -73,30 +67,31 @@
             box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
         }
         
-        /* --- TOMBOL GABUNG (Efek Lubang Gelap) --- */
+        /* --- TOMBOL GABUNG (Efek Lubang Cekung Dalam Sesuai Screenshot) --- */
         .glass-slot-empty { 
-            background: #03060a; /* Tetap gelap solid agar terlihat seperti lubang */
-            border: 1.5px dashed rgba(255,255,255,0.1); 
+            background: #05080f; /* Warna sangat gelap agar terlihat seperti lubang */
+            border: 1.5px dashed rgba(255,255,255,0.15); 
             transition: all 0.2s; 
-            box-shadow: inset 0 6px 12px rgba(0,0,0,0.8), inset 0 -2px 5px rgba(255,255,255,0.03);
+            /* Bayangan dalam (inset) tebal untuk efek cekung maksimal */
+            box-shadow: inset 0 8px 16px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.05);
         }
         .glass-slot-empty:hover, .glass-slot-empty:active { 
-            background: #050911; 
-            border-color: rgba(16,185,129,0.5); 
-            box-shadow: inset 0 6px 12px rgba(0,0,0,0.6), inset 0 0 10px rgba(16,185,129,0.15);
+            background: rgba(16,185,129,0.05); /* Sedikit hijau transparan saat disentuh */
+            border-color: rgba(16,185,129,0.6); 
+            box-shadow: inset 0 8px 16px rgba(0,0,0,0.8), inset 0 0 10px rgba(16,185,129,0.2);
             transform: scale(0.98);
         }
 
-        /* --- INPUT CHAT (Efek Lubang Gelap) --- */
+        /* --- INPUT CHAT (Efek Lubang Cekung) --- */
         .input-hole {
-            background: #03060a; /* Tetap gelap solid */
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.05);
+            background: #05080f; 
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.9), inset 0 -1px 3px rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
         .input-hole:focus {
-            background: #050911;
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.9), 0 0 0 2px rgba(16,185,129,0.3);
+            background: #0a111e;
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.9), 0 0 0 2px rgba(16,185,129,0.3);
             border-color: rgba(16,185,129,0.5);
         }
 
@@ -187,7 +182,6 @@
             🚨 OBROLAN DIJEDA KARENA DARURAT SOS 🚨
         </div>
 
-        <!-- HEADER YANG SUDAH DIRAPIKAN -->
         <header class="glass-header px-4 py-3 flex items-center justify-between shrink-0 z-20">
             <div class="flex items-center gap-2 min-w-0">
                 <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin & Bantuan">
@@ -208,7 +202,7 @@
             </div>
         </header>
 
-        <!-- BACKGROUND GRADIENT DI BELAKANG MENU GABUNG -->
+        <!-- AREA SUARA DENGAN BACKGROUND GRADIEN -->
         <section class="bg-voice-area px-4 pt-3 pb-2.5 shrink-0 border-b border-slate-800/70 relative">
             <div class="flex items-center justify-between mb-2.5">
                 <div class="flex items-center gap-2 min-w-0">
@@ -230,7 +224,7 @@
             </div>
 
             <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
-                <!-- Grid Tombol Gabung -->
+                <!-- Grid Tombol Gabung (Efek Lubang) -->
                 <div id="voice-grid" class="grid grid-cols-3 gap-2.5 pb-1 transition-all duration-300"></div>
             </div>
 
@@ -267,7 +261,7 @@
                 </div>
             </div>
 
-            <!-- BACKGROUND GRADIENT DI BELAKANG KOLOM CHAT -->
+            <!-- AREA INPUT CHAT DENGAN BACKGROUND GRADIEN -->
             <div class="p-3 bg-chat-input-area border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
                     <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
