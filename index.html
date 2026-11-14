@@ -50,7 +50,7 @@
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
 
-    <!-- OVERLAY PAKSA SIRENE (JIKA DIBLOKIR BROWSER) -->
+    <!-- OVERLAY PAKSA SIRENE -->
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[500] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
         <h1 class="text-3xl font-black text-white text-center px-4">DARURAT SOS!</h1>
@@ -85,7 +85,6 @@
         </div>
     </div>
 
-    <!-- ================= APLIKASI UTAMA ================= -->
     <div id="app-shell" class="hidden relative z-10 w-full max-w-md h-[100dvh] flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
         
         <header class="glass-header px-3.5 py-3 flex items-center justify-between shrink-0 z-20">
@@ -119,6 +118,15 @@
                 <span class="text-[10px] text-slate-400 flex items-center gap-1 shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="online-count-text">0 Warga Online</span>
                 </span>
+            </div>
+
+            <!-- LIVE AUDIO INDICATOR UNTUK PENDENGAR -->
+            <div id="live-listener-bar" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="headphones" class="w-4 h-4 text-sky-400 animate-pulse"></i>
+                    <span class="text-xs font-bold text-sky-300">Mode Pendengar (Live)</span>
+                </div>
+                <button onclick="doUnlockAudio()" class="px-2 py-1 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold rounded-lg transition">Aktifkan Suara</button>
             </div>
 
             <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
@@ -166,8 +174,8 @@
         </section>
     </div>
 
-    <!-- SEMUA MODAL & OVERLAY LAINNYA (SAMA SEPERTI SEBELUMNYA) -->
-    <!-- Demi menghemat ruang, saya pastikan kode modal Admin, SOS, dll di bawah ini sudah terpasang lengkap -->
+    <!-- SISA MODAL DIAGNOSTIC, ADMIN, SOS, DLL SAMA SEPERTI SEBELUMNYA -->
+    <!-- Demi efisiensi, pastikan Anda menyalin semua kode di atas ke file index.html Anda -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -359,7 +367,7 @@
         let lastVisibleChatDoc = null;
         let isLoadingMore = false;
         let typingTimeout = null;
-        let isAudienceMode = false; // Mode live (hanya mendengar)
+        let isAudienceMode = false;
 
         const MAX_SLOTS = 20;
         const SLOT_TIMEOUT_MS = 30000; 
@@ -369,7 +377,6 @@
         // ================= PWA & FCM =================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then((registration) => {
-                console.log('Service Worker registered');
                 if (messaging && VAPID_KEY !== "VAPID_KEY_DISINI") {
                     Notification.requestPermission().then((permission) => {
                         if (permission === 'granted') {
@@ -495,13 +502,12 @@
                     });
                 }
 
-                // Join sebagai Audience (Hanya mendengar)
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
                 await agoraClient.setClientRole("audience");
                 isAudienceMode = true;
+                $('live-listener-bar').classList.remove('hidden');
 
-                // Subscribe ke semua yang sudah publish
                 agoraClient.remoteUsers.forEach(async (user) => {
                     if (user.hasAudio) {
                         try {
@@ -544,7 +550,7 @@
 
                     setupPresence(); 
                     listenToOnlineUsers(); 
-                    fetchLatestAgoraToken().then(() => startAudienceMode()); // Mulai mode Live setelah token ada
+                    fetchLatestAgoraToken().then(() => startAudienceMode()); 
                     listenToActiveSlots(); 
                     initFirebaseChat();
                     listenTypingStatus();
@@ -1059,7 +1065,14 @@
 
             try {
                 const slotRef = doc(db, "active_slots", `slot_${index}`);
-                const myAgoraUid = Math.floor(Math.random() * 100000000);
+                
+                // PERBAIKAN: Gunakan localAgoraUid yang sudah ada (dari mode pendengar)
+                let myAgoraUid = localAgoraUid;
+                if (!myAgoraUid) {
+                    myAgoraUid = Math.floor(Math.random() * 100000000);
+                    localAgoraUid = myAgoraUid;
+                }
+
                 try {
                     await runTransaction(db, async (tx) => {
                         const snap = await tx.get(slotRef);
@@ -1081,6 +1094,7 @@
                 if (agoraClient && isAudienceMode) {
                     await agoraClient.setClientRole("host");
                     isAudienceMode = false;
+                    $('live-listener-bar').classList.add('hidden');
                 } else {
                     agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
                     agoraClient.on("user-published", async (user, mediaType) => {
@@ -1213,6 +1227,7 @@
                     await agoraClient.unpublish();
                     await agoraClient.setClientRole("audience");
                     isAudienceMode = true;
+                    $('live-listener-bar').classList.remove('hidden');
                 }
                 
                 if (!isKicked) await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
@@ -1360,7 +1375,7 @@
                         forceOverlay.classList.add('hidden');
                     }).catch(e => { 
                         playSirenTone(); 
-                        forceOverlay.classList.remove('hidden'); // Tampilkan layar paksa
+                        forceOverlay.classList.remove('hidden'); 
                     }); 
                 } else { 
                     playSirenTone(); 
