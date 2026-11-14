@@ -31,7 +31,6 @@
         ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
         ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
         
-        /* --- GLASSMORPHISM & BACKGROUND GRADIENTS --- */
         .glass-header { 
             background: rgba(10,17,30,0.95); 
             backdrop-filter: blur(18px); 
@@ -39,12 +38,10 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
         }
         
-        /* Background Gradien di belakang area suara */
         .bg-voice-area {
             background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%);
         }
 
-        /* Background Gradien di belakang kolom chat */
         .bg-chat-input-area {
             background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%);
         }
@@ -67,7 +64,6 @@
             box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
         }
         
-        /* --- TOMBOL GABUNG (Efek Lubang Kaca Transparan) --- */
         .glass-slot-empty { 
             background: rgba(10, 17, 30, 0.4); 
             backdrop-filter: blur(4px);
@@ -82,7 +78,6 @@
             transform: scale(0.98);
         }
 
-        /* --- INPUT CHAT (Efek Lubang Kaca Transparan) --- */
         .input-hole {
             background: rgba(5, 9, 17, 0.6); 
             backdrop-filter: blur(4px);
@@ -96,7 +91,6 @@
             border-color: rgba(16,185,129,0.5);
         }
 
-        /* --- SOFT NEUMORPHISM (Tombol Elegan) --- */
         .btn-soft {
             background: #1e293b;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
@@ -109,7 +103,6 @@
             background: #0f172a;
         }
         
-        /* --- GLOW & GRADIENTS --- */
         .text-gradient { 
             background: linear-gradient(to right, #34d399, #38bdf8, #34d399); 
             -webkit-background-clip: text; 
@@ -129,7 +122,6 @@
             box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2);
         }
 
-        /* --- ANIMATIONS --- */
         @keyframes speakingWave { 0% { transform: scale(0.95); opacity: 0.85; } 75% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
         .speaking-ring { position: absolute; inset: -3px; border-radius: 9999px; border: 2px solid #10b981; animation: speakingWave 1.45s infinite; }
         .speaking-ring-delay { position: absolute; inset: -3px; border-radius: 9999px; border: 1.5px solid #34d399; animation: speakingWave 1.45s 0.5s infinite; }
@@ -203,7 +195,6 @@
             </div>
         </header>
 
-        <!-- AREA SUARA DENGAN BACKGROUND GRADIEN -->
         <section class="bg-voice-area px-4 pt-3 pb-2.5 shrink-0 border-b border-slate-800/70 relative">
             <div class="flex items-center justify-between mb-2.5">
                 <div class="flex items-center gap-2 min-w-0">
@@ -225,7 +216,6 @@
             </div>
 
             <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
-                <!-- Grid Tombol Gabung (Efek Lubang Kaca) -->
                 <div id="voice-grid" class="grid grid-cols-3 gap-2.5 pb-1 transition-all duration-300"></div>
             </div>
 
@@ -262,7 +252,6 @@
                 </div>
             </div>
 
-            <!-- AREA INPUT CHAT DENGAN BACKGROUND GRADIEN -->
             <div class="p-3 bg-chat-input-area border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
                     <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
@@ -272,7 +261,7 @@
         </section>
     </div>
 
-    <!-- MODAL DIAGNOSTIC -->
+    <!-- SISA MODAL DLL TETAP SAMA -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -850,21 +839,23 @@
                     isEmergency: !!opts.isEmergency
                 });
 
-                if (!opts.isEmergency) { 
-                    const usersSnap = await getDocs(collection(db, "users"));
-                    let tokens = [];
-                    usersSnap.forEach(u => {
-                        const data = u.data();
-                        if (u.id !== currentUserUid && data.fcmToken) tokens.push(data.fcmToken);
-                    });
+                // PERBAIKAN: Kirim notifikasi untuk SEMUA pesan (termasuk SOS)
+                const usersSnap = await getDocs(collection(db, "users"));
+                let tokens = [];
+                usersSnap.forEach(u => {
+                    const data = u.data();
+                    if (u.id !== currentUserUid && data.fcmToken) tokens.push(data.fcmToken);
+                });
+                
+                if (tokens.length > 0) {
+                    let notifTitle = `Pesan dari ${senderName}`;
+                    if (opts.isEmergency) notifTitle = `🚨 DARURAT SOS: ${senderName}`;
                     
-                    if (tokens.length > 0) {
-                        fetch(CLOUDFLARE_WORKER_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ tokens: tokens, title: `Pesan dari ${senderName}`, message: text })
-                        }).catch(e => console.log('Notif error:', e));
-                    }
+                    fetch(CLOUDFLARE_WORKER_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tokens: tokens, title: notifTitle, message: text })
+                    }).catch(e => console.log('Notif error:', e));
                 }
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
@@ -1681,36 +1672,31 @@
         function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
 
-        // ================= DIAGNOSTIC FUNCTIONS (FIXED) =================
+        // ================= DIAGNOSTIC FUNCTIONS =================
         window.toggleDiag = () => {
             const overlay = $('diag-overlay');
             if(!overlay) return;
             overlay.classList.toggle('hidden');
             
             if (!overlay.classList.contains('hidden')) {
-                // Update Status Agora
                 const chkAgora = $('chk-agora'); const valAgora = $('val-agora');
                 if (agoraClient) { chkAgora.textContent = '✅'; valAgora.textContent = 'Connected'; valAgora.className = 'text-emerald-400 text-xs font-bold'; } 
                 else { chkAgora.textContent = '❌'; valAgora.textContent = 'Disconnected'; valAgora.className = 'text-rose-400 text-xs font-bold'; }
 
-                // Update Token
                 const chkToken = $('chk-token'); const valToken = $('val-token');
                 if (AGORA_TOKEN) { chkToken.textContent = '✅'; valToken.textContent = 'Tersedia'; } 
                 else { chkToken.textContent = '❌'; valToken.textContent = 'Kosong'; }
 
-                // Update Mic
                 const chkMic = $('chk-mic'); const valMic = $('val-mic');
                 if (localAudioTrack) { chkMic.textContent = '✅'; valMic.textContent = isMicMuted ? 'Muted' : 'Aktif'; } 
                 else { chkMic.textContent = '⏳'; valMic.textContent = 'Belum Join'; }
 
-                // Update Remotes
                 const remoteCount = Object.keys(remoteAudioTracks).length;
                 $('chk-remotes').textContent = remoteCount > 0 ? '✅' : '⏳';
                 $('val-remotes').textContent = remoteCount;
                 $('chk-tracks').textContent = remoteCount > 0 ? '✅' : '⏳';
                 $('val-tracks').textContent = remoteCount;
 
-                // Log
                 const log = $('diag-log');
                 log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
             }
@@ -1740,7 +1726,7 @@
                 const log = $('diag-log');
                 log.innerHTML = `[FORCE] Re-publishing mic...\n` + log.innerHTML;
                 await agoraClient.unpublish([localAudioTrack]);
-                await new Promise(r => setTimeout(r, 500)); // jeda sebentar
+                await new Promise(r => setTimeout(r, 500)); 
                 await agoraClient.publish([localAudioTrack]);
                 showToast("Mic berhasil di-republish ulang.");
                 log.innerHTML = `[FORCE] Berhasil re-publish.\n` + log.innerHTML;
@@ -1750,7 +1736,7 @@
                 log.innerHTML = `[ERROR] Re-publish gagal: ${e.message}\n` + log.innerHTML;
             }
         };
-        // =============================================================
+        // =======================================================
 
         window.addEventListener('load', () => {
             lucide.createIcons();
