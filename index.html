@@ -69,12 +69,10 @@
         
         /* --- TOMBOL GABUNG (Efek Lubang Kaca Transparan) --- */
         .glass-slot-empty { 
-            /* Latar belakang transparan agar gradien di belakangnya tembus pandang */
             background: rgba(10, 17, 30, 0.4); 
             backdrop-filter: blur(4px);
             border: 1.5px dashed rgba(148, 163, 184, 0.2); 
             transition: all 0.2s; 
-            /* Bayangan dalam (inset) yang lebih halus */
             box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03);
         }
         .glass-slot-empty:hover, .glass-slot-empty:active { 
@@ -274,7 +272,7 @@
         </section>
     </div>
 
-    <!-- SISA MODAL (DIAGNOSTIC, ADMIN, DLL) -->
+    <!-- MODAL DIAGNOSTIC -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -290,9 +288,9 @@
                 <div class="flex items-center gap-2"><span id="chk-tracks">⏳</span><span class="text-white flex-1">Audio Track Aktif</span><span id="val-tracks" class="text-slate-400 text-xs">0</span></div>
                 <div id="remote-list" class="text-xs text-slate-400 space-y-1 mt-2"></div>
             </div>
-            <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold">🔔 Test Speaker</button>
-            <button onclick="forceRepublish()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold">🔄 Force Re-Publish Mic</button>
-            <button onclick="doUnlockAudio()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold">🔊 Force Play Remote Audio</button>
+            <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔔 Test Speaker</button>
+            <button onclick="forceRepublish()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔄 Force Re-Publish Mic</button>
+            <button onclick="doUnlockAudio()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔊 Force Play Remote Audio</button>
             <div class="bg-slate-900 rounded-xl p-3 text-xs text-slate-300 font-mono max-h-48 overflow-y-auto" id="diag-log"></div>
         </div>
     </div>
@@ -1682,6 +1680,77 @@
         }
         function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
         function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
+
+        // ================= DIAGNOSTIC FUNCTIONS (FIXED) =================
+        window.toggleDiag = () => {
+            const overlay = $('diag-overlay');
+            if(!overlay) return;
+            overlay.classList.toggle('hidden');
+            
+            if (!overlay.classList.contains('hidden')) {
+                // Update Status Agora
+                const chkAgora = $('chk-agora'); const valAgora = $('val-agora');
+                if (agoraClient) { chkAgora.textContent = '✅'; valAgora.textContent = 'Connected'; valAgora.className = 'text-emerald-400 text-xs font-bold'; } 
+                else { chkAgora.textContent = '❌'; valAgora.textContent = 'Disconnected'; valAgora.className = 'text-rose-400 text-xs font-bold'; }
+
+                // Update Token
+                const chkToken = $('chk-token'); const valToken = $('val-token');
+                if (AGORA_TOKEN) { chkToken.textContent = '✅'; valToken.textContent = 'Tersedia'; } 
+                else { chkToken.textContent = '❌'; valToken.textContent = 'Kosong'; }
+
+                // Update Mic
+                const chkMic = $('chk-mic'); const valMic = $('val-mic');
+                if (localAudioTrack) { chkMic.textContent = '✅'; valMic.textContent = isMicMuted ? 'Muted' : 'Aktif'; } 
+                else { chkMic.textContent = '⏳'; valMic.textContent = 'Belum Join'; }
+
+                // Update Remotes
+                const remoteCount = Object.keys(remoteAudioTracks).length;
+                $('chk-remotes').textContent = remoteCount > 0 ? '✅' : '⏳';
+                $('val-remotes').textContent = remoteCount;
+                $('chk-tracks').textContent = remoteCount > 0 ? '✅' : '⏳';
+                $('val-tracks').textContent = remoteCount;
+
+                // Log
+                const log = $('diag-log');
+                log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
+            }
+        };
+
+        window.testSpeakerTone = async () => {
+            try {
+                if (typeof Tone !== 'undefined') {
+                    await Tone.start();
+                    const synth = new Tone.Synth().toDestination();
+                    synth.volume.value = -5;
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.2);
+                    showToast("Memutar nada tes speaker...");
+                    const log = $('diag-log');
+                    log.innerHTML = `[TEST] Memutar nada speaker.\n` + log.innerHTML;
+                } else {
+                    alert("Library Tone.js belum termuat.");
+                }
+            } catch(e) { alert("Gagal memutar suara: " + e.message); }
+        };
+
+        window.forceRepublish = async () => {
+            if (!agoraClient || !localAudioTrack) return alert("Anda belum bergabung ke voice channel.");
+            try {
+                const log = $('diag-log');
+                log.innerHTML = `[FORCE] Re-publishing mic...\n` + log.innerHTML;
+                await agoraClient.unpublish([localAudioTrack]);
+                await new Promise(r => setTimeout(r, 500)); // jeda sebentar
+                await agoraClient.publish([localAudioTrack]);
+                showToast("Mic berhasil di-republish ulang.");
+                log.innerHTML = `[FORCE] Berhasil re-publish.\n` + log.innerHTML;
+            } catch(e) { 
+                alert("Gagal republish: " + e.message); 
+                const log = $('diag-log');
+                log.innerHTML = `[ERROR] Re-publish gagal: ${e.message}\n` + log.innerHTML;
+            }
+        };
+        // =============================================================
 
         window.addEventListener('load', () => {
             lucide.createIcons();
