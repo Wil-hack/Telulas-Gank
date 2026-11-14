@@ -259,7 +259,7 @@
             <!-- HALAMAN TOKEN & DAFTAR WARGA (SETELAH MASUK PIN) -->
             <div id="admin-token-section" class="hidden flex flex-col gap-4">
                 
-                <!-- TOMBOL KELOLA AKUN WARGA DIPINDAH KE SINI -->
+                <!-- TOMBOL KELOLA AKUN WARGA -->
                 <button type="button" onclick="openUserListModal()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1">
                     <i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga
                 </button>
@@ -408,6 +408,7 @@
         const ADMIN_USERNAME = "wildan jaka"; 
         
         const VAPID_KEY = "BLOeL5qHPVUIEQGFa0vQAC9NqHuF64EHvWim3vPJQ5nqvUGtu8YLlkxTRzm90SqgNczTSb0uv9cr7soVpXOurfM"; 
+        const CLOUDFLARE_WORKER_URL = "https://jolly-dream-a7d9.willdan60.workers.dev/"; // URL Worker Anda
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -790,6 +791,33 @@
                     tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
                     isEmergency: !!opts.isEmergency
                 });
+
+                // ========================================================
+                // KIRIM NOTIFIKASI VIA CLOUDFLARE WORKER
+                // ========================================================
+                if (!opts.isEmergency) { 
+                    const usersSnap = await getDocs(collection(db, "users"));
+                    let tokens = [];
+                    usersSnap.forEach(u => {
+                        const data = u.data();
+                        if (u.id !== currentUserUid && data.fcmToken) {
+                            tokens.push(data.fcmToken);
+                        }
+                    });
+                    
+                    if (tokens.length > 0) {
+                        fetch(CLOUDFLARE_WORKER_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                tokens: tokens,
+                                title: `Pesan dari ${senderName}`,
+                                message: text
+                            })
+                        }).catch(e => console.log('Notif error:', e));
+                    }
+                }
+
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
 
