@@ -1,27 +1,55 @@
-importScripts('https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging-compat.js');
+// sw.js
+self.addEventListener('push', function(event) {
+    if (event.data) {
+        try {
+            // Menangkap data yang dikirim dari Cloudflare Worker / Firebase
+            const data = event.data.json();
+            
+            // Mengambil judul dan pesan
+            const title = data.notification?.title || data.title || 'Telulas Gank';
+            const body = data.notification?.body || data.message || 'Pesan baru';
+            
+            // Opsi Notifikasi
+            const options = {
+                body: body,
+                icon: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png', // Ikon besar (bisa diganti logo Telulas)
+                badge: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png', // Ikon kecil di status bar
+                vibrate: [200, 100, 200, 100, 200], // Pola getar
+                tag: 'telulas-gank-chat', // Agar notifikasi menumpuk (tidak menuhin layar)
+                renotify: true, // Tetap bergetar walau menumpuk
+                data: {
+                    url: '/' // Link yang dibuka saat notif diklik
+                }
+            };
 
-firebase.initializeApp({
-    apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
-    authDomain: "telulas-dd5c8.firebaseapp.com",
-    projectId: "telulas-dd5c8",
-    storageBucket: "telulas-dd5c8.firebasestorage.app",
-    messagingSenderId: "619593885912",
-    appId: "1:619593885912:web:27d14bea00aab6fd574fad"
+            // Tampilkan Notifikasi ke Panel Android
+            event.waitUntil(self.registration.showNotification(title, options));
+        } catch (e) {
+            // Cadangan jika format bukan JSON
+            event.waitUntil(self.registration.showNotification('Telulas Gank', {
+                body: event.data.text()
+            }));
+        }
+    }
 });
 
-const messaging = firebase.messaging();
+// Aksi saat notifikasi di-klik
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close(); // Tutup notif
 
-// Menangani notifikasi saat aplikasi di background/tertutup
-messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: 'https://cdn-icons-png.flaticon.com/512/2933/2933245.png'
-    };
-    self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-self.addEventListener('install', (e) => {
-    self.skipWaiting();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            // Jika aplikasi sudah terbuka, fokuskan
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url.includes(self.location.origin) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Jika belum terbuka, buka aplikasi
+            if (clients.openWindow) {
+                return clients.openWindow('/');
+            }
+        })
+    );
 });
