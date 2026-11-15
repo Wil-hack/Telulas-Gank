@@ -63,7 +63,6 @@
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
         .vol-bar { height: 3px; background: linear-gradient(to right, #10b981, #34d399); transition: width 0.1s; border-radius: 99px; }
 
-        /* Custom Range Slider */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #818cf8; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(129, 140, 248, 0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px; }
@@ -72,7 +71,8 @@
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
-    <audio id="radio-stream" preload="none" crossorigin="anonymous"></audio>
+    <!-- CROSSORIGIN DIHAPUS AGAR TIDAK DIBLOKIR BROWSER -->
+    <audio id="radio-stream" preload="none"></audio>
 
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[9999] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
@@ -562,7 +562,12 @@
 
         function forcePlayRadio() {
             if (isRadioPlaying && radioAudio.paused) {
-                $('radio-status-text').textContent = "Menghubungkan ke Radio...";
+                $('radio-status-text').textContent = "Menghubungkan...";
+                $('radio-status-text').className = 'text-center text-[10px] font-bold text-amber-400 mb-4 h-4 animate-pulse';
+                
+                // Paksa muat ulang sumber audio
+                radioAudio.load(); 
+                
                 radioAudio.play().then(() => {
                     $('radio-status-text').textContent = "Radio Sedang Memutar";
                     $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
@@ -596,7 +601,11 @@
                         $('radio-admin-controls').classList.remove('hidden');
                         $('btn-radio-play').style.display = newIsPlaying ? 'none' : 'flex';
                         $('btn-radio-stop').style.display = newIsPlaying ? 'flex' : 'none';
-                        $('radio-stream-url').value = streamUrl || '';
+                        
+                        // JANGAN TIMPA KOLOM INPUT AGAR LINK TIDAK HILANG
+                        if ($('radio-stream-url').value === '' && streamUrl) {
+                            $('radio-stream-url').value = streamUrl;
+                        }
                     } else {
                         $('radio-admin-controls').classList.add('hidden');
                     }
@@ -617,8 +626,10 @@
                                     });
                                     hls.on(Hls.Events.ERROR, function(event, data) {
                                         console.log("HLS Error:", data);
-                                        $('radio-status-text').textContent = "Stream Error / Link Tidak Valid";
-                                        $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
+                                        if (data.fatal) {
+                                            $('radio-status-text').textContent = "Stream Error / Link Tidak Valid";
+                                            $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
+                                        }
                                     });
                                 } else {
                                     forcePlayRadio();
@@ -659,9 +670,16 @@
         window.toggleRadio = async (action) => {
             if (!isAdmin) return;
             try {
+                // Ambil URL terbaru dari inputan admin
                 const streamUrl = $('radio-stream-url').value.trim();
                 if (action === 'play' && !streamUrl) return alert("Isi Link Stream AWE Radio dulu di Menu Admin!");
-                await setDoc(doc(db, "config", "radio"), { isPlaying: (action === 'play') }, { merge: true });
+                
+                // Simpan status dan URL secara bersamaan agar sinkron
+                await setDoc(doc(db, "config", "radio"), { 
+                    isPlaying: (action === 'play'),
+                    streamUrl: streamUrl 
+                }, { merge: true });
+                
                 forcePlayRadio();
             } catch(e) { alert("Gagal mengubah status radio: " + e.message); }
         };
@@ -1610,7 +1628,7 @@
             
             if (isRadioPlaying && radioAudio.paused) {
                 radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                forcePlayRadio(); 
+                forcePlayRadio();
             }
             showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
         }
