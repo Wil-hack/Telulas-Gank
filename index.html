@@ -12,8 +12,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -33,28 +31,97 @@
         ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
         ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
         
-        .glass-header { background: rgba(10,17,30,0.95); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
-        .bg-voice-area { background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%); }
-        .bg-chat-input-area { background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%); }
-        .glass-card { background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); transition: all .2s; }
-        .glass-card-self { background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.15); }
-        .glass-card:active, .glass-card:hover { border-color: rgba(16,185,129,0.5); transform: translateY(-1px); box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); }
+        .glass-header { 
+            background: rgba(10,17,30,0.95); 
+            backdrop-filter: blur(18px); 
+            border-bottom: 1px solid rgba(255,255,255,0.08); 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
         
-        .glass-slot-empty { background: rgba(10, 17, 30, 0.4); backdrop-filter: blur(4px); border: 1.5px dashed rgba(148, 163, 184, 0.2); transition: all 0.2s; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03); }
-        .glass-slot-empty:hover, .glass-slot-empty:active { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(16,185,129,0.15); transform: scale(0.98); }
+        .bg-voice-area {
+            background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%);
+        }
+
+        .bg-chat-input-area {
+            background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%);
+        }
+
+        .glass-card { 
+            background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); 
+            transition: all .2s; 
+        }
+        .glass-card-self { 
+            background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); 
+            border: 1px solid rgba(16,185,129,0.4); 
+            box-shadow: 0 4px 15px rgba(16,185,129,0.15); 
+        }
+        .glass-card:active, .glass-card:hover { 
+            border-color: rgba(16,185,129,0.5); 
+            transform: translateY(-1px); 
+            box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
+        }
         
-        .input-hole { background: rgba(5, 9, 17, 0.6); backdrop-filter: blur(4px); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
-        .input-hole:focus { background: rgba(10, 17, 30, 0.8); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+        .glass-slot-empty { 
+            background: rgba(10, 17, 30, 0.4); 
+            backdrop-filter: blur(4px);
+            border: 1.5px dashed rgba(148, 163, 184, 0.2); 
+            transition: all 0.2s; 
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03);
+        }
+        .glass-slot-empty:hover, .glass-slot-empty:active { 
+            background: rgba(16, 185, 129, 0.1); 
+            border-color: rgba(16, 185, 129, 0.5); 
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(16,185,129,0.15);
+            transform: scale(0.98);
+        }
+
+        .input-hole {
+            background: rgba(5, 9, 17, 0.6); 
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s;
+        }
+        .input-hole:focus {
+            background: rgba(10, 17, 30, 0.8);
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px rgba(16,185,129,0.2);
+            border-color: rgba(16,185,129,0.5);
+        }
+
+        .btn-soft {
+            background: #1e293b;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.15s;
+        }
+        .btn-soft:active {
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+            transform: scale(0.95);
+            background: #0f172a;
+        }
         
-        .btn-soft { background: #1e293b; box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); transition: all 0.15s; }
-        .btn-soft:active { box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); transform: scale(0.95); background: #0f172a; }
-        
-        .text-gradient { background: linear-gradient(to right, #34d399, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2)); }
-        .btn-sos-glow { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3); border: 1px solid rgba(244, 63, 94, 0.5); }
+        .text-gradient { 
+            background: linear-gradient(to right, #34d399, #38bdf8, #34d399); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2));
+        }
+        .btn-sos-glow {
+            background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+            box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3);
+            border: 1px solid rgba(244, 63, 94, 0.5);
+        }
         .btn-sos-glow:active { transform: scale(0.95); box-shadow: 0 1px 5px rgba(244, 63, 94, 0.5); }
         
-        .alert-sos-box { background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%); border: 1px solid rgba(244, 63, 94, 0.5); box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2); }
-        
+        .alert-sos-box {
+            background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%);
+            border: 1px solid rgba(244, 63, 94, 0.5);
+            box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2);
+        }
+
         @keyframes speakingWave { 0% { transform: scale(0.95); opacity: 0.85; } 75% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
         .speaking-ring { position: absolute; inset: -3px; border-radius: 9999px; border: 2px solid #10b981; animation: speakingWave 1.45s infinite; }
         .speaking-ring-delay { position: absolute; inset: -3px; border-radius: 9999px; border: 1.5px solid #34d399; animation: speakingWave 1.45s 0.5s infinite; }
@@ -62,16 +129,11 @@
         .voice-scroll::-webkit-scrollbar { width: 3px; }
         #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
         .vol-bar { height: 3px; background: linear-gradient(to right, #10b981, #34d399); transition: width 0.1s; border-radius: 99px; }
-
-        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #818cf8; cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(129, 140, 248, 0.5); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px; }
     </style>
 </head>
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
-    <audio id="radio-stream" preload="none"></audio>
 
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[9999] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
@@ -139,12 +201,6 @@
                     <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
                     <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide truncate">Nguling RW 13</span>
                     <span id="voice-counter" class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 text-[9px] font-bold border border-emerald-500/20 shrink-0">0/20</span>
-                    
-                    <!-- TOMBOL PEMICU RADIO (SIMPLE) -->
-                    <button type="button" onclick="openRadioModal()" id="btn-open-radio" class="ml-1 px-2 py-0.5 rounded-full bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 text-[9px] font-bold flex items-center gap-1 transition active:scale-95">
-                        <i data-lucide="music" class="w-3 h-3"></i> Radio
-                        <span id="radio-indicator" class="hidden w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
-                    </button>
                 </div>
                 <span class="text-[10px] text-slate-400 flex items-center gap-1.5 shrink-0 bg-slate-800/40 px-2 py-1 rounded-md border border-slate-700/50">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="online-count-text">0 Warga</span>
@@ -186,6 +242,7 @@
                 <div class="flex items-center gap-1.5">
                     <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
                     <span class="text-xs font-semibold text-slate-300">Obrolan Warga</span>
+                    <span id="typing-indicator" class="text-[10px] text-emerald-400 italic hidden animate-pulse ml-2">Seseorang mengetik...</span>
                 </div>
                 <span class="text-[9px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Real-time</span>
             </div>
@@ -197,50 +254,14 @@
 
             <div class="p-3 bg-chat-input-area border-t border-slate-800/80 shrink-0">
                 <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
-                    <input type="text" id="chat-input" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
+                    <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
                     <button type="submit" class="p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm border border-emerald-500/40 active:scale-95 shrink-0 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </section>
     </div>
 
-    <!-- MODAL RADIO PLAYER -->
-    <div id="radio-modal" class="hidden fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-end justify-center" onclick="forcePlayRadio()">
-        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-indigo-700/50 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
-            <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
-            <div class="flex items-center justify-center gap-2 mb-2">
-                <div class="w-8 h-8 rounded-full bg-indigo-500/15 border border-indigo-500/35 flex items-center justify-center"><i data-lucide="music" class="w-4 h-4 text-indigo-400"></i></div>
-                <h3 class="text-base font-extrabold text-white tracking-tight">Radio Ronda</h3>
-            </div>
-
-            <!-- TOMBOL DARURAT JIKA TERBLOKIR BROWSER -->
-            <button id="btn-force-play-radio" onclick="doUnlockAudio()" class="hidden w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-lg mt-2 mb-4 animate-pulse">
-                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i> KLIK DISINI UNTUK MEMUTAR RADIO
-            </button>
-
-            <!-- INDIKATOR STATUS PLAYER -->
-            <div id="radio-status-text" class="text-center text-[10px] font-bold text-amber-400 mb-4 h-4"></div>
-            
-            <!-- Kontrol Admin -->
-            <div id="radio-admin-controls" class="hidden flex justify-center gap-3 mb-5">
-                <button id="btn-radio-play" onclick="toggleRadio('play')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-[0_0_15px_rgba(79,70,229,0.4)] active:scale-95 transition flex items-center gap-2"><i data-lucide="play" class="w-4 h-4"></i> Play</button>
-                <button id="btn-radio-stop" onclick="toggleRadio('stop')" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-[0_0_15px_rgba(225,29,72,0.4)] active:scale-95 transition flex items-center gap-2"><i data-lucide="square" class="w-4 h-4"></i> Stop</button>
-            </div>
-
-            <!-- Kontrol Warga & Admin -->
-            <div class="bg-[#0f1829] p-4 rounded-2xl border border-slate-700/80 shadow-inner flex items-center gap-3 mb-2">
-                <button onclick="toggleMuteRadio()" id="btn-radio-mute" class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white active:scale-95 transition">
-                    <i data-lucide="volume-2" class="w-5 h-5" id="icon-radio-volume"></i>
-                </button>
-                <input type="range" id="radio-volume" min="0" max="1" step="0.05" value="0.5" oninput="adjustRadioVolume(this.value)" class="flex-1">
-            </div>
-            <p class="text-center text-[10px] text-slate-500 italic mb-4">Atur volume musik agar tidak mengganggu obrolan.</p>
-
-            <button type="button" onclick="closeRadioModal()" class="w-full py-3 rounded-2xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
-        </div>
-    </div>
-
-    <!-- SISA MODAL (DIAGNOSTIC, ADMIN, DLL) -->
+    <!-- SISA MODAL DLL TETAP SAMA -->
     <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
         <div class="max-w-md mx-auto space-y-3 text-sm">
             <div class="flex items-center justify-between mb-4">
@@ -284,24 +305,11 @@
             </div>
             <div id="admin-token-section" class="hidden flex flex-col gap-4">
                 <button type="button" onclick="openUserListModal()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga</button>
-                
-                <!-- PENGATURAN RADIO (KHUSUS ADMIN) -->
-                <div class="pt-3 border-t border-slate-700/60">
-                    <label class="text-[10px] font-bold text-indigo-400 mb-1 block flex items-center gap-1"><i data-lucide="music" class="w-3 h-3"></i> Link Stream Radio AWE</label>
-                    <input type="text" id="radio-stream-url" placeholder="https://..." class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition">
-                    <button type="button" onclick="saveRadioStreamUrl()" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1 mb-2"><i data-lucide="save" class="w-3 h-3"></i> Simpan Link Radio</button>
-                    
-                    <!-- TOMBOL PLAY/STOP DI MENU ADMIN -->
-                    <div class="flex gap-2">
-                        <button type="button" onclick="toggleRadio('play')" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> Play</button>
-                        <button type="button" onclick="toggleRadio('stop')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="square" class="w-3 h-3"></i> Stop</button>
-                    </div>
-                </div>
-
                 <div class="pt-3 border-t border-slate-700/60">
                     <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
-                    <textarea id="new-agora-token" rows="2" class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition" placeholder="Tempel Token Agora..."></textarea>
-                    <button type="button" onclick="saveAgoraToken()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Simpan Token Agora</button>
+                    <textarea id="new-agora-token" rows="3" class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
+                    <p class="text-[9px] text-slate-500 mb-3">Token aktif saat ini: <span id="current-token-display" class="text-emerald-400 font-mono">Belum ada</span></p>
+                    <button type="button" onclick="saveAgoraToken()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="save" class="w-4 h-4"></i> Simpan Token ke Server</button>
                 </div>
             </div>
             <button type="button" onclick="closeAdminTokenModal()" class="mt-3 w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
@@ -392,8 +400,8 @@
     </div>
 
     <div id="unlock-audio-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[400px]">
-        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95 animate-pulse">
-            <i data-lucide="volume-2" class="w-5 h-5"></i><span>🔊 Ketuk Layar Ini Agar Radio Berbunyi</span>
+        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95">
+            <i data-lucide="volume-2" class="w-5 h-5"></i><span>🔊 Ketuk untuk Aktifkan Suara</span>
         </button>
     </div>
 
@@ -406,8 +414,6 @@
         import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch, startAfter, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js";
-
-        const $ = id => document.getElementById(id);
 
         const firebaseConfig = {
             apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
@@ -443,11 +449,11 @@
         let currentUsername = '';
         let isAdmin = false;
         let onlineUserCount = 0;
-        let previousOnlineCount = 0;
         let processedSosIds = [];
         
         let lastVisibleChatDoc = null;
         let isLoadingMore = false;
+        let typingTimeout = null;
         let isAudienceMode = false;
 
         let isSosActive = false;
@@ -455,16 +461,10 @@
         let savedSpeakerState = true;
         let sosTimeout = null;
 
-        // Radio Variables
-        let isRadioPlaying = false;
-        let currentRadioVolume = 0.5;
-        let isRadioMuted = false;
-        let hls = null;
-        const radioAudio = $('radio-stream');
-        let isAudioUnlocked = false; // Flag penanda suara sudah dibuka
-
         const MAX_SLOTS = 20;
-        const SLOT_TIMEOUT_MS = 45000; 
+        const SLOT_TIMEOUT_MS = 30000; 
+
+        const $ = id => document.getElementById(id);
 
         // ================= PWA & FCM =================
         if ('serviceWorker' in navigator) {
@@ -551,196 +551,10 @@
         window.doLogout = async () => {
             if(confirm("Yakin ingin keluar dari aplikasi?")) {
                 if(agoraClient) await agoraClient.leave();
-                if (radioAudio) radioAudio.pause();
-                if (hls) hls.destroy();
                 await signOut(auth);
                 location.reload();
             }
         }
-
-        // ================= RADIO LOGIC =================
-        window.openRadioModal = () => { 
-            $('radio-modal').classList.remove('hidden'); 
-            forcePlayRadio(); 
-        }
-        window.closeRadioModal = () => { $('radio-modal').classList.add('hidden'); }
-
-        function forcePlayRadio() {
-            if (isRadioPlaying && radioAudio.paused) {
-                $('radio-status-text').textContent = "Menghubungkan...";
-                $('radio-status-text').className = 'text-center text-[10px] font-bold text-amber-400 mb-4 h-4 animate-pulse';
-                
-                // Paksa muat ulang sumber audio
-                radioAudio.load(); 
-                
-                radioAudio.play().then(() => {
-                    $('radio-status-text').textContent = "Radio Sedang Memutar";
-                    $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
-                    isAudioUnlocked = true; // Tandai berhasil
-                    hideUnlockBanner();
-                    $('btn-force-play-radio').classList.add('hidden');
-                }).catch(e => {
-                    console.log("Force play blocked:", e);
-                    $('radio-status-text').textContent = "Klik Layar Ini Untuk Memutar";
-                    $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4 animate-pulse';
-                    $('btn-force-play-radio').classList.remove('hidden'); // Tampilkan tombol darurat
-                    showUnlockBanner(); // Munculkan banner kuning
-                });
-            }
-        }
-
-        function listenToRadioStatus() {
-            onSnapshot(doc(db, "config", "radio"), (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    const newIsPlaying = data.isPlaying;
-                    const streamUrl = data.streamUrl;
-
-                    // Update UI Tombol Pemicu
-                    const indicator = $('radio-indicator');
-                    if (newIsPlaying) {
-                        indicator.classList.remove('hidden');
-                        $('btn-open-radio').classList.add('bg-indigo-500/30', 'text-white');
-                    } else {
-                        indicator.classList.add('hidden');
-                        $('btn-open-radio').classList.remove('bg-indigo-500/30', 'text-white');
-                    }
-
-                    // UI Kontrol di dalam Modal
-                    if (isAdmin) {
-                        $('radio-admin-controls').classList.remove('hidden');
-                        $('btn-radio-play').style.display = newIsPlaying ? 'none' : 'flex';
-                        $('btn-radio-stop').style.display = newIsPlaying ? 'flex' : 'none';
-                        
-                        if ($('radio-stream-url').value === '' && streamUrl) {
-                            $('radio-stream-url').value = streamUrl;
-                        }
-                    } else {
-                        $('radio-admin-controls').classList.add('hidden');
-                    }
-
-                    // LOGIKA PEMUTARAN AUDIO (HLS & MP3)
-                    if (newIsPlaying && streamUrl) {
-                        radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                        
-                        if (streamUrl.includes('.m3u8')) {
-                            if (Hls.isSupported()) {
-                                if (!hls || hls.url !== streamUrl) {
-                                    if (hls) hls.destroy();
-                                    hls = new Hls();
-                                    hls.loadSource(streamUrl);
-                                    hls.attachMedia(radioAudio);
-                                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                                        forcePlayRadio();
-                                    });
-                                    hls.on(Hls.Events.ERROR, function(event, data) {
-                                        console.log("HLS Error:", data);
-                                        if (data.fatal) {
-                                            $('radio-status-text').textContent = "Stream Error / Link Tidak Valid";
-                                            $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
-                                        }
-                                    });
-                                } else {
-                                    forcePlayRadio();
-                                }
-                            } else if (radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
-                                if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
-                                forcePlayRadio();
-                            }
-                        } else {
-                            if (hls) { hls.destroy(); hls = null; }
-                            if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
-                            forcePlayRadio();
-                        }
-                    } else {
-                        radioAudio.pause();
-                        if (hls) { hls.destroy(); hls = null; }
-                        $('radio-status-text').textContent = "";
-                        $('btn-force-play-radio').classList.add('hidden');
-                    }
-                    isRadioPlaying = newIsPlaying;
-                }
-            });
-        }
-
-        // Event Listener untuk Audio
-        radioAudio.addEventListener('playing', () => {
-            $('radio-status-text').textContent = "Radio Sedang Memutar";
-            $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
-            isAudioUnlocked = true; // Sukses
-            hideUnlockBanner();
-            $('btn-force-play-radio').classList.add('hidden');
-        });
-        radioAudio.addEventListener('waiting', () => {
-            $('radio-status-text').textContent = "Buffering / Memuat Stream...";
-            $('radio-status-text').className = 'text-center text-[10px] font-bold text-amber-400 mb-4 h-4 animate-pulse';
-        });
-        radioAudio.addEventListener('error', () => {
-            $('radio-status-text').textContent = "Gagal Memutar (CORS / Link Mati)";
-            $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
-        });
-
-        window.toggleRadio = async (action) => {
-            if (!isAdmin) return;
-            try {
-                const streamUrl = $('radio-stream-url').value.trim();
-                if (action === 'play' && !streamUrl) return alert("Isi Link Stream AWE Radio dulu di Menu Admin!");
-                
-                await setDoc(doc(db, "config", "radio"), { 
-                    isPlaying: (action === 'play'),
-                    streamUrl: streamUrl 
-                }, { merge: true });
-                
-                forcePlayRadio();
-            } catch(e) { alert("Gagal mengubah status radio: " + e.message); }
-        };
-
-        window.adjustRadioVolume = (val) => {
-            currentRadioVolume = parseFloat(val);
-            if (!isRadioMuted && radioAudio) radioAudio.volume = currentRadioVolume;
-            forcePlayRadio(); 
-        };
-
-        window.toggleMuteRadio = () => {
-            isRadioMuted = !isRadioMuted;
-            if (radioAudio) {
-                radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                if (!isRadioMuted && isRadioPlaying) forcePlayRadio(); 
-            }
-            
-            const icon = $('icon-radio-volume');
-            if (isRadioMuted) {
-                icon.setAttribute('data-lucide', 'volume-x');
-                icon.classList.add('text-rose-400');
-            } else {
-                icon.setAttribute('data-lucide', 'volume-2');
-                icon.classList.remove('text-rose-400');
-            }
-            lucide.createIcons();
-        };
-
-        // ================= ALERT BIP UNTUK ADMIN =================
-        let lastAlertTime = 0;
-        function playAdminAlert() {
-            if (!isAdmin) return;
-            if (document.visibilityState === 'hidden') {
-                const now = Date.now();
-                if (now - lastAlertTime < 10000) return; 
-                lastAlertTime = now;
-
-                try {
-                    if (typeof Tone !== 'undefined') {
-                        Tone.start();
-                        const synth = new Tone.Synth().toDestination();
-                        synth.volume.value = -5;
-                        const t = Tone.now();
-                        synth.triggerAttackRelease("C6", "16n", t);
-                        synth.triggerAttackRelease("C6", "16n", t + 0.2);
-                    }
-                } catch(e) { console.log("Alert error", e); }
-            }
-        }
-        // ========================================================
 
         // ================= AUTO LISTENER (LIVE AUDIO) =================
         async function startAudienceMode() {
@@ -835,8 +649,8 @@
                     fetchLatestAgoraToken().then(() => startAudienceMode()); 
                     listenToActiveSlots(); 
                     initFirebaseChat();
+                    listenTypingStatus();
                     listenIncomingSos();
-                    listenToRadioStatus();
                     startHeartbeat();
                     startStaleCleanup();
                     lucide.createIcons();
@@ -899,9 +713,38 @@
             } catch (e) { alert("Gagal update: " + e.message); }
         }
 
+        // ================= TYPING INDICATOR =================
+        window.handleTyping = () => {
+            if (!currentUserUid) return;
+            const typingRef = doc(db, "typing_status", currentUserUid);
+            setDoc(typingRef, { name: currentUsername, isTyping: true, lastUpdate: Date.now() }).catch(()=>{});
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => { deleteDoc(typingRef).catch(()=>{}); }, 2000);
+        }
+
+        function listenTypingStatus() {
+            onSnapshot(collection(db, "typing_status"), (snapshot) => {
+                const now = Date.now();
+                let typingUsers = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.isTyping && (now - data.lastUpdate < 3000) && docSnap.id !== currentUserUid) {
+                        typingUsers.push(data.name);
+                    }
+                });
+                const indicator = $('typing-indicator');
+                if (typingUsers.length > 0) {
+                    indicator.textContent = typingUsers.length === 1 ? `${typingUsers[0]} mengetik...` : `Beberapa orang mengetik...`;
+                    indicator.classList.remove('hidden');
+                } else {
+                    indicator.classList.add('hidden');
+                }
+            });
+        }
+
         // ================= CHAT =================
         function initFirebaseChat() {
-            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(10));
+            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
                 if (!snapshot.empty) lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -934,7 +777,7 @@
             const btn = $('btn-load-more');
             if(btn) btn.textContent = 'Memuat...';
             try {
-                const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), startAfter(lastVisibleChatDoc), limit(10));
+                const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), startAfter(lastVisibleChatDoc), limit(20));
                 const snapshot = await getDocs(q);
                 if (snapshot.empty) {
                     if(btn) btn.textContent = 'Tidak ada pesan lama';
@@ -967,10 +810,14 @@
             const wrapper = document.createElement('div');
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'} mb-3`;
 
+            // Fungsi pembantu untuk mengubah link teks biasa menjadi <a> yang bisa diklik
             const formatLinks = (text) => {
                 if (!text) return '';
+                // 1. Amankan dari XSS
                 const safeText = escapeHTML(text);
+                // 2. Cari URL
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
+                // 3. Ubah menjadi tag <a>
                 return safeText.replace(urlRegex, function(url) {
                     return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline font-bold hover:text-sky-200 break-all">${url}</a>`;
                 });
@@ -978,11 +825,14 @@
 
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
+                
+                // Cari apakah ada link Google Maps di pesan SOS
                 const urlMatch = data.message.match(/(https?:\/\/[^\s]+)/g);
                 let finalMessage = escapeHTML(data.message);
                 
                 if (urlMatch && urlMatch.length > 0) {
                     const mapUrl = urlMatch[0];
+                    // Ganti teks URL dengan tombol besar
                     finalMessage = finalMessage.replace(mapUrl, `<br><a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center gap-1.5 bg-rose-700 hover:bg-rose-600 text-white text-[11px] font-bold px-4 py-2 rounded-xl border border-rose-400/50 shadow-[0_2px_10px_rgba(225,29,72,0.4)] transition w-full"><i data-lucide="map-pin" class="w-4 h-4"></i> BUKA PETA LOKASI</a>`);
                 }
 
@@ -1005,6 +855,7 @@
             if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
             const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
             $('chat-input').value = ''; 
+            deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
 
             try {
                 await addDoc(collection(db, "chats"), {
@@ -1064,7 +915,6 @@
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
-                const previousCount = countJoined();
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
                 const now = Date.now();
                 
@@ -1086,12 +936,6 @@
                         };
                     }
                 });
-
-                const newCount = countJoined();
-                if (newCount > previousCount) {
-                    playAdminAlert();
-                    if (document.visibilityState === 'visible') showToast("Ada warga baru bergabung/masuk ruang suara.");
-                }
                 
                 if (joinedSlotIndex !== null) {
                     if (voiceSlots[joinedSlotIndex] && voiceSlots[joinedSlotIndex].occupied) {
@@ -1140,10 +984,6 @@
             if (!newToken) return alert("Token tidak boleh kosong!");
             try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
         }
-        async function saveRadioStreamUrl() {
-            const url = $('radio-stream-url').value.trim();
-            try { await setDoc(doc(db, "config", "radio"), { streamUrl: url }, { merge: true }); showToast("Link Radio disimpan!"); } catch (e) { alert("Gagal simpan link: " + e.message); }
-        }
         async function fetchLatestAgoraToken() {
             try { const docSnap = await getDoc(doc(db, "config", "agora")); if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token; } catch (e) {}
         }
@@ -1153,7 +993,7 @@
             const userDocRef = doc(db, "presence", currentUserUid);
             const updateStatus = () => setDoc(userDocRef, { lastSeen: Date.now(), username: currentUsername }, { merge: true }).catch(console.error);
             updateStatus();
-            setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 60000);
+            setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 30000);
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
             const cleanup = () => { try { deleteDoc(userDocRef); } catch(e) {} };
             window.addEventListener('beforeunload', cleanup);
@@ -1168,11 +1008,6 @@
                     const data = docSnap.data();
                     if (data.lastSeen && (now - data.lastSeen < 65000)) count++;
                 });
-                
-                if (count > previousOnlineCount && previousOnlineCount !== 0) {
-                    playAdminAlert();
-                }
-                previousOnlineCount = count;
                 onlineUserCount = count;
                 updateCounters();
             });
@@ -1182,7 +1017,7 @@
             setInterval(async () => {
                 if (joinedSlotIndex === null || !currentUserUid) return;
                 try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true }); } catch(e) {}
-            }, 20000);
+            }, 10000); 
         }
         
         function startStaleCleanup() {
@@ -1196,7 +1031,7 @@
                         if (now - data.lastSeen > SLOT_TIMEOUT_MS) { try { await deleteDoc(d.ref); } catch(e) {} }
                     }
                 } catch(e) {}
-            }, 30000); 
+            }, 15000); 
         }
 
         function updateCounters() {
@@ -1226,7 +1061,6 @@
                     const roleText = isAdminMuted
                         ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>`
                         : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${escapeHTML(slot.role || '')}</p>`;
-                    
                     const volBar = slot.volumeLevel !== undefined ? `<div class="w-full mt-1 h-0.5 bg-slate-800 rounded overflow-hidden"><div class="vol-bar" style="width:${Math.min(100, slot.volumeLevel * 5)}%"></div></div>` : '';
 
                     const card = document.createElement('div');
@@ -1410,6 +1244,7 @@
                     } catch (err) {
                         if (err.message.includes('UID_CONFLICT') || err.code === 'UID_CONFLICT') {
                             retries++;
+                            console.log("UID conflict, retrying with new UID...");
                             localAgoraUid = Math.floor(Math.random() * 100000000);
                             if (agoraClient) { try { await agoraClient.leave(); } catch(e){} }
                         } else {
@@ -1437,7 +1272,7 @@
                     }
                 });
 
-                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "speech_low_quality", AEC: true, AGC: true, ANS: true });
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "speech_standard", AEC: true, AGC: true, ANS: true });
                 await agoraClient.publish([localAudioTrack]);
 
                 startBackgroundKeepAlive();
@@ -1618,12 +1453,8 @@
 
             try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
             try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
-
-            // Jika radio sedang nyala, coba putar saat user klik layar pertama kali
-            if (isRadioPlaying) forcePlayRadio();
         }
 
-        // Event listener global untuk membuka kunci audio pada klik pertama
         document.addEventListener('pointerdown', primeAudio, { capture: true });
         document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
         document.addEventListener('click', primeAudio, { capture: true });
@@ -1640,11 +1471,6 @@
             let played = 0;
             for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); played++; } catch(e) {} }
             if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
-            
-            if (isRadioPlaying && radioAudio.paused) {
-                radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                forcePlayRadio();
-            }
             showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
         }
         window.doUnlockAudio = doUnlockAudio;
@@ -1829,9 +1655,13 @@
             let reporterLabel = currentUsername;
             if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
             
+            // 1. Tampilkan UI SOS & Sirene langsung
             showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory, true);
+            
+            // 2. Tampilkan loading sebentar untuk ambil lokasi
             showToast("Mengambil titik lokasi...");
 
+            // 3. Fungsi Promise untuk ambil koordinat GPS
             const getLocation = () => {
                 return new Promise((resolve) => {
                     if (!navigator.geolocation) {
@@ -1854,9 +1684,13 @@
             };
 
             try {
+                // Ambil lokasi
                 const locationText = await getLocation();
+                
+                // Format pesan darurat dengan Shareloc
                 const fullMessage = `🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}.\n📍 Lokasi: ${locationText}\nSegera merapat!`;
 
+                // Kirim ke database Firebase
                 await addDoc(collection(db, "sos_alerts"), {
                     senderUid: currentUserUid, 
                     reporter: reporterLabel,
@@ -1866,6 +1700,7 @@
                     active: true 
                 });
                 
+                // Kirim pesan ke Chat (Memicu notifikasi background)
                 await sendChatToDB(fullMessage, { isEmergency: true });
                 showToast("SOS & Lokasi Berhasil Dikirim!");
             } catch (e) { 
@@ -1967,7 +1802,7 @@
                 registration.showNotification('Tes Notifikasi Telulas Gank', {
                     body: 'Hore! Kalau notif ini muncul, berarti Service Worker (sw.js) sudah bekerja dengan baik.',
                     icon: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
-                    vibrate: [200],
+                    vibrate: [200, 100, 200, 100, 200],
                     tag: 'tes-lokal'
                 });
                 showToast("Notifikasi tes dikirim!");
@@ -2012,7 +1847,6 @@
                     if (!$('join-modal').classList.contains('hidden')) closeJoinModal();
                     if (!$('admin-modal').classList.contains('hidden')) closeAdminModal();
                     if (!$('admin-token-modal').classList.contains('hidden')) closeAdminTokenModal();
-                    if (!$('radio-modal').classList.contains('hidden')) closeRadioModal();
                     if (!$('diag-overlay').classList.contains('hidden')) toggleDiag();
                     if (!$('user-list-modal').classList.contains('hidden')) closeUserListModal();
                 }
@@ -2021,7 +1855,6 @@
             $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
             $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
             $('user-list-modal').addEventListener('click', e => { if (e.target === $('user-list-modal')) closeUserListModal(); });
-            $('radio-modal').addEventListener('click', e => { if (e.target === $('radio-modal')) closeRadioModal(); });
             
             document.addEventListener('visibilitychange', async () => {
                 if (document.visibilityState === 'visible') {
@@ -2033,10 +1866,6 @@
                             }
                             for (const uid in remoteAudioTracks) {
                                 try { await remoteAudioTracks[uid].play(); } catch(e) {}
-                            }
-                            if (isRadioPlaying && radioAudio.paused) {
-                                radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                                forcePlayRadio();
                             }
                         } catch(e) {}
                     }
