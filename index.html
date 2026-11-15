@@ -12,6 +12,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    <!-- HLS.js untuk memutar stream radio .m3u8 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -286,7 +289,13 @@
                 <div class="pt-3 border-t border-slate-700/60">
                     <label class="text-[10px] font-bold text-indigo-400 mb-1 block flex items-center gap-1"><i data-lucide="music" class="w-3 h-3"></i> Link Stream Radio AWE</label>
                     <input type="text" id="radio-stream-url" placeholder="https://..." class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition">
-                    <button type="button" onclick="saveRadioStreamUrl()" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1 mb-4"><i data-lucide="save" class="w-3 h-3"></i> Simpan Link Radio</button>
+                    <button type="button" onclick="saveRadioStreamUrl()" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1 mb-2"><i data-lucide="save" class="w-3 h-3"></i> Simpan Link Radio</button>
+                    
+                    <!-- TOMBOL PLAY/STOP DI MENU ADMIN -->
+                    <div class="flex gap-2">
+                        <button type="button" onclick="toggleRadio('play')" class="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> Play</button>
+                        <button type="button" onclick="toggleRadio('stop')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="square" class="w-3 h-3"></i> Stop</button>
+                    </div>
                 </div>
 
                 <div class="pt-3 border-t border-slate-700/60">
@@ -398,7 +407,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js";
 
-        // Deklarasi $ di paling atas agar tidak error saat dipanggil
         const $ = id => document.getElementById(id);
 
         const firebaseConfig = {
@@ -451,7 +459,8 @@
         let isRadioPlaying = false;
         let currentRadioVolume = 0.5;
         let isRadioMuted = false;
-        const radioAudio = $('radio-stream'); // Variabel radioPanel sudah dihapus
+        let hls = null;
+        const radioAudio = $('radio-stream');
 
         const MAX_SLOTS = 20;
         const SLOT_TIMEOUT_MS = 45000; 
@@ -542,6 +551,7 @@
             if(confirm("Yakin ingin keluar dari aplikasi?")) {
                 if(agoraClient) await agoraClient.leave();
                 if (radioAudio) radioAudio.pause();
+                if (hls) hls.destroy();
                 await signOut(auth);
                 location.reload();
             }
@@ -578,18 +588,46 @@
                         $('radio-admin-controls').classList.add('hidden');
                     }
 
-                    // Logika Play/Stop Audio
+                    // LOGIKA PEMUTARAN AUDIO (HLS & MP3)
                     if (isRadioPlaying && streamUrl) {
-                        if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
-                        if (radioAudio.paused) {
-                            radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                            radioAudio.play().catch(e => {
-                                console.log("Autoplay blocked, waiting for interaction");
-                                showUnlockBanner(); // Minta user klik layar
-                            });
+                        radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
+                        
+                        if (streamUrl.includes('.m3u8')) {
+                            if (Hls.isSupported()) {
+                                if (!hls) {
+                                    hls = new Hls();
+                                    hls.loadSource(streamUrl);
+                                    hls.attachMedia(radioAudio);
+                                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                                        if (radioAudio.paused) radioAudio.play().catch(e => {
+                                            console.log("Autoplay blocked (HLS)"); showUnlockBanner();
+                                        });
+                                    });
+                                } else {
+                                    if (radioAudio.paused) radioAudio.play().catch(e => {
+                                        console.log("Autoplay blocked (HLS resume)"); showUnlockBanner();
+                                    });
+                                }
+                            } else if (radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
+                                if (radioAudio.src !== streamUrl) {
+                                    radioAudio.src = streamUrl;
+                                    if (radioAudio.paused) radioAudio.play().catch(e => {
+                                        console.log("Autoplay blocked (Native HLS)"); showUnlockBanner();
+                                    });
+                                }
+                            }
+                        } else {
+                            if (hls) { hls.destroy(); hls = null; }
+                            if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
+                            if (radioAudio.paused) {
+                                radioAudio.play().catch(e => {
+                                    console.log("Autoplay blocked (MP3)"); showUnlockBanner();
+                                });
+                            }
                         }
                     } else {
                         radioAudio.pause();
+                        if (hls) { hls.destroy(); hls = null; }
                     }
                 }
             });
@@ -628,10 +666,9 @@
         let lastAlertTime = 0;
         function playAdminAlert() {
             if (!isAdmin) return;
-            // Hanya berbunyi jika aplikasi di-minimize (hidden)
             if (document.visibilityState === 'hidden') {
                 const now = Date.now();
-                if (now - lastAlertTime < 10000) return; // Jeda minimal 10 detik agar tidak spam
+                if (now - lastAlertTime < 10000) return; 
                 lastAlertTime = now;
 
                 try {
@@ -994,7 +1031,6 @@
                 });
 
                 const newCount = countJoined();
-                // ALERT BIP: Jika jumlah orang bertambah
                 if (newCount > previousCount) {
                     playAdminAlert();
                     if (document.visibilityState === 'visible') showToast("Ada warga baru bergabung/masuk ruang suara.");
