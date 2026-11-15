@@ -213,6 +213,11 @@
                 <h3 class="text-base font-extrabold text-white tracking-tight">Radio Ronda</h3>
             </div>
 
+            <!-- TOMBOL DARURAT JIKA TERBLOKIR BROWSER -->
+            <button id="btn-force-play-radio" onclick="doUnlockAudio()" class="hidden w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-lg mt-2 mb-4 animate-pulse">
+                <i data-lucide="play" class="w-4 h-4 inline mr-1"></i> KLIK DISINI UNTUK MEMUTAR RADIO
+            </button>
+
             <!-- INDIKATOR STATUS PLAYER -->
             <div id="radio-status-text" class="text-center text-[10px] font-bold text-amber-400 mb-4 h-4"></div>
             
@@ -573,11 +578,13 @@
                     $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
                     isAudioUnlocked = true; // Tandai berhasil
                     hideUnlockBanner();
+                    $('btn-force-play-radio').classList.add('hidden');
                 }).catch(e => {
                     console.log("Force play blocked:", e);
                     $('radio-status-text').textContent = "Klik Layar Ini Untuk Memutar";
                     $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4 animate-pulse';
-                    showUnlockBanner(); // Munculkan banner kuning jika terblokir
+                    $('btn-force-play-radio').classList.remove('hidden'); // Tampilkan tombol darurat
+                    showUnlockBanner(); // Munculkan banner kuning
                 });
             }
         }
@@ -649,6 +656,7 @@
                         radioAudio.pause();
                         if (hls) { hls.destroy(); hls = null; }
                         $('radio-status-text').textContent = "";
+                        $('btn-force-play-radio').classList.add('hidden');
                     }
                     isRadioPlaying = newIsPlaying;
                 }
@@ -661,6 +669,7 @@
             $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
             isAudioUnlocked = true; // Sukses
             hideUnlockBanner();
+            $('btn-force-play-radio').classList.add('hidden');
         });
         radioAudio.addEventListener('waiting', () => {
             $('radio-status-text').textContent = "Buffering / Memuat Stream...";
