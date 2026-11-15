@@ -12,7 +12,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
-    <!-- HLS.js untuk memutar stream radio .m3u8 -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <script>
@@ -34,13 +33,7 @@
         ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
         ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
         
-        .glass-header { 
-            background: rgba(10,17,30,0.95); 
-            backdrop-filter: blur(18px); 
-            border-bottom: 1px solid rgba(255,255,255,0.08); 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-        
+        .glass-header { background: rgba(10,17,30,0.95); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
         .bg-voice-area { background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%); }
         .bg-chat-input-area { background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%); }
         .glass-card { background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); transition: all .2s; }
@@ -79,7 +72,7 @@
 <body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
 
     <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
-    <audio id="radio-stream" src="" preload="none"></audio>
+    <audio id="radio-stream" preload="none" crossorigin="anonymous"></audio>
 
     <div id="force-siren-overlay" class="hidden fixed inset-0 z-[9999] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
         <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
@@ -216,10 +209,13 @@
     <div id="radio-modal" class="hidden fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-end justify-center">
         <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-indigo-700/50 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up" onclick="forcePlayRadio()">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
-            <div class="flex items-center justify-center gap-2 mb-4">
+            <div class="flex items-center justify-center gap-2 mb-2">
                 <div class="w-8 h-8 rounded-full bg-indigo-500/15 border border-indigo-500/35 flex items-center justify-center"><i data-lucide="music" class="w-4 h-4 text-indigo-400"></i></div>
                 <h3 class="text-base font-extrabold text-white tracking-tight">Radio Ronda</h3>
             </div>
+
+            <!-- INDIKATOR STATUS PLAYER -->
+            <div id="radio-status-text" class="text-center text-[10px] font-bold text-amber-400 mb-4 h-4"></div>
             
             <!-- Kontrol Admin -->
             <div id="radio-admin-controls" class="hidden flex justify-center gap-3 mb-5">
@@ -560,14 +556,20 @@
         // ================= RADIO LOGIC =================
         window.openRadioModal = () => { 
             $('radio-modal').classList.remove('hidden'); 
-            forcePlayRadio(); // Coba paksa play saat modal dibuka
+            forcePlayRadio(); 
         }
         window.closeRadioModal = () => { $('radio-modal').classList.add('hidden'); }
 
         function forcePlayRadio() {
             if (isRadioPlaying && radioAudio.paused) {
-                radioAudio.play().catch(e => {
+                $('radio-status-text').textContent = "Menghubungkan ke Radio...";
+                radioAudio.play().then(() => {
+                    $('radio-status-text').textContent = "Radio Sedang Memutar";
+                    $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
+                }).catch(e => {
                     console.log("Force play blocked:", e);
+                    $('radio-status-text').textContent = "Klik Layar Ini Untuk Memutar";
+                    $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4 animate-pulse';
                 });
             }
         }
@@ -605,60 +607,54 @@
                         
                         if (streamUrl.includes('.m3u8')) {
                             if (Hls.isSupported()) {
-                                // Selalu inisialisasi ulang jika URL berubah
                                 if (!hls || hls.url !== streamUrl) {
                                     if (hls) hls.destroy();
                                     hls = new Hls();
                                     hls.loadSource(streamUrl);
                                     hls.attachMedia(radioAudio);
                                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                                        if (radioAudio.paused) {
-                                            radioAudio.play().catch(e => {
-                                                console.log("Autoplay blocked (HLS)"); 
-                                                showUnlockBanner();
-                                            });
-                                        }
+                                        forcePlayRadio();
                                     });
                                     hls.on(Hls.Events.ERROR, function(event, data) {
                                         console.log("HLS Error:", data);
+                                        $('radio-status-text').textContent = "Stream Error / Link Tidak Valid";
+                                        $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
                                     });
                                 } else {
-                                    if (radioAudio.paused) {
-                                        radioAudio.play().catch(e => {
-                                            console.log("Autoplay blocked (HLS resume)"); 
-                                            showUnlockBanner();
-                                        });
-                                    }
+                                    forcePlayRadio();
                                 }
                             } else if (radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
-                                if (radioAudio.src !== streamUrl) {
-                                    radioAudio.src = streamUrl;
-                                }
-                                if (radioAudio.paused) {
-                                    radioAudio.play().catch(e => {
-                                        console.log("Autoplay blocked (Native HLS)"); 
-                                        showUnlockBanner();
-                                    });
-                                }
+                                if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
+                                forcePlayRadio();
                             }
                         } else {
                             if (hls) { hls.destroy(); hls = null; }
                             if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
-                            if (radioAudio.paused) {
-                                radioAudio.play().catch(e => {
-                                    console.log("Autoplay blocked (MP3)"); 
-                                    showUnlockBanner();
-                                });
-                            }
+                            forcePlayRadio();
                         }
                     } else {
                         radioAudio.pause();
                         if (hls) { hls.destroy(); hls = null; }
+                        $('radio-status-text').textContent = "";
                     }
                     isRadioPlaying = newIsPlaying;
                 }
             });
         }
+
+        // Event Listener untuk Audio
+        radioAudio.addEventListener('playing', () => {
+            $('radio-status-text').textContent = "Radio Sedang Memutar";
+            $('radio-status-text').className = 'text-center text-[10px] font-bold text-emerald-400 mb-4 h-4';
+        });
+        radioAudio.addEventListener('waiting', () => {
+            $('radio-status-text').textContent = "Buffering / Memuat Stream...";
+            $('radio-status-text').className = 'text-center text-[10px] font-bold text-amber-400 mb-4 h-4 animate-pulse';
+        });
+        radioAudio.addEventListener('error', () => {
+            $('radio-status-text').textContent = "Gagal Memutar (CORS / Link Mati)";
+            $('radio-status-text').className = 'text-center text-[10px] font-bold text-rose-400 mb-4 h-4';
+        });
 
         window.toggleRadio = async (action) => {
             if (!isAdmin) return;
@@ -666,14 +662,14 @@
                 const streamUrl = $('radio-stream-url').value.trim();
                 if (action === 'play' && !streamUrl) return alert("Isi Link Stream AWE Radio dulu di Menu Admin!");
                 await setDoc(doc(db, "config", "radio"), { isPlaying: (action === 'play') }, { merge: true });
-                forcePlayRadio(); // Paksa play saat admin menekan tombol
+                forcePlayRadio();
             } catch(e) { alert("Gagal mengubah status radio: " + e.message); }
         };
 
         window.adjustRadioVolume = (val) => {
             currentRadioVolume = parseFloat(val);
             if (!isRadioMuted && radioAudio) radioAudio.volume = currentRadioVolume;
-            forcePlayRadio(); // Paksa play saat slider disentuh
+            forcePlayRadio(); 
         };
 
         window.toggleMuteRadio = () => {
@@ -1614,7 +1610,7 @@
             
             if (isRadioPlaying && radioAudio.paused) {
                 radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                radioAudio.play().catch(e => console.log(e));
+                forcePlayRadio(); 
             }
             showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
         }
@@ -2007,7 +2003,7 @@
                             }
                             if (isRadioPlaying && radioAudio.paused) {
                                 radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
-                                radioAudio.play().catch(e => console.log(e));
+                                forcePlayRadio();
                             }
                         } catch(e) {}
                     }
