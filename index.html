@@ -592,7 +592,15 @@
 
                 agoraClient.on("user-unpublished", (user, mediaType) => {
                     if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
-                        try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                // TAMBAHAN: Pastikan suara hilang saat user left total
+                agoraClient.on("user-left", (user, reason) => {
+                    if (remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
                         delete remoteAudioTracks[user.uid];
                     }
                 });
@@ -810,14 +818,10 @@
             const wrapper = document.createElement('div');
             wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'} mb-3`;
 
-            // Fungsi pembantu untuk mengubah link teks biasa menjadi <a> yang bisa diklik
             const formatLinks = (text) => {
                 if (!text) return '';
-                // 1. Amankan dari XSS
                 const safeText = escapeHTML(text);
-                // 2. Cari URL
                 const urlRegex = /(https?:\/\/[^\s]+)/g;
-                // 3. Ubah menjadi tag <a>
                 return safeText.replace(urlRegex, function(url) {
                     return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline font-bold hover:text-sky-200 break-all">${url}</a>`;
                 });
@@ -825,14 +829,11 @@
 
             if (data.isEmergency) {
                 wrapper.className = 'w-full my-1';
-                
-                // Cari apakah ada link Google Maps di pesan SOS
                 const urlMatch = data.message.match(/(https?:\/\/[^\s]+)/g);
                 let finalMessage = escapeHTML(data.message);
                 
                 if (urlMatch && urlMatch.length > 0) {
                     const mapUrl = urlMatch[0];
-                    // Ganti teks URL dengan tombol besar
                     finalMessage = finalMessage.replace(mapUrl, `<br><a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center gap-1.5 bg-rose-700 hover:bg-rose-600 text-white text-[11px] font-bold px-4 py-2 rounded-xl border border-rose-400/50 shadow-[0_2px_10px_rgba(225,29,72,0.4)] transition w-full"><i data-lucide="map-pin" class="w-4 h-4"></i> BUKA PETA LOKASI</a>`);
                 }
 
@@ -1231,7 +1232,15 @@
 
                 agoraClient.on("user-unpublished", (user, mediaType) => {
                     if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
-                        try { remoteAudioTracks[user.uid].stop(); } catch(e) {}
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                // TAMBAHAN: Pastikan suara hilang saat user left total
+                agoraClient.on("user-left", (user, reason) => {
+                    if (remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
                         delete remoteAudioTracks[user.uid];
                     }
                 });
@@ -1336,12 +1345,19 @@
             const prevIndex = joinedSlotIndex;
             const leavingName = userProfile.name;
 
+            // 1. HAPUS DARI DATABASE DULU (Agar hilang dari layar orang lain seketika)
+            if (!isKicked) {
+                try { await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`)); } catch(e){}
+            }
+
+            // 2. Bersihkan UI Lokal
             hideUnlockBanner();
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
+            wasMutedByAdmin = false;
 
-            // 1. MATIKAN TOTAL SEMUA SUARA WARGA LAIN
+            // 3. Matikan Semua Suara Warga Lain secara Paksa
             Object.values(remoteAudioTracks).forEach(track => {
                 try { 
                     track.stop(); 
@@ -1349,7 +1365,6 @@
                 } catch(e){}
             });
             remoteAudioTracks = {};
-            wasMutedByAdmin = false;
 
             stopBackgroundKeepAlive();
             renderVoiceGrid();
@@ -1362,7 +1377,7 @@
             releaseWakeLock();
 
             try {
-                // 2. MATIKAN MIC LOKAL
+                // 4. Matikan Mic Lokal
                 if (localAudioTrack) { 
                     localAudioTrack.stop(); 
                     localAudioTrack.close(); 
@@ -1373,19 +1388,19 @@
                     await agoraClient.unpublish();
                     
                     if (!isKicked) {
-                        // 3. KELUAR TOTAL DARI CHANNEL (Suara hilang total)
+                        // 5. Putus Total Koneksi Agora
                         await agoraClient.leave();
                         agoraClient = null;
                         isAudienceMode = false;
-                        $('live-listener-bar').classList.add('hidden');
+                        
+                        // 6. Kembalikan ke Mode Pendengar agar bisa dengar warga lain (Tanpa suara sendiri)
+                        await startAudienceMode(); 
                     } else {
                         await agoraClient.setClientRole("audience");
                         isAudienceMode = true;
                         $('live-listener-bar').classList.remove('hidden');
                     }
                 }
-                
-                if (!isKicked) await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
             } catch (e) { console.log("Error leaving slot:", e); }
         }
 
@@ -1615,6 +1630,7 @@
             $('sos-active-banner').classList.add('hidden');
             $('push-notification-preview').classList.add('hidden');
 
+            // Mengembalikan suara otomatis JIKA sebelumnya sedang di dalam slot
             if (localAudioTrack && joinedSlotIndex !== null) {
                 localAudioTrack.setEnabled(!savedMicState);
             }
@@ -1675,13 +1691,9 @@
             let reporterLabel = currentUsername;
             if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
             
-            // 1. Tampilkan UI SOS & Sirene langsung
             showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory, true);
-            
-            // 2. Tampilkan loading sebentar untuk ambil lokasi
             showToast("Mengambil titik lokasi...");
 
-            // 3. Fungsi Promise untuk ambil koordinat GPS
             const getLocation = () => {
                 return new Promise((resolve) => {
                     if (!navigator.geolocation) {
@@ -1704,13 +1716,9 @@
             };
 
             try {
-                // Ambil lokasi
                 const locationText = await getLocation();
-                
-                // Format pesan darurat dengan Shareloc
                 const fullMessage = `🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}.\n📍 Lokasi: ${locationText}\nSegera merapat!`;
 
-                // Kirim ke database Firebase
                 await addDoc(collection(db, "sos_alerts"), {
                     senderUid: currentUserUid, 
                     reporter: reporterLabel,
@@ -1720,7 +1728,6 @@
                     active: true 
                 });
                 
-                // Kirim pesan ke Chat (Memicu notifikasi background)
                 await sendChatToDB(fullMessage, { isEmergency: true });
                 showToast("SOS & Lokasi Berhasil Dikirim!");
             } catch (e) { 
