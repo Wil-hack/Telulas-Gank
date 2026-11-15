@@ -31,96 +31,28 @@
         ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
         ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
         
-        .glass-header { 
-            background: rgba(10,17,30,0.95); 
-            backdrop-filter: blur(18px); 
-            border-bottom: 1px solid rgba(255,255,255,0.08); 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
+        .glass-header { background: rgba(10,17,30,0.95); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
+        .bg-voice-area { background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%); }
+        .bg-chat-input-area { background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%); }
+
+        .glass-card { background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); transition: all .2s; }
+        .glass-card-self { background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.15); }
+        .glass-card:active, .glass-card:hover { border-color: rgba(16,185,129,0.5); transform: translateY(-1px); box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); }
         
-        .bg-voice-area {
-            background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%);
-        }
+        .glass-slot-empty { background: rgba(10, 17, 30, 0.4); backdrop-filter: blur(4px); border: 1.5px dashed rgba(148, 163, 184, 0.2); transition: all 0.2s; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03); }
+        .glass-slot-empty:hover, .glass-slot-empty:active { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(16,185,129,0.15); transform: scale(0.98); }
 
-        .bg-chat-input-area {
-            background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%);
-        }
+        .input-hole { background: rgba(5, 9, 17, 0.6); backdrop-filter: blur(4px); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+        .input-hole:focus { background: rgba(10, 17, 30, 0.8); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
 
-        .glass-card { 
-            background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255,255,255,0.08); 
-            box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); 
-            transition: all .2s; 
-        }
-        .glass-card-self { 
-            background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); 
-            border: 1px solid rgba(16,185,129,0.4); 
-            box-shadow: 0 4px 15px rgba(16,185,129,0.15); 
-        }
-        .glass-card:active, .glass-card:hover { 
-            border-color: rgba(16,185,129,0.5); 
-            transform: translateY(-1px); 
-            box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); 
-        }
+        .btn-soft { background: #1e293b; box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); transition: all 0.15s; }
+        .btn-soft:active { box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); transform: scale(0.95); background: #0f172a; }
         
-        .glass-slot-empty { 
-            background: rgba(10, 17, 30, 0.4); 
-            backdrop-filter: blur(4px);
-            border: 1.5px dashed rgba(148, 163, 184, 0.2); 
-            transition: all 0.2s; 
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03);
-        }
-        .glass-slot-empty:hover, .glass-slot-empty:active { 
-            background: rgba(16, 185, 129, 0.1); 
-            border-color: rgba(16, 185, 129, 0.5); 
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(16,185,129,0.15);
-            transform: scale(0.98);
-        }
-
-        .input-hole {
-            background: rgba(5, 9, 17, 0.6); 
-            backdrop-filter: blur(4px);
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.2s;
-        }
-        .input-hole:focus {
-            background: rgba(10, 17, 30, 0.8);
-            box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px rgba(16,185,129,0.2);
-            border-color: rgba(16,185,129,0.5);
-        }
-
-        .btn-soft {
-            background: #1e293b;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.15s;
-        }
-        .btn-soft:active {
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
-            transform: scale(0.95);
-            background: #0f172a;
-        }
-        
-        .text-gradient { 
-            background: linear-gradient(to right, #34d399, #38bdf8, #34d399); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2));
-        }
-        .btn-sos-glow {
-            background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
-            box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3);
-            border: 1px solid rgba(244, 63, 94, 0.5);
-        }
+        .text-gradient { background: linear-gradient(to right, #34d399, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2)); }
+        .btn-sos-glow { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3); border: 1px solid rgba(244, 63, 94, 0.5); }
         .btn-sos-glow:active { transform: scale(0.95); box-shadow: 0 1px 5px rgba(244, 63, 94, 0.5); }
         
-        .alert-sos-box {
-            background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%);
-            border: 1px solid rgba(244, 63, 94, 0.5);
-            box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2);
-        }
+        .alert-sos-box { background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%); border: 1px solid rgba(244, 63, 94, 0.5); box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2); }
 
         @keyframes speakingWave { 0% { transform: scale(0.95); opacity: 0.85; } 75% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
         .speaking-ring { position: absolute; inset: -3px; border-radius: 9999px; border: 2px solid #10b981; animation: speakingWave 1.45s infinite; }
@@ -399,10 +331,11 @@
         </div>
     </div>
 
-    <div id="unlock-audio-banner" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-[400px]">
-        <button type="button" onclick="doUnlockAudio()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-sm shadow-xl border border-amber-300/50 flex items-center justify-center gap-2 active:scale-95">
-            <i data-lucide="volume-2" class="w-5 h-5"></i><span>🔊 Ketuk untuk Aktifkan Suara</span>
-        </button>
+    <!-- Banner Kuning Diperkecil dan Auto-Hide saat layar disentuh -->
+    <div id="unlock-audio-banner" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-auto pointer-events-none">
+        <div class="px-4 py-2 rounded-full bg-amber-500/95 text-white font-bold text-[11px] shadow-lg border border-amber-300/50 flex items-center justify-center gap-1.5 backdrop-blur-sm">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 animate-pulse"></i><span>Sentuh Layar Untuk Suara</span>
+        </div>
     </div>
 
     <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
@@ -597,7 +530,6 @@
                     }
                 });
 
-                // TAMBAHAN: Pastikan suara hilang saat user left total
                 agoraClient.on("user-left", (user, reason) => {
                     if (remoteAudioTracks[user.uid]) {
                         try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
@@ -1208,7 +1140,12 @@
                 }
 
                 if (agoraClient) {
-                    try { await agoraClient.leave(); } catch(e){}
+                    try { 
+                        agoraClient.removeAllListeners("user-published");
+                        agoraClient.removeAllListeners("user-unpublished");
+                        agoraClient.removeAllListeners("user-left");
+                        await agoraClient.leave(); 
+                    } catch(e){}
                     agoraClient = null;
                 }
 
@@ -1237,7 +1174,6 @@
                     }
                 });
 
-                // TAMBAHAN: Pastikan suara hilang saat user left total
                 agoraClient.on("user-left", (user, reason) => {
                     if (remoteAudioTracks[user.uid]) {
                         try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
@@ -1350,58 +1286,41 @@
                 try { await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`)); } catch(e){}
             }
 
-            // 2. Bersihkan UI Lokal
+            // 2. MATIKAN MIC LOKAL (Sangat penting agar suara tidak nyambung)
+            if (localAudioTrack) { 
+                try {
+                    localAudioTrack.stop(); 
+                    localAudioTrack.close(); 
+                } catch(e){}
+                localAudioTrack = null; 
+            }
+            
+            // 3. TARIK SUARA DARI SERVER & JADIKAN PENDENGAR
+            if (agoraClient) {
+                try {
+                    await agoraClient.unpublish();
+                    await agoraClient.setClientRole("audience");
+                } catch(e) { console.log("Error unpublish:", e); }
+            }
+
+            // 4. Bersihkan UI Lokal
             hideUnlockBanner();
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
+            $('live-listener-bar').classList.remove('hidden'); // Tampilkan bar mode pendengar
             wasMutedByAdmin = false;
-
-            // 3. Matikan Semua Suara Warga Lain secara Paksa
-            Object.values(remoteAudioTracks).forEach(track => {
-                try { 
-                    track.stop(); 
-                    track.close(); 
-                } catch(e){}
-            });
-            remoteAudioTracks = {};
+            isAudienceMode = true;
 
             stopBackgroundKeepAlive();
             renderVoiceGrid();
             
             if (!isKicked) {
-                showToast('Keluar dari ruang suara');
-                sendSystemChat(`📴 ${leavingName} keluar dari ruang suara.`);
+                showToast('Mic mati. Kembali ke mode pendengar.');
+                sendSystemChat(`📴 ${leavingName} keluar dari panggilan.`);
             }
             
             releaseWakeLock();
-
-            try {
-                // 4. Matikan Mic Lokal
-                if (localAudioTrack) { 
-                    localAudioTrack.stop(); 
-                    localAudioTrack.close(); 
-                    localAudioTrack = null; 
-                }
-                
-                if (agoraClient) {
-                    await agoraClient.unpublish();
-                    
-                    if (!isKicked) {
-                        // 5. Putus Total Koneksi Agora
-                        await agoraClient.leave();
-                        agoraClient = null;
-                        isAudienceMode = false;
-                        
-                        // 6. Kembalikan ke Mode Pendengar agar bisa dengar warga lain (Tanpa suara sendiri)
-                        await startAudienceMode(); 
-                    } else {
-                        await agoraClient.setClientRole("audience");
-                        isAudienceMode = true;
-                        $('live-listener-bar').classList.remove('hidden');
-                    }
-                }
-            } catch (e) { console.log("Error leaving slot:", e); }
         }
 
         async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
@@ -1472,6 +1391,7 @@
 
         let audioPrimed = false;
         async function primeAudio() {
+            hideUnlockBanner(); // Sembunyikan banner kuning jika layar disentuh
             for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
             if (audioPrimed) return;
             audioPrimed = true;
@@ -1501,6 +1421,7 @@
         function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
         
         async function doUnlockAudio() {
+            hideUnlockBanner();
             try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200); } catch(e) {}
             try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
             let played = 0;
