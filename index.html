@@ -1340,12 +1340,18 @@
             joinedSlotIndex = null;
             voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
             $('audio-control-bar').classList.add('hidden');
-            Object.values(remoteAudioTracks).forEach(t => { try { t.stop(); } catch(e){} });
+
+            // 1. MATIKAN TOTAL SEMUA SUARA WARGA LAIN
+            Object.values(remoteAudioTracks).forEach(track => {
+                try { 
+                    track.stop(); 
+                    track.close(); 
+                } catch(e){}
+            });
             remoteAudioTracks = {};
             wasMutedByAdmin = false;
 
             stopBackgroundKeepAlive();
-
             renderVoiceGrid();
             
             if (!isKicked) {
@@ -1356,17 +1362,31 @@
             releaseWakeLock();
 
             try {
-                if (localAudioTrack) { localAudioTrack.stop(); localAudioTrack.close(); localAudioTrack = null; }
+                // 2. MATIKAN MIC LOKAL
+                if (localAudioTrack) { 
+                    localAudioTrack.stop(); 
+                    localAudioTrack.close(); 
+                    localAudioTrack = null; 
+                }
                 
                 if (agoraClient) {
                     await agoraClient.unpublish();
-                    await agoraClient.setClientRole("audience");
-                    isAudienceMode = true;
-                    $('live-listener-bar').classList.remove('hidden');
+                    
+                    if (!isKicked) {
+                        // 3. KELUAR TOTAL DARI CHANNEL (Suara hilang total)
+                        await agoraClient.leave();
+                        agoraClient = null;
+                        isAudienceMode = false;
+                        $('live-listener-bar').classList.add('hidden');
+                    } else {
+                        await agoraClient.setClientRole("audience");
+                        isAudienceMode = true;
+                        $('live-listener-bar').classList.remove('hidden');
+                    }
                 }
                 
                 if (!isKicked) await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`));
-            } catch (e) {}
+            } catch (e) { console.log("Error leaving slot:", e); }
         }
 
         async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
