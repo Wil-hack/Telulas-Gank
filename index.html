@@ -214,7 +214,7 @@
 
     <!-- MODAL RADIO PLAYER -->
     <div id="radio-modal" class="hidden fixed inset-0 z-[150] bg-black/75 backdrop-blur-sm flex items-end justify-center">
-        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-indigo-700/50 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
+        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-indigo-700/50 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up" onclick="forcePlayRadio()">
             <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
             <div class="flex items-center justify-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-full bg-indigo-500/15 border border-indigo-500/35 flex items-center justify-center"><i data-lucide="music" class="w-4 h-4 text-indigo-400"></i></div>
@@ -558,19 +558,30 @@
         }
 
         // ================= RADIO LOGIC =================
-        window.openRadioModal = () => { $('radio-modal').classList.remove('hidden'); }
+        window.openRadioModal = () => { 
+            $('radio-modal').classList.remove('hidden'); 
+            forcePlayRadio(); // Coba paksa play saat modal dibuka
+        }
         window.closeRadioModal = () => { $('radio-modal').classList.add('hidden'); }
+
+        function forcePlayRadio() {
+            if (isRadioPlaying && radioAudio.paused) {
+                radioAudio.play().catch(e => {
+                    console.log("Force play blocked:", e);
+                });
+            }
+        }
 
         function listenToRadioStatus() {
             onSnapshot(doc(db, "config", "radio"), (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    isRadioPlaying = data.isPlaying;
+                    const newIsPlaying = data.isPlaying;
                     const streamUrl = data.streamUrl;
 
                     // Update UI Tombol Pemicu
                     const indicator = $('radio-indicator');
-                    if (isRadioPlaying) {
+                    if (newIsPlaying) {
                         indicator.classList.remove('hidden');
                         $('btn-open-radio').classList.add('bg-indigo-500/30', 'text-white');
                     } else {
@@ -581,38 +592,52 @@
                     // UI Kontrol di dalam Modal
                     if (isAdmin) {
                         $('radio-admin-controls').classList.remove('hidden');
-                        $('btn-radio-play').style.display = isRadioPlaying ? 'none' : 'flex';
-                        $('btn-radio-stop').style.display = isRadioPlaying ? 'flex' : 'none';
+                        $('btn-radio-play').style.display = newIsPlaying ? 'none' : 'flex';
+                        $('btn-radio-stop').style.display = newIsPlaying ? 'flex' : 'none';
                         $('radio-stream-url').value = streamUrl || '';
                     } else {
                         $('radio-admin-controls').classList.add('hidden');
                     }
 
                     // LOGIKA PEMUTARAN AUDIO (HLS & MP3)
-                    if (isRadioPlaying && streamUrl) {
+                    if (newIsPlaying && streamUrl) {
                         radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
                         
                         if (streamUrl.includes('.m3u8')) {
                             if (Hls.isSupported()) {
-                                if (!hls) {
+                                // Selalu inisialisasi ulang jika URL berubah
+                                if (!hls || hls.url !== streamUrl) {
+                                    if (hls) hls.destroy();
                                     hls = new Hls();
                                     hls.loadSource(streamUrl);
                                     hls.attachMedia(radioAudio);
                                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                                        if (radioAudio.paused) radioAudio.play().catch(e => {
-                                            console.log("Autoplay blocked (HLS)"); showUnlockBanner();
-                                        });
+                                        if (radioAudio.paused) {
+                                            radioAudio.play().catch(e => {
+                                                console.log("Autoplay blocked (HLS)"); 
+                                                showUnlockBanner();
+                                            });
+                                        }
+                                    });
+                                    hls.on(Hls.Events.ERROR, function(event, data) {
+                                        console.log("HLS Error:", data);
                                     });
                                 } else {
-                                    if (radioAudio.paused) radioAudio.play().catch(e => {
-                                        console.log("Autoplay blocked (HLS resume)"); showUnlockBanner();
-                                    });
+                                    if (radioAudio.paused) {
+                                        radioAudio.play().catch(e => {
+                                            console.log("Autoplay blocked (HLS resume)"); 
+                                            showUnlockBanner();
+                                        });
+                                    }
                                 }
                             } else if (radioAudio.canPlayType('application/vnd.apple.mpegurl')) {
                                 if (radioAudio.src !== streamUrl) {
                                     radioAudio.src = streamUrl;
-                                    if (radioAudio.paused) radioAudio.play().catch(e => {
-                                        console.log("Autoplay blocked (Native HLS)"); showUnlockBanner();
+                                }
+                                if (radioAudio.paused) {
+                                    radioAudio.play().catch(e => {
+                                        console.log("Autoplay blocked (Native HLS)"); 
+                                        showUnlockBanner();
                                     });
                                 }
                             }
@@ -621,7 +646,8 @@
                             if (radioAudio.src !== streamUrl) radioAudio.src = streamUrl;
                             if (radioAudio.paused) {
                                 radioAudio.play().catch(e => {
-                                    console.log("Autoplay blocked (MP3)"); showUnlockBanner();
+                                    console.log("Autoplay blocked (MP3)"); 
+                                    showUnlockBanner();
                                 });
                             }
                         }
@@ -629,6 +655,7 @@
                         radioAudio.pause();
                         if (hls) { hls.destroy(); hls = null; }
                     }
+                    isRadioPlaying = newIsPlaying;
                 }
             });
         }
@@ -639,17 +666,22 @@
                 const streamUrl = $('radio-stream-url').value.trim();
                 if (action === 'play' && !streamUrl) return alert("Isi Link Stream AWE Radio dulu di Menu Admin!");
                 await setDoc(doc(db, "config", "radio"), { isPlaying: (action === 'play') }, { merge: true });
+                forcePlayRadio(); // Paksa play saat admin menekan tombol
             } catch(e) { alert("Gagal mengubah status radio: " + e.message); }
         };
 
         window.adjustRadioVolume = (val) => {
             currentRadioVolume = parseFloat(val);
             if (!isRadioMuted && radioAudio) radioAudio.volume = currentRadioVolume;
+            forcePlayRadio(); // Paksa play saat slider disentuh
         };
 
         window.toggleMuteRadio = () => {
             isRadioMuted = !isRadioMuted;
-            if (radioAudio) radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
+            if (radioAudio) {
+                radioAudio.volume = isRadioMuted ? 0 : currentRadioVolume;
+                if (!isRadioMuted && isRadioPlaying) forcePlayRadio(); 
+            }
             
             const icon = $('icon-radio-volume');
             if (isRadioMuted) {
