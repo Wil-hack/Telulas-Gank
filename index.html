@@ -364,6 +364,8 @@
         let messaging = null;
         try { messaging = getMessaging(app); } catch (e) { console.log("FCM tidak didukung browser ini"); }
 
+        // Isi setelah Worker token dipasang (kosong = pakai token manual seperti biasa)
+        const TOKEN_WORKER_URL = "https://telulas-token.willdan60.workers.dev";
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
         let localAudioTrack = null;
@@ -504,7 +506,7 @@
                     agoraClient = null;
                 }
 
-                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" }); attachTokenRenewal(agoraClient);
                 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     try {
@@ -540,7 +542,7 @@
 
                 localAgoraUid = Math.floor(Math.random() * 100000000);
                 
-                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid); window.lastAgoraError = null;
                 await agoraClient.setClientRole("audience");
                 isAudienceMode = true;
                 $('live-listener-bar').classList.remove('hidden');
@@ -913,7 +915,20 @@
             try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
         }
         async function fetchLatestAgoraToken() {
+            if (TOKEN_WORKER_URL && auth.currentUser) {
+                try {
+                    const idToken = await auth.currentUser.getIdToken();
+                    const r = await fetch(TOKEN_WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken, channel: AGORA_CHANNEL }) });
+                    if (r.ok) { const j = await r.json(); if (j.token) { AGORA_TOKEN = j.token; return true; } }
+                } catch (e) {}
+            }
             try { const docSnap = await getDoc(doc(db, "config", "agora")); if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token; } catch (e) {}
+            return false;
+        }
+        function attachTokenRenewal(client) {
+            const renew = async () => { try { if (await fetchLatestAgoraToken()) await client.renewToken(AGORA_TOKEN); } catch (e) {} };
+            client.on("token-privilege-will-expire", renew);
+            client.on("token-privilege-did-expire", renew);
         }
 
         function setupPresence() {
@@ -1143,7 +1158,7 @@
                     agoraClient = null;
                 }
 
-                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" }); attachTokenRenewal(agoraClient);
 
                 agoraClient.on("user-published", async (user, mediaType) => {
                     try {
