@@ -224,12 +224,6 @@
                 <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
             </div>
             <div id="admin-pin-section">
-                <p class="text-xs text-slate-400 text-center mb-4">Masukkan PIN Admin untuk mengubah Token Agora.</p>
-                <div class="relative mb-4">
-                    <input type="password" id="admin-pin-input" placeholder="Masukkan PIN" class="w-full input-hole text-center text-lg tracking-widest text-white placeholder-slate-600 px-4 py-3 rounded-xl transition pr-12">
-                    <button type="button" onclick="togglePasswordVisibility('admin-pin-input', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-amber-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button>
-                </div>
-                <button type="button" onclick="verifyAdminPin()" class="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-lg mb-4">Buka Akses Admin</button>
                 <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
                     <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition"><i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara</button>
                     <button type="button" onclick="doLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-500/30 transition"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun</button>
@@ -359,8 +353,6 @@
 
         const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
         const AGORA_CHANNEL = "telulas-gank-rw13"; 
-        const ADMIN_PIN = "7454";
-        const ADMIN_USERNAME = "wildan jaka"; 
         
         const VAPID_KEY = "BLOeL5qHPVUIEQGFa0vQAC9NqHuF64EHvWim3vPJQ5nqvUGtu8YLlkxTRzm90SqgNczTSb0uv9cr7soVpXOurfM"; 
         const CLOUDFLARE_WORKER_URL = "https://jolly-dream-a7d9.willdan60.workers.dev/";
@@ -385,6 +377,10 @@
         let processedSosIds = [];
         
         let lastVisibleChatDoc = null;
+        let usersTokenCache = { at: 0, list: [] };
+        let slotsCacheDocs = [];
+        const chatStore = new Map();
+        let chatNoMore = false;
         let isLoadingMore = false;
         let typingTimeout = null;
         let isAudienceMode = false;
@@ -462,17 +458,22 @@
             }
         }
 
+        let registering = false;
         window.doRegister = async () => {
             const user = $('reg-username').value.trim();
             const pass = $('reg-password').value.trim();
             if (!user || !pass) return alert("Semua kolom wajib diisi!");
             if (pass.length < 6) return alert("Password minimal 6 karakter!");
             const dummyEmail = `${user.toLowerCase().replace(/\s/g, '')}@telulas.local`;
+            registering = true;
+            let cred = null;
             try {
-                const userCred = await createUserWithEmailAndPassword(auth, dummyEmail, pass);
-                await setDoc(doc(db, "users", userCred.user.uid), { username: user, createdAt: Date.now(), isBanned: false });
+                cred = await createUserWithEmailAndPassword(auth, dummyEmail, pass);
+                await setDoc(doc(db, "users", cred.user.uid), { username: user, createdAt: Date.now(), isBanned: false });
                 alert(`Pendaftaran Berhasil! Selamat datang ${user}.`);
+                location.reload();
             } catch (error) {
+                registering = false;
                 if (error.code === 'auth/email-already-in-use') {
                     alert("Username sudah terdaftar! Silakan gunakan nama lain atau langsung Login.");
                 } else {
@@ -557,7 +558,7 @@
                     }
                 });
 
-            } catch(e) { console.log("Audience Join Error:", e); }
+            } catch(e) { console.log("Audience Join Error:", e); window.lastAgoraError = (e && (e.code || e.message)) || String(e); try { showToast("Agora gagal: " + window.lastAgoraError); } catch(_) {} }
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -574,7 +575,7 @@
                     }
 
                     currentUsername = userData.username;
-                    isAdmin = (currentUsername.toLowerCase() === ADMIN_USERNAME);
+                    isAdmin = (userData.role === 'admin');
                     
                     $('role-badge').textContent = isAdmin ? 'Admin' : 'Warga';
                     $('role-badge').classList.remove('hidden');
@@ -595,7 +596,7 @@
                     startStaleCleanup();
                     lucide.createIcons();
                 } else {
-                    signOut(auth); 
+                    if (!registering) signOut(auth);
                 }
             } else {
                 $('app-shell').classList.add('hidden');
@@ -657,9 +658,9 @@
         window.handleTyping = () => {
             if (!currentUserUid) return;
             const typingRef = doc(db, "typing_status", currentUserUid);
-            setDoc(typingRef, { name: currentUsername, isTyping: true, lastUpdate: Date.now() }).catch(()=>{});
+            if (!window._typingOn) { window._typingOn = true; setDoc(typingRef, { name: currentUsername, isTyping: true, lastUpdate: Date.now() }).catch(()=>{}); }
             clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => { deleteDoc(typingRef).catch(()=>{}); }, 2000);
+            typingTimeout = setTimeout(() => { window._typingOn = false; deleteDoc(typingRef).catch(()=>{}); }, 2000);
         }
 
         function listenTypingStatus() {
@@ -687,28 +688,28 @@
             const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
-                if (!snapshot.empty) lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
-                let chats = [];
+                if (!snapshot.empty && !lastVisibleChatDoc) lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
                 let isNewMessage = false;
-                
                 snapshot.docChanges().forEach(change => {
                     if (change.type === "added" && change.doc.data().senderUid !== currentUserUid) isNewMessage = true;
                 });
                 if(isNewMessage && feed.innerHTML !== '') triggerChatNotification();
+                snapshot.forEach((docSnap) => chatStore.set(docSnap.id, { id: docSnap.id, ...docSnap.data() }));
+                renderChatFeed();
+                if(!isLoadingMore) feed.scrollTop = feed.scrollHeight;
+                lucide.createIcons();
+            });
+        }
 
-                snapshot.forEach((docSnap) => chats.push({ id: docSnap.id, ...docSnap.data() }));
-                chats.reverse();
-
-                feed.innerHTML = `
+        function renderChatFeed() {
+            const feed = $('chat-feed');
+            feed.innerHTML = `
                     <div class="flex justify-center mb-2">
                         <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
                     </div>
                 `;
-
-                chats.forEach(data => renderMessageBubble(data, feed));
-                if(!isLoadingMore) feed.scrollTop = feed.scrollHeight;
-                lucide.createIcons();
-            });
+            const lb = $('btn-load-more'); if (lb && chatNoMore) lb.textContent = 'Tidak ada pesan lama';
+            Array.from(chatStore.values()).sort((x, y) => (x.timestamp || 0) - (y.timestamp || 0)).forEach(d => renderMessageBubble(d, feed));
         }
 
         window.loadMoreChats = async () => {
@@ -720,24 +721,17 @@
                 const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), startAfter(lastVisibleChatDoc), limit(20));
                 const snapshot = await getDocs(q);
                 if (snapshot.empty) {
+                    chatNoMore = true;
                     if(btn) btn.textContent = 'Tidak ada pesan lama';
                     isLoadingMore = false;
                     return;
                 }
                 lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
-                let oldChats = [];
-                snapshot.forEach(docSnap => oldChats.push({ id: docSnap.id, ...docSnap.data() }));
-                oldChats.reverse();
-
+                snapshot.forEach(docSnap => chatStore.set(docSnap.id, { id: docSnap.id, ...docSnap.data() }));
                 const feed = $('chat-feed');
                 const oldScrollHeight = feed.scrollHeight;
-                const tempDiv = document.createElement('div');
-                tempDiv.className = 'flex flex-col space-y-3';
-                oldChats.forEach(data => renderMessageBubble(data, tempDiv));
-                
-                const loadBtnContainer = feed.firstElementChild;
-                loadBtnContainer.insertAdjacentElement('afterend', tempDiv);
-                if(btn) btn.textContent = 'Muat Pesan Sebelumnya';
+                renderChatFeed();
+                lucide.createIcons();
                 feed.scrollTop = feed.scrollHeight - oldScrollHeight;
             } catch(e) {
                 if(btn) btn.textContent = 'Gagal memuat';
@@ -788,7 +782,7 @@
             if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
             const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
             $('chat-input').value = ''; 
-            deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
+            window._typingOn = false; deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
 
             try {
                 await addDoc(collection(db, "chats"), {
@@ -798,12 +792,12 @@
                     isEmergency: !!opts.isEmergency
                 });
 
-                const usersSnap = await getDocs(collection(db, "users"));
-                let tokens = [];
-                usersSnap.forEach(u => {
-                    const data = u.data();
-                    if (u.id !== currentUserUid && data.fcmToken) tokens.push(data.fcmToken);
-                });
+                if (opts.isEmergency || Date.now() - usersTokenCache.at > 300000) {
+                    const usersSnap = await getDocs(collection(db, "users"));
+                    usersTokenCache.list = usersSnap.docs.map(u => ({ id: u.id, token: u.data().fcmToken }));
+                    usersTokenCache.at = Date.now();
+                }
+                let tokens = usersTokenCache.list.filter(u => u.id !== currentUserUid && u.token).map(u => u.token);
                 
                 if (tokens.length > 0) {
                     let notifTitle = `Pesan dari ${senderName}`;
@@ -848,6 +842,7 @@
         function listenToActiveSlots() {
             const slotsCol = collection(db, "active_slots");
             onSnapshot(slotsCol, (snapshot) => {
+                slotsCacheDocs = snapshot.docs;
                 voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
                 const now = Date.now();
                 
@@ -900,19 +895,19 @@
             });
         }
 
-        function openAdminTokenModal() { $('admin-token-modal').classList.remove('hidden'); $('admin-pin-section').classList.remove('hidden'); $('admin-token-section').classList.add('hidden'); $('admin-pin-input').value = ''; }
-        function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
-        function verifyAdminPin() {
-            const pin = $('admin-pin-input').value;
-            if (pin === ADMIN_PIN) {
-                $('admin-pin-section').classList.add('hidden');
+        function openAdminTokenModal() {
+            $('admin-token-modal').classList.remove('hidden');
+            $('admin-pin-section').classList.remove('hidden');
+            if (isAdmin) {
                 $('admin-token-section').classList.remove('hidden');
                 $('new-agora-token').value = AGORA_TOKEN;
-                const disp = $('current-token-display');
-                disp.textContent = AGORA_TOKEN ? AGORA_TOKEN.substring(0, 10) + "..." : "Belum ada / Kosong";
-            } else { alert("PIN Admin Salah!"); }
+                $('current-token-display').textContent = AGORA_TOKEN ? AGORA_TOKEN.substring(0, 10) + "..." : "Belum ada / Kosong";
+            } else { $('admin-token-section').classList.add('hidden'); }
         }
+        function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
+        function verifyAdminPin() {}
         async function saveAgoraToken() {
+            if (!isAdmin) return;
             const newToken = $('new-agora-token').value.trim();
             if (!newToken) return alert("Token tidak boleh kosong!");
             try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
@@ -926,7 +921,7 @@
             const userDocRef = doc(db, "presence", currentUserUid);
             const updateStatus = () => setDoc(userDocRef, { lastSeen: Date.now(), username: currentUsername }, { merge: true }).catch(console.error);
             updateStatus();
-            setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 30000);
+            setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 45000);
             document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
             const cleanup = () => { try { deleteDoc(userDocRef); } catch(e) {} };
             window.addEventListener('beforeunload', cleanup);
@@ -956,9 +951,8 @@
         function startStaleCleanup() {
             setInterval(async () => {
                 try {
-                    const snap = await getDocs(collection(db, "active_slots"));
                     const now = Date.now();
-                    for (const d of snap.docs) {
+                    for (const d of slotsCacheDocs) {
                         const data = d.data();
                         if (!data.lastSeen || data.uid === currentUserUid) continue;
                         if (now - data.lastSeen > SLOT_TIMEOUT_MS) { try { await deleteDoc(d.ref); } catch(e) {} }
@@ -1716,6 +1710,7 @@
 
                 const log = $('diag-log');
                 log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
+                if (window.lastAgoraError) log.innerHTML = `[ERR] Agora: ${window.lastAgoraError}\n` + log.innerHTML;
             }
         };
 
