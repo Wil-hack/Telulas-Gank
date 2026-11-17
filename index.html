@@ -338,7 +338,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch, startAfter, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch, startAfter, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js";
 
@@ -399,6 +399,46 @@
         const $ = id => document.getElementById(id);
 
         // ================= PWA & FCM =================
+        function saveFcmToken(token, n = 0) {
+            if (n > 600) return;
+            if (!currentUserUid) { setTimeout(() => saveFcmToken(token, n + 1), 1000); return; }
+            setDoc(doc(db, "users", currentUserUid), { fcmToken: token }, { merge: true })
+                .catch(() => setTimeout(() => saveFcmToken(token, n + 1), 3000));
+        }
+        async function enablePush() {
+            try {
+                const reg = await navigator.serviceWorker.register('sw.js');
+                await navigator.serviceWorker.ready;
+                let perm = Notification.permission;
+                if (perm === 'default') perm = await Notification.requestPermission();
+                if (perm === 'granted' && messaging) {
+                    const t = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+                    if (t) { myFcmToken = t; saveFcmToken(t); showToast("Notifikasi aktif"); }
+                }
+            } catch (e) { showToast("Gagal mengaktifkan notifikasi"); }
+            checkPushBanner();
+        }
+        window.enablePush = enablePush;
+        function checkPushBanner() {
+            let el = document.getElementById('push-banner');
+            if (window._pushBannerDismissed) { if (el) el.remove(); return; }
+            const supported = typeof Notification !== 'undefined' && 'serviceWorker' in navigator && messaging;
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+            let msg = '', btn = '';
+            if (isIOS && !standalone) msg = 'Di iPhone: ketuk Bagikan, pilih "Tambahkan ke Layar Utama", lalu buka dari layar utama agar notifikasi aktif.';
+            else if (!supported) msg = 'Browser ini belum mendukung notifikasi. Gunakan Chrome agar menerima notifikasi pesan dan SOS.';
+            else if (Notification.permission === 'denied') msg = 'Notifikasi diblokir. Buka pengaturan situs di browser, ubah Notifikasi menjadi Izinkan, lalu buka ulang aplikasi.';
+            else if (Notification.permission !== 'granted' || !myFcmToken) { msg = 'Aktifkan notifikasi agar tetap menerima pesan dan SOS saat aplikasi ditutup.'; btn = 'Aktifkan'; }
+            else { if (el) el.remove(); return; }
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'push-banner';
+                el.style.cssText = 'position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9998;background:#1e293b;border:1px solid #f59e0b;color:#fde68a;border-radius:14px;padding:10px 12px;font-size:12px;line-height:1.4;display:flex;gap:8px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.5)';
+                document.body.appendChild(el);
+            }
+            el.innerHTML = '<span style="flex:1">' + msg + '</span>' + (btn ? '<button onclick="enablePush()" style="background:#f59e0b;color:#0f172a;font-weight:700;border-radius:10px;padding:6px 12px;font-size:12px">' + btn + '</button>' : '') + '<button onclick="window._pushBannerDismissed=true;this.parentNode.remove()" style="color:#94a3b8;font-size:16px;padding:0 4px">&times;</button>';
+        }
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then((registration) => {
                 if (messaging && VAPID_KEY !== "VAPID_KEY_DISINI") {
@@ -406,17 +446,7 @@
                         if (permission === 'granted') {
                             getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
                             .then((currentToken) => {
-                                if (currentToken) {
-                                    myFcmToken = currentToken;
-                                    // Tunggu sampai login selesai, lalu simpan token (coba ulang bila gagal)
-                                    const saveFcm = (n) => {
-                                        if (n > 600) return;
-                                        if (!currentUserUid) { setTimeout(() => saveFcm(n + 1), 1000); return; }
-                                        setDoc(doc(db, "users", currentUserUid), { fcmToken: currentToken }, { merge: true })
-                                            .catch(() => setTimeout(() => saveFcm(n + 1), 3000));
-                                    };
-                                    saveFcm(0);
-                                }
+                                if (currentToken) { myFcmToken = currentToken; saveFcmToken(currentToken); }
                             }).catch((err) => { console.log('Gagal ambil token FCM: ', err); });
                         }
                     });
@@ -496,6 +526,7 @@
         window.doLogout = async () => {
             if(confirm("Yakin ingin keluar dari aplikasi?")) {
                 if(agoraClient) await agoraClient.leave();
+                try { if (currentUserUid) await updateDoc(doc(db, "users", currentUserUid), { fcmToken: deleteField() }); } catch (e) {}
                 await signOut(auth);
                 location.reload();
             }
@@ -597,6 +628,8 @@
                     $('app-shell').classList.add('flex');
 
                     setupPresence(); 
+                    if (myFcmToken) saveFcmToken(myFcmToken);
+                    setTimeout(checkPushBanner, 6000);
                     listenToOnlineUsers(); 
                     fetchLatestAgoraToken().then(() => startAudienceMode()); 
                     listenToActiveSlots(); 
@@ -803,7 +836,7 @@
                     isEmergency: !!opts.isEmergency
                 });
 
-                if (opts.isEmergency || Date.now() - usersTokenCache.at > 300000) {
+                if (opts.isEmergency || Date.now() - usersTokenCache.at > 90000) {
                     const usersSnap = await getDocs(collection(db, "users"));
                     usersTokenCache.list = usersSnap.docs.map(u => ({ id: u.id, token: u.data().fcmToken }));
                     usersTokenCache.at = Date.now();
@@ -1738,6 +1771,7 @@
 
                 const log = $('diag-log');
                 log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
+                log.innerHTML = `[PUSH] Izin notifikasi: ${typeof Notification !== 'undefined' ? Notification.permission : 'tidak didukung'} | Token HP ini: ${myFcmToken ? 'ADA' : 'BELUM ADA'}\n` + log.innerHTML;
                 if (window.lastAgoraError) log.innerHTML = `[ERR] Agora: ${window.lastAgoraError}\n` + log.innerHTML;
             }
         };
