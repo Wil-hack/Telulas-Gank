@@ -405,8 +405,15 @@
                         if (permission === 'granted') {
                             getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
                             .then((currentToken) => {
-                                if (currentToken && currentUserUid) {
-                                    setDoc(doc(db, "users", currentUserUid), { fcmToken: currentToken }, { merge: true });
+                                if (currentToken) {
+                                    // Tunggu sampai login selesai, lalu simpan token (coba ulang bila gagal)
+                                    const saveFcm = (n) => {
+                                        if (n > 600) return;
+                                        if (!currentUserUid) { setTimeout(() => saveFcm(n + 1), 1000); return; }
+                                        setDoc(doc(db, "users", currentUserUid), { fcmToken: currentToken }, { merge: true })
+                                            .catch(() => setTimeout(() => saveFcm(n + 1), 3000));
+                                    };
+                                    saveFcm(0);
                                 }
                             }).catch((err) => { console.log('Gagal ambil token FCM: ', err); });
                         }
