@@ -1,48 +1,1839 @@
-// sw.js
-self.addEventListener('push', function(event) {
-    if (event.data) {
-        try {
-            const data = event.data.json();
-            
-            const title = data.notification?.title || data.title || 'Telulas Gank';
-            const body = data.notification?.body || data.message || 'Pesan baru masuk';
-            
-            const options = {
-                body: body,
-                icon: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
-                badge: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
-                vibrate: [300, 100, 400, 100, 400],
-                tag: 'telulas-gank-chat',
-                renotify: true, 
-                silent: false, // MEMAKSA SUARA DAN POP-UP MUNCUL
-                requireInteraction: true, // Notif tidak hilang sampai disentuh
-                data: { url: '/' }
-            };
-
-            event.waitUntil(self.registration.showNotification(title, options));
-        } catch (e) {
-            event.waitUntil(self.registration.showNotification('Telulas Gank', {
-                body: event.data.text(),
-                silent: false
-            }));
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telulas Gank - Ronda Nguling RW 13</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#050911">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: {
+                fontFamily: { sans: ['Inter', 'sans-serif'], title: ['Outfit', 'sans-serif'] },
+                colors: { night: { 950:'#050911', 900:'#0a111e', 850:'#0f1829', 800:'#152238' } },
+                animation: { 'banner-slide': 'bannerSlide 0.45s cubic-bezier(0.16,1,0.3,1) forwards', 'sheet-up': 'sheetUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards' },
+                keyframes: {
+                    bannerSlide: { '0%': { transform: 'translate(-50%,-120%)', opacity: '0' }, '100%': { transform: 'translate(-50%,0)', opacity: '1' } },
+                    sheetUp: { '0%': { transform: 'translateY(100%)', opacity: '0.4' }, '100%': { transform: 'translateY(0)', opacity: '1' } }
+                }
+            }}
         }
-    }
-});
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(10,17,30,0.4); }
+        ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.25); border-radius: 99px; }
+        
+        .glass-header { background: rgba(10,17,30,0.95); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); }
+        .bg-voice-area { background: linear-gradient(180deg, #0a111e 0%, rgba(16, 185, 129, 0.08) 50%, #0a111e 100%); }
+        .bg-chat-input-area { background: linear-gradient(0deg, #050911 0%, rgba(16, 185, 129, 0.05) 100%); }
 
-// Aksi saat notifikasi di-klik
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close(); 
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-            for (var i = 0; i < windowClients.length; i++) {
-                var client = windowClients[i];
-                if (client.url.includes(self.location.origin) && 'focus' in client) {
-                    return client.focus();
+        .glass-card { background: linear-gradient(155deg, rgba(30,41,59,0.6) 0%, rgba(15,23,42,0.85) 100%); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3); transition: all .2s; }
+        .glass-card-self { background: linear-gradient(155deg, rgba(16,185,129,0.15) 0%, rgba(15,23,42,0.9) 100%); border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 4px 15px rgba(16,185,129,0.15); }
+        .glass-card:active, .glass-card:hover { border-color: rgba(16,185,129,0.5); transform: translateY(-1px); box-shadow: 0 6px 16px 0 rgba(0,0,0,0.4); }
+        
+        .glass-slot-empty { background: rgba(10, 17, 30, 0.4); backdrop-filter: blur(4px); border: 1.5px dashed rgba(148, 163, 184, 0.2); transition: all 0.2s; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5), inset 0 -1px 2px rgba(255,255,255,0.03); }
+        .glass-slot-empty:hover, .glass-slot-empty:active { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.5); box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), inset 0 0 8px rgba(16,185,129,0.15); transform: scale(0.98); }
+
+        .input-hole { background: rgba(5, 9, 17, 0.6); backdrop-filter: blur(4px); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
+        .input-hole:focus { background: rgba(10, 17, 30, 0.8); box-shadow: inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+
+        .btn-soft { background: #1e293b; box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); transition: all 0.15s; }
+        .btn-soft:active { box-shadow: inset 0 2px 5px rgba(0,0,0,0.4); transform: scale(0.95); background: #0f172a; }
+        
+        .text-gradient { background: linear-gradient(to right, #34d399, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 2px rgba(52,211,153,0.2)); }
+        .btn-sos-glow { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 2px 10px rgba(244, 63, 94, 0.3); border: 1px solid rgba(244, 63, 94, 0.5); }
+        .btn-sos-glow:active { transform: scale(0.95); box-shadow: 0 1px 5px rgba(244, 63, 94, 0.5); }
+        
+        .alert-sos-box { background: linear-gradient(180deg, rgba(159, 18, 57, 0.8) 0%, rgba(76, 5, 25, 0.9) 100%); border: 1px solid rgba(244, 63, 94, 0.5); box-shadow: 0 4px 15px -2px rgba(225, 29, 72, 0.3), inset 0 0 10px rgba(225, 29, 72, 0.2); }
+
+        @keyframes speakingWave { 0% { transform: scale(0.95); opacity: 0.85; } 75% { transform: scale(1.3); opacity: 0; } 100% { transform: scale(1.3); opacity: 0; } }
+        .speaking-ring { position: absolute; inset: -3px; border-radius: 9999px; border: 2px solid #10b981; animation: speakingWave 1.45s infinite; }
+        .speaking-ring-delay { position: absolute; inset: -3px; border-radius: 9999px; border: 1.5px solid #34d399; animation: speakingWave 1.45s 0.5s infinite; }
+        
+        .voice-scroll::-webkit-scrollbar { width: 3px; }
+        #hold-sos-btn { touch-action: none; -webkit-user-select: none; user-select: none; }
+        .vol-bar { height: 3px; background: linear-gradient(to right, #10b981, #34d399); transition: width 0.1s; border-radius: 99px; }
+    </style>
+</head>
+<body class="bg-night-950 text-slate-100 font-sans antialiased flex justify-center min-h-screen overflow-hidden">
+
+    <audio id="siren-audio" src="https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" loop preload="auto"></audio>
+
+    <div id="force-siren-overlay" class="hidden fixed inset-0 z-[9999] bg-rose-900 flex flex-col items-center justify-center cursor-pointer animate-pulse" onclick="unlockAndPlaySiren()">
+        <i data-lucide="alert-triangle" class="w-24 h-24 text-white mb-4 animate-bounce"></i>
+        <h1 class="text-3xl font-black text-white text-center px-4">DARURAT SOS!</h1>
+        <p class="text-lg text-white/80 mt-2 text-center px-4 font-bold">KETUK LAYAR INI UNTUK MEMBUNYIKAN SIRENE!</p>
+    </div>
+
+    <div id="auth-screen" class="fixed inset-0 z-[200] bg-night-950 flex flex-col items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-6 relative overflow-hidden animate-sheet-up">
+            <div class="flex flex-col items-center justify-center mb-6">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg border border-emerald-400/30 mb-3">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                </div>
+                <h1 class="text-3xl font-title font-black tracking-tight text-gradient">Telulas Gank</h1>
+                <p class="text-[11px] text-slate-400 mt-1 uppercase tracking-widest font-bold">Ronda Nguling RW 13</p>
+            </div>
+            <div id="form-login">
+                <div class="space-y-3">
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="login-username" placeholder="Username Anda" class="w-full input-hole text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl transition"></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="login-password" placeholder="Password" class="w-full input-hole text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl transition"><button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
+                </div>
+                <button type="button" onclick="doLogin()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition active:scale-95">Masuk Aplikasi</button>
+                <p class="text-center text-xs text-slate-400 mt-5">Belum punya akun? <button onclick="toggleAuth('register')" class="text-emerald-400 font-bold hover:underline">Daftar Warga</button></p>
+            </div>
+            <div id="form-register" class="hidden">
+                <div class="space-y-3">
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="reg-username" placeholder="Buat Username" class="w-full input-hole text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl transition"></div>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="lock" class="w-5 h-5 text-slate-500"></i></div><input type="password" id="reg-password" placeholder="Buat Password (Min. 6 Karakter)" class="w-full input-hole text-sm text-white placeholder-slate-600 pl-11 pr-12 py-3.5 rounded-2xl transition"><button type="button" onclick="togglePasswordVisibility('reg-password', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-emerald-400 transition cursor-pointer"><i data-lucide="eye" class="w-5 h-5"></i></button></div>
+                </div>
+                <button type="button" onclick="doRegister()" class="w-full mt-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg transition active:scale-95">Daftar Akun</button>
+                <p class="text-center text-xs text-slate-400 mt-5">Sudah punya akun? <button onclick="toggleAuth('login')" class="text-emerald-400 font-bold hover:underline">Masuk di sini</button></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-shell" class="hidden relative z-10 w-full max-w-md h-[100dvh] flex-col bg-night-900/85 sm:border-x sm:border-slate-800/80 shadow-2xl overflow-hidden">
+        
+        <div id="sos-active-banner" class="hidden bg-rose-600 text-white text-xs font-bold text-center py-1.5 animate-pulse z-30 shrink-0">
+            🚨 OBROLAN DIJEDA KARENA DARURAT SOS 🚨
+        </div>
+
+        <header class="glass-header px-4 py-3 flex items-center justify-between shrink-0 z-20">
+            <div class="flex items-center gap-2 min-w-0">
+                <button type="button" onclick="openAdminTokenModal()" class="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md border border-emerald-400/30 shrink-0 active:scale-95 transition-transform" title="Menu Admin & Bantuan">
+                    <i data-lucide="radio-tower" class="w-5 h-5 text-white"></i>
+                </button>
+                <div class="min-w-0 flex items-center gap-2">
+                    <h1 class="font-title font-black text-lg tracking-tight text-gradient drop-shadow-sm truncate">Telulas Gank</h1>
+                    <span id="role-badge" class="hidden px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30">Admin</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="shareToWhatsApp()" class="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition active:scale-95 flex items-center justify-center shadow-sm">
+                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="openSosModal()" class="btn-sos-glow px-3.5 py-1.5 rounded-full text-white font-bold text-xs tracking-wider flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-white"></i><span>SOS</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="bg-voice-area px-4 pt-3 pb-2.5 shrink-0 border-b border-slate-800/70 relative">
+            <div class="flex items-center justify-between mb-2.5">
+                <div class="flex items-center gap-2 min-w-0">
+                    <i data-lucide="radio" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+                    <span class="text-[11px] font-bold text-slate-200 uppercase tracking-wide truncate">Nguling RW 13</span>
+                    <span id="voice-counter" class="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 text-[9px] font-bold border border-emerald-500/20 shrink-0">0/20</span>
+                </div>
+                <span class="text-[10px] text-slate-400 flex items-center gap-1.5 shrink-0 bg-slate-800/40 px-2 py-1 rounded-md border border-slate-700/50">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span id="online-count-text">0 Warga</span>
+                </span>
+            </div>
+
+            <div id="live-listener-bar" class="hidden mb-2.5 px-3 py-2 rounded-xl bg-sky-900/30 border border-sky-500/30 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="headphones" class="w-4 h-4 text-sky-400 animate-pulse"></i>
+                    <span class="text-xs font-bold text-sky-300">Mode Pendengar</span>
+                </div>
+                <button onclick="doUnlockAudio()" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold rounded-lg transition active:scale-95">Aktifkan Suara</button>
+            </div>
+
+            <div class="voice-scroll max-h-[160px] overflow-y-auto pr-1 -mr-1">
+                <div id="voice-grid" class="grid grid-cols-3 gap-2.5 pb-1 transition-all duration-300"></div>
+            </div>
+
+            <div id="audio-control-bar" class="hidden mt-3 px-3 py-2.5 rounded-2xl bg-[#0f1829] border border-slate-700/80 shadow-md flex items-center justify-between gap-2 transition-all duration-300">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div id="mic-badge-bg" class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                        <i id="mic-badge-icon" data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p id="mic-status-label" class="text-xs font-bold text-white truncate">Mic Aktif</p>
+                        <p id="speaker-status-label" class="text-[10px] text-emerald-300/80 truncate">Speaker: Aktif</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" id="btn-mute" onclick="toggleMic()" class="btn-soft p-2 rounded-xl disabled:opacity-40"><i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i></button>
+                    <button type="button" id="btn-speaker" onclick="toggleSpeaker()" class="btn-soft p-2 rounded-xl"><i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i></button>
+                    <button type="button" onclick="leaveSlot()" class="p-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white shadow-sm border border-rose-500/50 text-xs font-semibold active:scale-95 transition"><i data-lucide="phone-off" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section class="flex-1 flex flex-col min-h-0 bg-night-950/50">
+            <div class="px-4 py-2 flex items-center justify-between border-b border-slate-800/60 shrink-0">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="messages-square" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span class="text-xs font-semibold text-slate-300">Obrolan Warga</span>
+                    <span id="typing-indicator" class="text-[10px] text-emerald-400 italic hidden animate-pulse ml-2">Seseorang mengetik...</span>
+                </div>
+                <span class="text-[9px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Real-time</span>
+            </div>
+            <div id="chat-feed" class="flex-1 overflow-y-auto px-4 py-3 scroll-smooth flex flex-col">
+                <div class="flex justify-center mb-2">
+                    <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
+                </div>
+            </div>
+
+            <div class="p-3 bg-chat-input-area border-t border-slate-800/80 shrink-0">
+                <form onsubmit="submitChatForm(event)" class="flex items-center gap-2">
+                    <input type="text" id="chat-input" oninput="handleTyping()" placeholder="Ketik laporan..." autocomplete="off" class="flex-1 input-hole text-sm text-white placeholder-slate-500 px-4 py-2.5 rounded-2xl focus:outline-none transition">
+                    <button type="submit" class="p-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm border border-emerald-500/40 active:scale-95 shrink-0 flex items-center justify-center transition"><i data-lucide="send" class="w-4 h-4"></i></button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <!-- SISA MODAL DLL TETAP SAMA -->
+    <div id="diag-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 p-4 overflow-y-auto">
+        <div class="max-w-md mx-auto space-y-3 text-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-white font-bold text-lg">🎙️ Voice Diagnostic</h2>
+                <button onclick="toggleDiag()" class="text-slate-400 text-xs bg-slate-800 px-3 py-1 rounded-lg">Tutup</button>
+            </div>
+            <div class="bg-slate-900 rounded-xl p-3 space-y-2">
+                <div class="flex items-center gap-2"><span id="chk-agora">⏳</span><span class="text-white flex-1">Koneksi Agora</span><span id="val-agora" class="text-slate-400 text-xs">-</span></div>
+                <div class="flex items-center gap-2"><span id="chk-token">⏳</span><span class="text-white flex-1">Token Agora</span><span id="val-token" class="text-slate-400 text-xs">-</span></div>
+                <div class="flex items-center gap-2"><span id="chk-mic">⏳</span><span class="text-white flex-1">Mic Publik</span><span id="val-mic" class="text-slate-400 text-xs">-</span></div>
+                <div class="mt-1 h-2 bg-slate-800 rounded"><div id="meter-mic" class="h-2 bg-green-500 rounded transition-all" style="width:0%"></div></div>
+                <div class="flex items-center gap-2 mt-2"><span id="chk-remotes">⏳</span><span class="text-white flex-1">Remote Users</span><span id="val-remotes" class="text-slate-400 text-xs">0</span></div>
+                <div class="flex items-center gap-2"><span id="chk-tracks">⏳</span><span class="text-white flex-1">Audio Track Aktif</span><span id="val-tracks" class="text-slate-400 text-xs">0</span></div>
+                <div id="remote-list" class="text-xs text-slate-400 space-y-1 mt-2"></div>
+            </div>
+            <button onclick="testSpeakerTone()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔔 Test Speaker</button>
+            <button onclick="testLocalNotif()" class="w-full bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">📱 Test Notif HP</button>
+            <button onclick="forceRepublish()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔄 Force Re-Publish Mic</button>
+            <button onclick="doUnlockAudio()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold active:scale-95 transition">🔊 Force Play Remote Audio</button>
+            <div class="bg-slate-900 rounded-xl p-3 text-xs text-slate-300 font-mono max-h-48 overflow-y-auto" id="diag-log"></div>
+        </div>
+    </div>
+
+    <div id="admin-token-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 relative overflow-hidden animate-sheet-up">
+            <div class="flex items-center justify-center gap-2 mb-3">
+                <div class="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/35 flex items-center justify-center"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i></div>
+                <h3 class="text-base font-extrabold text-white tracking-tight">Menu Admin</h3>
+            </div>
+            <div id="admin-pin-section">
+                <div class="pt-3 border-t border-slate-700/60 flex flex-col gap-2">
+                    <button type="button" onclick="closeAdminTokenModal(); toggleDiag();" class="w-full py-2.5 rounded-xl bg-blue-600/20 text-blue-300 border border-blue-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-600/30 transition"><i data-lucide="life-buoy" class="w-4 h-4"></i> Bantuan Suara</button>
+                    <button type="button" onclick="doLogout()" class="w-full py-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-500/30 transition"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar Akun</button>
+                </div>
+            </div>
+            <div id="admin-token-section" class="hidden flex flex-col gap-4">
+                <button type="button" onclick="openUserListModal()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga</button>
+                <div class="pt-3 border-t border-slate-700/60">
+                    <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
+                    <textarea id="new-agora-token" rows="3" class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
+                    <p class="text-[9px] text-slate-500 mb-3">Token aktif saat ini: <span id="current-token-display" class="text-emerald-400 font-mono">Belum ada</span></p>
+                    <button type="button" onclick="saveAgoraToken()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="save" class="w-4 h-4"></i> Simpan Token ke Server</button>
+                </div>
+            </div>
+            <button type="button" onclick="closeAdminTokenModal()" class="mt-3 w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
+        </div>
+    </div>
+
+    <div id="user-list-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 h-[80vh] flex flex-col relative animate-sheet-up">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-extrabold text-white">Daftar Warga</h3>
+                <button onclick="closeUserListModal()" class="text-slate-400 text-xs bg-slate-800 px-3 py-1 rounded-lg">Tutup</button>
+            </div>
+            <div id="user-list-feed" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-sm rounded-3xl bg-night-900 border border-slate-700/80 shadow-2xl p-5 text-center relative overflow-hidden animate-sheet-up">
+            <div class="flex justify-center mb-2"><div id="admin-target-avatar" class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">W</div></div>
+            <h3 id="admin-target-name" class="text-base font-extrabold text-white tracking-tight">Nama Warga</h3>
+            <p id="admin-target-status" class="text-xs text-slate-400 mb-4">Status Peserta</p>
+            <div class="space-y-2">
+                <button type="button" id="admin-toggle-btn" onclick="toggleTargetMute()" class="w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg">Bisukan Peserta</button>
+                <button type="button" id="admin-kick-btn" onclick="kickTarget()" class="w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-red-800 hover:bg-red-700 text-white shadow-lg border border-red-500/50"><i data-lucide="user-x" class="w-4 h-4"></i> Tendang (Kick)</button>
+                <button type="button" onclick="closeAdminModal()" class="w-full py-2.5 rounded-xl bg-slate-800/70 text-xs font-semibold text-slate-400">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="join-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
+        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 relative overflow-hidden animate-sheet-up">
+            <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+            <div class="flex items-center justify-center gap-2 mb-1.5">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4 text-emerald-400"></i></div>
+                <h3 class="text-base font-extrabold text-white tracking-tight">Identitas Ronda</h3>
+            </div>
+            <p class="text-xs text-slate-400 text-center mb-4">Isi lokasi anda. (Pastikan Mikrofon diizinkan).</p>
+            <div class="space-y-3 mb-5">
+                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="user-circle" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="user-name-input" placeholder="Nama Anda" class="w-full bg-slate-800/50 text-sm text-slate-400 pl-11 pr-4 py-3.5 rounded-2xl border border-slate-700/50 cursor-not-allowed" readonly></div>
+                <div class="relative"><div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-lucide="map-pin" class="w-5 h-5 text-slate-500"></i></div><input type="text" id="custom-loc-input" placeholder="Lokasi Anda (Cth: RT 01)" autocomplete="off" onkeypress="if(event.key === 'Enter') confirmJoin()" class="w-full input-hole text-sm text-white placeholder-slate-600 pl-11 pr-4 py-3.5 rounded-2xl transition"></div>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" onclick="closeJoinModal()" class="flex-1 py-3 rounded-2xl bg-slate-800/70 text-xs font-bold text-slate-400">Batal</button>
+                <button type="button" onclick="confirmJoin()" class="flex-[2] py-3 rounded-2xl bg-emerald-600 text-white text-xs font-bold shadow-lg">Gabung Suara</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sos-modal" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-end justify-center">
+        <div class="w-full max-w-md rounded-t-3xl bg-night-900 border-t border-x border-slate-700/80 shadow-2xl p-5 pb-6 text-center relative overflow-hidden animate-sheet-up">
+            <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+            <div class="flex items-center justify-center gap-2 mb-1.5">
+                <div class="w-8 h-8 rounded-full bg-rose-500/15 border border-rose-500/35 flex items-center justify-center"><i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i></div>
+                <h3 class="text-base font-extrabold text-white tracking-tight">Kirim Sinyal Darurat SOS</h3>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Notifikasi peringatan akan langsung dikirim ke seluruh ponsel warga <strong class="text-slate-200">Nguling RW 13</strong>.</p>
+            <div class="grid grid-cols-2 gap-2 mt-4 text-left">
+                <button type="button" onclick="selectSosCategory(this, 'Maling / Pencurian')" class="sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition"><span>🚨</span><span>Maling</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Kebakaran')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🔥</span><span>Kebakaran</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Medis')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🚑</span><span>Medis</span></button>
+                <button type="button" onclick="selectSosCategory(this, 'Bencana')" class="sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition"><span>🌊</span><span>Bencana</span></button>
+            </div>
+            <div class="mt-5">
+                <button type="button" id="hold-sos-btn" class="relative w-full py-3.5 rounded-2xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs tracking-wide overflow-hidden select-none shadow-md border border-rose-500/40 cursor-pointer">
+                    <div id="hold-progress" class="absolute inset-y-0 left-0 bg-red-950/75 w-0 pointer-events-none transition-none"></div>
+                    <span id="hold-btn-label" class="relative z-10 flex items-center justify-center gap-2"><i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik</span>
+                </button>
+            </div>
+            <button type="button" onclick="closeSosModal()" class="mt-2.5 w-full py-2.5 rounded-2xl bg-slate-800/70 text-xs font-semibold text-slate-400">Batal</button>
+        </div>
+    </div>
+
+    <div id="push-notification-preview" class="hidden fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-[410px] z-50 animate-banner-slide">
+        <div class="rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-rose-500/70 shadow-lg p-3.5">
+            <div class="flex items-start justify-between gap-2.5">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-rose-600 flex items-center justify-center shrink-0"><i data-lucide="bell-ring" class="w-4 h-4 text-white"></i></div>
+                    <div>
+                        <div class="flex items-center gap-1.5"><span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">TELULAS GANK • DARURAT</span><span class="text-[10px] text-slate-500">Baru</span></div>
+                        <h4 class="text-xs font-extrabold text-white mt-1">SOS: <span id="push-category-text" class="text-rose-400">Maling</span></h4>
+                        <p class="text-[11px] text-slate-300 mt-0.5">Oleh <strong id="push-reporter-text">Warga</strong>.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="dismissPushBanner()" class="p-1 rounded-lg text-slate-400"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <button type="button" onclick="stopSosSiren()" class="mt-2.5 w-full py-1.5 rounded-lg bg-rose-600 text-white text-[10px] font-bold transition flex justify-center gap-1"><i data-lucide="bell-off" class="w-3 h-3"></i> Hentikan Sirene</button>
+        </div>
+    </div>
+
+    <!-- Banner Kuning Diperkecil dan Auto-Hide saat layar disentuh -->
+    <div id="unlock-audio-banner" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-auto pointer-events-none">
+        <div class="px-4 py-2 rounded-full bg-amber-500/95 text-white font-bold text-[11px] shadow-lg border border-amber-300/50 flex items-center justify-center gap-1.5 backdrop-blur-sm">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 animate-pulse"></i><span>Sentuh Layar Untuk Suara</span>
+        </div>
+    </div>
+
+    <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none opacity-0 translate-y-2 transition-all duration-300">
+        <div class="px-3.5 py-2 rounded-full bg-slate-900/95 border border-emerald-500/40 shadow-xl flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span id="toast-msg" class="text-xs font-medium text-slate-100">Info</span></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, limit, orderBy, doc, setDoc, getDoc, deleteDoc, runTransaction, getDocs, writeBatch, startAfter, updateDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJnkrBjbCivsCjFC2DyMRfv0ssXA9ZONs",
+            authDomain: "telulas-dd5c8.firebaseapp.com",
+            projectId: "telulas-dd5c8",
+            storageBucket: "telulas-dd5c8.firebasestorage.app",
+            messagingSenderId: "619593885912",
+            appId: "1:619593885912:web:27d14bea00aab6fd574fad"
+        };
+
+        const AGORA_APP_ID = "21d5fa0e054846bda5a547efebf73e6c";
+        const AGORA_CHANNEL = "telulas-gank-rw13"; 
+        
+        const VAPID_KEY = "BLOeL5qHPVUIEQGFa0vQAC9NqHuF64EHvWim3vPJQ5nqvUGtu8YLlkxTRzm90SqgNczTSb0uv9cr7soVpXOurfM"; 
+        const CLOUDFLARE_WORKER_URL = "https://jolly-dream-a7d9.willdan60.workers.dev/";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        let messaging = null;
+        try { messaging = getMessaging(app); } catch (e) { console.log("FCM tidak didukung browser ini"); }
+
+        // Isi setelah Worker token dipasang (kosong = pakai token manual seperti biasa)
+        const TOKEN_WORKER_URLS = ["https://token.serabimu.my.id", "https://telulas-token.willdan60.workers.dev"];
+        let AGORA_TOKEN = ""; 
+        let agoraClient = null;
+        let localAudioTrack = null;
+        let localAgoraUid = null; 
+        let remoteAudioTracks = {};
+
+        let currentUserUid = null;
+        let currentUsername = '';
+        let isAdmin = false;
+        let onlineUserCount = 0;
+        let processedSosIds = [];
+        
+        let lastVisibleChatDoc = null;
+        let usersTokenCache = { at: 0, list: [] };
+        let slotsCacheDocs = [];
+        const chatStore = new Map();
+        let chatNoMore = false;
+        let isLoadingMore = false;
+        let typingTimeout = null;
+        let isAudienceMode = false;
+
+        let isSosActive = false;
+        let savedMicState = false;
+        let savedSpeakerState = true;
+        let sosTimeout = null;
+
+        const MAX_SLOTS = 20;
+        const SLOT_TIMEOUT_MS = 30000; 
+
+        const $ = id => document.getElementById(id);
+
+        // ================= PWA & FCM =================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then((registration) => {
+                if (messaging && VAPID_KEY !== "VAPID_KEY_DISINI") {
+                    Notification.requestPermission().then((permission) => {
+                        if (permission === 'granted') {
+                            getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
+                            .then((currentToken) => {
+                                if (currentToken && currentUserUid) {
+                                    setDoc(doc(db, "users", currentUserUid), { fcmToken: currentToken }, { merge: true });
+                                }
+                            }).catch((err) => { console.log('Gagal ambil token FCM: ', err); });
+                        }
+                    });
+                }
+            });
+        }
+
+        if(messaging) {
+            onMessage(messaging, (payload) => {
+                if(payload.notification) {
+                    showToast(`${payload.notification.title}: ${payload.notification.body}`);
+                    triggerChatNotification();
+                }
+            });
+        }
+        // ========================================================
+
+        window.toggleAuth = (mode) => {
+            if (mode === 'register') {
+                $('form-login').classList.add('hidden');
+                $('form-register').classList.remove('hidden');
+            } else {
+                $('form-register').classList.add('hidden');
+                $('form-login').classList.remove('hidden');
+            }
+        }
+
+        window.togglePasswordVisibility = (inputId, btnElement) => {
+            const input = $(inputId);
+            const icon = btnElement.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        window.doLogin = async () => {
+            const user = $('login-username').value.trim();
+            const pass = $('login-password').value.trim();
+            if (!user || !pass) return alert("Username dan Password wajib diisi!");
+            const dummyEmail = `${user.toLowerCase().replace(/\s/g, '')}@telulas.local`;
+            try {
+                await signInWithEmailAndPassword(auth, dummyEmail, pass);
+            } catch (error) {
+                alert("Login Gagal: Username tidak ditemukan atau Password salah.");
+            }
+        }
+
+        let registering = false;
+        window.doRegister = async () => {
+            const user = $('reg-username').value.trim();
+            const pass = $('reg-password').value.trim();
+            if (!user || !pass) return alert("Semua kolom wajib diisi!");
+            if (pass.length < 6) return alert("Password minimal 6 karakter!");
+            const dummyEmail = `${user.toLowerCase().replace(/\s/g, '')}@telulas.local`;
+            registering = true;
+            let cred = null;
+            try {
+                cred = await createUserWithEmailAndPassword(auth, dummyEmail, pass);
+                await setDoc(doc(db, "users", cred.user.uid), { username: user, createdAt: Date.now(), isBanned: false });
+                alert(`Pendaftaran Berhasil! Selamat datang ${user}.`);
+                location.reload();
+            } catch (error) {
+                registering = false;
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("Username sudah terdaftar! Silakan gunakan nama lain atau langsung Login.");
+                } else {
+                    alert("Gagal Daftar: " + error.message);
                 }
             }
-            if (clients.openWindow) {
-                return clients.openWindow('/');
+        }
+
+        window.doLogout = async () => {
+            if(confirm("Yakin ingin keluar dari aplikasi?")) {
+                if(agoraClient) await agoraClient.leave();
+                await signOut(auth);
+                location.reload();
             }
-        })
-    );
-});
+        }
+
+        // ================= AUTO LISTENER (LIVE AUDIO) =================
+        async function startAudienceMode() {
+            if (isAudienceMode || joinedSlotIndex !== null) return;
+            if (!AGORA_TOKEN) {
+                await fetchLatestAgoraToken();
+                if (!AGORA_TOKEN) return;
+            }
+
+            try {
+                if (agoraClient) {
+                    try { await agoraClient.leave(); } catch(e){}
+                    agoraClient = null;
+                }
+
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" }); attachTokenRenewal(agoraClient);
+                
+                agoraClient.on("user-published", async (user, mediaType) => {
+                    try {
+                        await agoraClient.subscribe(user, mediaType);
+                        if (mediaType === "audio" && user.audioTrack) {
+                            remoteAudioTracks[user.uid] = user.audioTrack;
+                            try {
+                                if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
+                                user.audioTrack.setVolume(100);
+                                await user.audioTrack.play();
+                                hideUnlockBanner();
+                                startAutoRetryPlay(user);
+                            } catch (playErr) {
+                                showUnlockBanner(); startAutoRetryPlay(user);
+                            }
+                        }
+                    } catch (e) {}
+                });
+
+                agoraClient.on("user-unpublished", (user, mediaType) => {
+                    if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                agoraClient.on("user-left", (user, reason) => {
+                    if (remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                localAgoraUid = Math.floor(Math.random() * 100000000);
+                
+                await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid); window.lastAgoraError = null;
+                await agoraClient.setClientRole("audience");
+                isAudienceMode = true;
+                $('live-listener-bar').classList.remove('hidden');
+
+                agoraClient.remoteUsers.forEach(async (user) => {
+                    if (user.hasAudio) {
+                        try {
+                            await agoraClient.subscribe(user, "audio");
+                            if (user.audioTrack) {
+                                remoteAudioTracks[user.uid] = user.audioTrack;
+                                try { user.audioTrack.setVolume(100); await user.audioTrack.play(); } catch(e) { showUnlockBanner(); }
+                                startAutoRetryPlay(user);
+                            }
+                        } catch(e) {}
+                    }
+                });
+
+            } catch(e) { console.log("Audience Join Error:", e); window.lastAgoraError = (e && (e.code || e.message)) || String(e); try { showToast("Agora gagal: " + window.lastAgoraError); } catch(_) {} }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                const userDoc = await getDoc(doc(db, "users", currentUserUid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    if (userData.isBanned) {
+                        alert("Akun Anda telah diblokir oleh Admin.");
+                        await signOut(auth);
+                        location.reload();
+                        return;
+                    }
+
+                    currentUsername = userData.username;
+                    isAdmin = (userData.role === 'admin');
+                    
+                    $('role-badge').textContent = isAdmin ? 'Admin' : 'Warga';
+                    $('role-badge').classList.remove('hidden');
+                    if(isAdmin) $('role-badge').className = 'px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/30';
+
+                    $('auth-screen').classList.add('hidden');
+                    $('app-shell').classList.remove('hidden');
+                    $('app-shell').classList.add('flex');
+
+                    setupPresence(); 
+                    listenToOnlineUsers(); 
+                    fetchLatestAgoraToken().then(() => startAudienceMode()); 
+                    listenToActiveSlots(); 
+                    initFirebaseChat();
+                    listenTypingStatus();
+                    listenIncomingSos();
+                    startHeartbeat();
+                    startStaleCleanup();
+                    lucide.createIcons();
+                } else {
+                    if (!registering) signOut(auth);
+                }
+            } else {
+                $('app-shell').classList.add('hidden');
+                $('app-shell').classList.remove('flex');
+                $('auth-screen').classList.remove('hidden');
+            }
+        });
+
+        // ================= FITUR BAN =================
+        window.openUserListModal = async () => {
+            closeAdminTokenModal();
+            $('user-list-modal').classList.remove('hidden');
+            const feed = $('user-list-feed');
+            feed.innerHTML = '<div class="text-center text-slate-500 text-xs py-4">Memuat data...</div>';
+            
+            try {
+                const snap = await getDocs(collection(db, "users"));
+                feed.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const uid = docSnap.id;
+                    const isBanned = data.isBanned ? true : false;
+                    const banText = isBanned ? 'Buka Blokir' : 'Blokir';
+                    const banColor = isBanned ? 'bg-emerald-600' : 'bg-rose-600';
+                    const isSelf = uid === currentUserUid;
+
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">${data.username.substring(0,2).toUpperCase()}</div>
+                            <div>
+                                <p class="text-xs font-bold text-white">${escapeHTML(data.username)}</p>
+                                <p class="text-[9px] text-slate-400">${isBanned ? '<span class="text-rose-400">Diblokir</span>' : 'Aktif'}</p>
+                            </div>
+                        </div>
+                        ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">Anda</span>' : 
+                        `<button onclick="toggleBan('${uid}', ${isBanned})" class="px-2.5 py-1.5 rounded-lg ${banColor} text-white text-[10px] font-bold shadow">${banText}</button>`}
+                    `;
+                    feed.appendChild(item);
+                });
+            } catch (e) {
+                feed.innerHTML = `<div class="text-center text-rose-500 text-xs py-4">Gagal memuat: ${e.message}</div>`;
+            }
+        }
+        window.closeUserListModal = () => { $('user-list-modal').classList.add('hidden'); }
+        window.toggleBan = async (uid, currentStatus) => {
+            if (!isAdmin) return;
+            const action = currentStatus ? 'membuka blokir' : 'memblokir';
+            if (!confirm(`Yakin ingin ${action} akun ini?`)) return;
+            try {
+                await updateDoc(doc(db, "users", uid), { isBanned: !currentStatus });
+                showToast(`Akun berhasil di${action}.`);
+                openUserListModal(); 
+            } catch (e) { alert("Gagal update: " + e.message); }
+        }
+
+        // ================= TYPING INDICATOR =================
+        window.handleTyping = () => {
+            if (!currentUserUid) return;
+            const typingRef = doc(db, "typing_status", currentUserUid);
+            if (!window._typingOn) { window._typingOn = true; setDoc(typingRef, { name: currentUsername, isTyping: true, lastUpdate: Date.now() }).catch(()=>{}); }
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => { window._typingOn = false; deleteDoc(typingRef).catch(()=>{}); }, 2000);
+        }
+
+        function listenTypingStatus() {
+            onSnapshot(collection(db, "typing_status"), (snapshot) => {
+                const now = Date.now();
+                let typingUsers = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.isTyping && (now - data.lastUpdate < 3000) && docSnap.id !== currentUserUid) {
+                        typingUsers.push(data.name);
+                    }
+                });
+                const indicator = $('typing-indicator');
+                if (typingUsers.length > 0) {
+                    indicator.textContent = typingUsers.length === 1 ? `${typingUsers[0]} mengetik...` : `Beberapa orang mengetik...`;
+                    indicator.classList.remove('hidden');
+                } else {
+                    indicator.classList.add('hidden');
+                }
+            });
+        }
+
+        // ================= CHAT =================
+        function initFirebaseChat() {
+            const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(20));
+            onSnapshot(q, (snapshot) => {
+                const feed = $('chat-feed');
+                if (!snapshot.empty && !lastVisibleChatDoc) lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
+                let isNewMessage = false;
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added" && change.doc.data().senderUid !== currentUserUid) isNewMessage = true;
+                });
+                if(isNewMessage && feed.innerHTML !== '') triggerChatNotification();
+                snapshot.forEach((docSnap) => chatStore.set(docSnap.id, { id: docSnap.id, ...docSnap.data() }));
+                renderChatFeed();
+                if(!isLoadingMore) feed.scrollTop = feed.scrollHeight;
+                lucide.createIcons();
+            });
+        }
+
+        function renderChatFeed() {
+            const feed = $('chat-feed');
+            feed.innerHTML = `
+                    <div class="flex justify-center mb-2">
+                        <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
+                    </div>
+                `;
+            const lb = $('btn-load-more'); if (lb && chatNoMore) lb.textContent = 'Tidak ada pesan lama';
+            Array.from(chatStore.values()).sort((x, y) => (x.timestamp || 0) - (y.timestamp || 0)).forEach(d => renderMessageBubble(d, feed));
+        }
+
+        window.loadMoreChats = async () => {
+            if (isLoadingMore || !lastVisibleChatDoc) return;
+            isLoadingMore = true;
+            const btn = $('btn-load-more');
+            if(btn) btn.textContent = 'Memuat...';
+            try {
+                const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), startAfter(lastVisibleChatDoc), limit(20));
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    chatNoMore = true;
+                    if(btn) btn.textContent = 'Tidak ada pesan lama';
+                    isLoadingMore = false;
+                    return;
+                }
+                lastVisibleChatDoc = snapshot.docs[snapshot.docs.length - 1];
+                snapshot.forEach(docSnap => chatStore.set(docSnap.id, { id: docSnap.id, ...docSnap.data() }));
+                const feed = $('chat-feed');
+                const oldScrollHeight = feed.scrollHeight;
+                renderChatFeed();
+                lucide.createIcons();
+                feed.scrollTop = feed.scrollHeight - oldScrollHeight;
+            } catch(e) {
+                if(btn) btn.textContent = 'Gagal memuat';
+            }
+            isLoadingMore = false;
+        }
+
+        function renderMessageBubble(data, targetFeed) {
+            const isSelf = (data.senderUid === currentUserUid);
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'} mb-3`;
+
+            const formatLinks = (text) => {
+                if (!text) return '';
+                const safeText = escapeHTML(text);
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                return safeText.replace(urlRegex, function(url) {
+                    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-sky-300 underline font-bold hover:text-sky-200 break-all">${url}</a>`;
+                });
+            };
+
+            if (data.isEmergency) {
+                wrapper.className = 'w-full my-1';
+                const urlMatch = data.message.match(/(https?:\/\/[^\s]+)/g);
+                let finalMessage = escapeHTML(data.message);
+                
+                if (urlMatch && urlMatch.length > 0) {
+                    const mapUrl = urlMatch[0];
+                    finalMessage = finalMessage.replace(mapUrl, `<br><a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center justify-center gap-1.5 bg-rose-700 hover:bg-rose-600 text-white text-[11px] font-bold px-4 py-2 rounded-xl border border-rose-400/50 shadow-[0_2px_10px_rgba(225,29,72,0.4)] transition w-full"><i data-lucide="map-pin" class="w-4 h-4"></i> BUKA PETA LOKASI</a>`);
+                }
+
+                wrapper.innerHTML = `<div class="alert-sos-box w-full p-4 rounded-2xl">
+                    <div class="flex items-center justify-between mb-2"><span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-400 flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> DARURAT SOS</span><span class="text-[10px] text-rose-300/80 font-bold">${escapeHTML(data.time || '')}</span></div>
+                    <p class="text-xs font-semibold text-white leading-relaxed">${finalMessage}</p>
+                    <button onclick="stopSosSiren()" class="mt-3 w-full py-2 bg-gradient-to-r from-slate-700 to-slate-800 text-white text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-[0_2px_10px_rgba(0,0,0,0.3)] border border-slate-600"><i data-lucide="bell-off" class="w-4 h-4"></i> Hentikan Sirene</button></div>`;
+            } else if (isSelf) {
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span><span class="text-[11px] font-bold text-emerald-400">Anda</span></div>
+                    <div class="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tr-sm bg-gradient-to-br from-emerald-600 to-teal-700 text-white text-xs shadow-[0_4px_10px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] border border-emerald-400/30 leading-relaxed">${formatLinks(data.message)}</div>`;
+            } else {
+                wrapper.innerHTML = `<div class="flex items-center gap-1.5 mb-1 px-1"><span class="text-[11px] font-bold text-slate-200">${escapeHTML(data.sender || 'Warga')}</span><span class="text-[9px] font-semibold px-1.5 py-0.5 rounded border text-slate-400 bg-slate-500/10 border-slate-500/25 shadow-sm">${escapeHTML(data.tag || 'Warga')}</span><span class="text-[10px] text-slate-500">${escapeHTML(data.time || '')}</span></div>
+                    <div class="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-tl-sm glass-card text-slate-200 text-xs leading-relaxed">${formatLinks(data.message)}</div>`;
+            }
+            targetFeed.appendChild(wrapper);
+        }
+
+        async function sendChatToDB(text, opts = {}) {
+            if (!text) return;
+            if (!currentUserUid) return alert("Tunggu, sedang menghubungkan...");
+            const senderName = joinedSlotIndex !== null ? userProfile.name : currentUsername;
+            $('chat-input').value = ''; 
+            window._typingOn = false; deleteDoc(doc(db, "typing_status", currentUserUid)).catch(()=>{});
+
+            try {
+                await addDoc(collection(db, "chats"), {
+                    senderUid: currentUserUid, sender: senderName, message: text,
+                    timestamp: Date.now(), time: getCurrentTime(),
+                    tag: joinedSlotIndex !== null ? userProfile.location : 'Warga',
+                    isEmergency: !!opts.isEmergency
+                });
+
+                if (opts.isEmergency || Date.now() - usersTokenCache.at > 300000) {
+                    const usersSnap = await getDocs(collection(db, "users"));
+                    usersTokenCache.list = usersSnap.docs.map(u => ({ id: u.id, token: u.data().fcmToken }));
+                    usersTokenCache.at = Date.now();
+                }
+                let tokens = usersTokenCache.list.filter(u => u.id !== currentUserUid && u.token).map(u => u.token);
+                
+                if (tokens.length > 0) {
+                    let notifTitle = `Pesan dari ${senderName}`;
+                    if (opts.isEmergency) notifTitle = `🚨 DARURAT SOS: ${senderName}`;
+                    
+                    fetch(CLOUDFLARE_WORKER_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tokens: tokens, title: notifTitle, message: text })
+                    }).catch(e => console.log('Notif error:', e));
+                }
+            } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
+        }
+
+        function sendSystemChat(text) { sendChatToDB(text); }
+        function submitChatForm(e) { e.preventDefault(); const val = $('chat-input').value.trim(); if (!val) return; sendChatToDB(val); }
+
+        // ================= VOICE (AGORA) =================
+        let userProfile = { name: 'Warga', location: 'Ronda' }; 
+        let voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
+        let joinedSlotIndex = null;
+        let isMicMuted = false;
+        let isSpeakerOn = true;
+        let wasMutedByAdmin = false;
+        let selectedSosCategory = 'Maling / Pencurian';
+        let pendingJoinSlotIndex = null;
+        let wakeLock = null;
+        let targetAdminSlotIndex = null;
+        let sosSirenInterval = null;
+
+        window.openSosModal = openSosModal; window.closeSosModal = closeSosModal; window.selectSosCategory = selectSosCategory;
+        window.dismissPushBanner = dismissPushBanner; window.stopSosSiren = stopSosSiren; window.shareToWhatsApp = shareToWhatsApp;
+        window.toggleMic = toggleMic; window.toggleSpeaker = toggleSpeaker;
+        window.leaveSlot = leaveSlot; window.openAdminModal = openAdminModal; window.closeAdminModal = closeAdminModal;
+        window.toggleTargetMute = toggleTargetMute; window.kickTarget = kickTarget; window.openJoinModal = openJoinModal; window.closeJoinModal = closeJoinModal;
+        window.confirmJoin = confirmJoin; window.submitChatForm = submitChatForm;
+        window.openAdminTokenModal = openAdminTokenModal; window.closeAdminTokenModal = closeAdminTokenModal;
+        window.verifyAdminPin = verifyAdminPin; window.saveAgoraToken = saveAgoraToken;
+
+        const countJoined = () => voiceSlots.filter(s => s.occupied).length;
+
+        function listenToActiveSlots() {
+            const slotsCol = collection(db, "active_slots");
+            onSnapshot(slotsCol, (snapshot) => {
+                slotsCacheDocs = snapshot.docs;
+                voiceSlots = Array.from({length: MAX_SLOTS}, (_, i) => ({ id:i, occupied:false }));
+                const now = Date.now();
+                
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const slotId = data.slotId;
+                    if (!data.lastSeen || (now - data.lastSeen > SLOT_TIMEOUT_MS)) {
+                        deleteDoc(docSnap.ref).catch(() => {});
+                        return;
+                    }
+                    if (slotId >= 0 && slotId < MAX_SLOTS) {
+                        voiceSlots[slotId] = {
+                            id: slotId, occupied: true, isSelf: (data.uid === currentUserUid),
+                            name: data.name, role: data.location,
+                            initials: (data.name || 'W').substring(0, 2).toUpperCase(),
+                            gradient: 'from-emerald-400 to-emerald-600',
+                            isSpeaking: false, isMuted: !!data.isMuted, mutedByAdmin: !!data.mutedByAdmin,
+                            agoraUid: data.agoraUid
+                        };
+                    }
+                });
+                
+                if (joinedSlotIndex !== null) {
+                    if (voiceSlots[joinedSlotIndex] && voiceSlots[joinedSlotIndex].occupied) {
+                        voiceSlots[joinedSlotIndex].isSelf = true;
+                    } else {
+                        if (localAudioTrack) {
+                            leaveSlot(true);
+                            showToast("Anda telah ditendang oleh Admin.");
+                        }
+                    }
+                }
+
+                if (joinedSlotIndex !== null && localAudioTrack) {
+                    const mySlot = voiceSlots[joinedSlotIndex];
+                    if (mySlot && mySlot.occupied) {
+                        const nowMutedByAdmin = mySlot.mutedByAdmin === true;
+                        if (nowMutedByAdmin && !wasMutedByAdmin) {
+                            localAudioTrack.setEnabled(false); updateAudioControlUI(); showToast("Anda dibisukan oleh Admin.");
+                        } else if (!nowMutedByAdmin && wasMutedByAdmin) {
+                            localAudioTrack.setEnabled(!isMicMuted); updateAudioControlUI();
+                        }
+                        wasMutedByAdmin = nowMutedByAdmin;
+                        if (!nowMutedByAdmin && mySlot.isMuted !== isMicMuted) {
+                            isMicMuted = mySlot.isMuted; localAudioTrack.setEnabled(!isMicMuted); updateAudioControlUI();
+                        }
+                    }
+                }
+                renderVoiceGrid();
+            });
+        }
+
+        function openAdminTokenModal() {
+            $('admin-token-modal').classList.remove('hidden');
+            $('admin-pin-section').classList.remove('hidden');
+            if (isAdmin) {
+                $('admin-token-section').classList.remove('hidden');
+                $('new-agora-token').value = AGORA_TOKEN;
+                $('current-token-display').textContent = AGORA_TOKEN ? AGORA_TOKEN.substring(0, 10) + "..." : "Belum ada / Kosong";
+            } else { $('admin-token-section').classList.add('hidden'); }
+        }
+        function closeAdminTokenModal() { $('admin-token-modal').classList.add('hidden'); }
+        function verifyAdminPin() {}
+        async function saveAgoraToken() {
+            if (!isAdmin) return;
+            const newToken = $('new-agora-token').value.trim();
+            if (!newToken) return alert("Token tidak boleh kosong!");
+            try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
+        }
+        async function fetchLatestAgoraToken() {
+            if (auth.currentUser) {
+                for (const url of TOKEN_WORKER_URLS) {
+                    try {
+                        const idToken = await auth.currentUser.getIdToken();
+                        const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 8000);
+                        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken, channel: AGORA_CHANNEL }), signal: ctrl.signal });
+                        clearTimeout(tm);
+                        if (r.ok) { const j = await r.json(); if (j.token) { AGORA_TOKEN = j.token; return true; } }
+                    } catch (e) {}
+                }
+            }
+            try { const docSnap = await getDoc(doc(db, "config", "agora")); if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token; } catch (e) {}
+            return false;
+        }
+        function attachTokenRenewal(client) {
+            const renew = async () => { try { if (await fetchLatestAgoraToken()) await client.renewToken(AGORA_TOKEN); } catch (e) {} };
+            client.on("token-privilege-will-expire", renew);
+            client.on("token-privilege-did-expire", renew);
+        }
+
+        function setupPresence() {
+            if (!currentUserUid) return;
+            const userDocRef = doc(db, "presence", currentUserUid);
+            const updateStatus = () => setDoc(userDocRef, { lastSeen: Date.now(), username: currentUsername }, { merge: true }).catch(console.error);
+            updateStatus();
+            setInterval(() => { if (document.visibilityState === 'visible') updateStatus(); }, 45000);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') updateStatus(); });
+            const cleanup = () => { try { deleteDoc(userDocRef); } catch(e) {} };
+            window.addEventListener('beforeunload', cleanup);
+            window.addEventListener('pagehide', cleanup);
+        }
+
+        function listenToOnlineUsers() {
+            onSnapshot(collection(db, "presence"), (snapshot) => {
+                const now = Date.now();
+                let count = 0;
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (data.lastSeen && (now - data.lastSeen < 65000)) count++;
+                });
+                onlineUserCount = count;
+                updateCounters();
+            });
+        }
+
+        function startHeartbeat() {
+            setInterval(async () => {
+                if (joinedSlotIndex === null || !currentUserUid) return;
+                try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { lastSeen: Date.now() }, { merge: true }); } catch(e) {}
+            }, 10000); 
+        }
+        
+        function startStaleCleanup() {
+            setInterval(async () => {
+                try {
+                    const now = Date.now();
+                    for (const d of slotsCacheDocs) {
+                        const data = d.data();
+                        if (!data.lastSeen || data.uid === currentUserUid) continue;
+                        if (now - data.lastSeen > SLOT_TIMEOUT_MS) { try { await deleteDoc(d.ref); } catch(e) {} }
+                    }
+                } catch(e) {}
+            }, 15000); 
+        }
+
+        function updateCounters() {
+            const n = countJoined();
+            $('voice-counter').textContent = `${n}/${MAX_SLOTS}`;
+            $('online-count-text').textContent = `${onlineUserCount} Warga`;
+        }
+
+        function shareToWhatsApp() {
+            const text = "Ayo gabung ronda malam Nguling RW 13 di *Telulas Gank*! Klik link ini: \n\n" + window.location.href;
+            window.open("https://wa.me/?text=" + encodeURIComponent(text), '_blank');
+        }
+
+        function renderVoiceGrid() {
+            const grid = $('voice-grid');
+            grid.innerHTML = '';
+            voiceSlots.forEach(slot => {
+                if (slot.occupied) {
+                    const isAdminMuted = slot.isMuted && slot.mutedByAdmin;
+                    const cardStyle = slot.isSelf ? 'glass-card-self' : (isAdminMuted ? 'glass-card border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.15)]' : 'glass-card');
+                    const activeRings = (slot.isSpeaking && !slot.isMuted) ? `<div class="speaking-ring"></div><div class="speaking-ring-delay"></div>` : '';
+                    const statusBadgeBg = isAdminMuted ? 'bg-purple-500' : (slot.isMuted ? 'bg-rose-500' : 'bg-emerald-500');
+                    const statusBadge = isAdminMuted ? `<i data-lucide="shield-alert" class="w-2 h-2 text-white"></i>` : (slot.isMuted ? `<i data-lucide="mic-off" class="w-2 h-2 text-white"></i>` : (slot.isSpeaking ? `<span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>` : `<i data-lucide="volume-2" class="w-2 h-2 text-white"></i>`));
+                    const adminBadge = slot.isSelf ? `<i data-lucide="crown" class="w-3 h-3 text-amber-400 absolute -top-1.5 left-1/2 -translate-x-1/2 bg-night-900 rounded-full p-0.5 border border-slate-700 z-10 shadow-sm"></i>` : '';
+                    const isClickable = (joinedSlotIndex !== null && !slot.isSelf);
+                    const cursorClass = isClickable ? 'cursor-pointer' : '';
+                    const roleText = isAdminMuted
+                        ? `<p class="text-[8px] text-purple-400 font-bold bg-purple-500/10 px-1 py-0.5 rounded-sm mt-0.5 truncate max-w-full">Mute Admin</p>`
+                        : `<p class="text-[8px] ${slot.isSelf ? 'text-emerald-400 font-semibold' : 'text-slate-400'} truncate max-w-full leading-tight mt-0.5">${escapeHTML(slot.role || '')}</p>`;
+                    const volBar = slot.volumeLevel !== undefined ? `<div class="w-full mt-1 h-0.5 bg-slate-800 rounded overflow-hidden"><div class="vol-bar" style="width:${Math.min(100, slot.volumeLevel * 5)}%"></div></div>` : '';
+
+                    const card = document.createElement('div');
+                    card.className = `${cardStyle} ${cursorClass} rounded-2xl p-2 flex flex-col items-center justify-center relative transition-all duration-300`;
+                    card.innerHTML = `
+                        <div class="relative mb-1 mt-1">
+                            ${activeRings} ${adminBadge}
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br ${slot.gradient} flex items-center justify-center text-white font-bold text-[11px] shadow-sm border border-white/20 ${isAdminMuted ? 'opacity-60 grayscale-[50%]' : ''}">${escapeHTML(slot.initials || 'W')}</div>
+                            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full ${statusBadgeBg} border-2 border-night-900 flex items-center justify-center z-10">${statusBadge}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-white truncate max-w-full text-center leading-tight">${slot.isSelf ? 'Anda' : escapeHTML(slot.name || 'Warga')}</p>
+                        ${roleText}${volBar}`;
+                    if (isClickable) card.onclick = () => openAdminModal(slot.id);
+                    grid.appendChild(card);
+                } else {
+                    const emptyBtn = document.createElement('button');
+                    emptyBtn.type = 'button'; emptyBtn.onclick = () => openJoinModal(slot.id);
+                    emptyBtn.className = 'glass-slot-empty rounded-2xl p-2 flex flex-col items-center justify-center min-h-[85px] group cursor-pointer focus:outline-none';
+                    emptyBtn.innerHTML = `<div class="w-7 h-7 rounded-full bg-emerald-500/10 group-hover:bg-emerald-500 border border-emerald-500/30 flex items-center justify-center mb-1 transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5 text-emerald-400 group-hover:text-white"></i></div><span class="text-[10px] font-bold text-slate-400 group-hover:text-emerald-300 transition-colors">Gabung</span>`;
+                    grid.appendChild(emptyBtn);
+                }
+            });
+            lucide.createIcons();
+            updateCounters();
+            if (joinedSlotIndex !== null) {
+                $('admin-hint').innerHTML = `<i data-lucide="shield-check" class="w-3 h-3 text-purple-400"></i> <span class="text-purple-300">Mode Admin</span>`;
+            } else {
+                $('admin-hint').innerHTML = ''; 
+            }
+            lucide.createIcons();
+        }
+
+        function openAdminModal(slotId) {
+            if (joinedSlotIndex === null || slotId === joinedSlotIndex) return;
+            if (!isAdmin) { showToast("Hanya Admin (Wildan Jaka) yang bisa mengontrol."); return; }
+            const targetSlot = voiceSlots[slotId];
+            if (!targetSlot.occupied) return;
+            targetAdminSlotIndex = slotId;
+            $('admin-target-avatar').textContent = targetSlot.initials;
+            $('admin-target-avatar').className = `w-10 h-10 rounded-full bg-gradient-to-br ${targetSlot.gradient} flex items-center justify-center text-white font-bold text-xs shadow-inner`;
+            $('admin-target-name').textContent = targetSlot.name;
+            updateAdminModalUI();
+            $('admin-modal').classList.remove('hidden');
+        }
+        function closeAdminModal() { $('admin-modal').classList.add('hidden'); targetAdminSlotIndex = null; }
+        
+        function updateAdminModalUI() {
+            const targetSlot = voiceSlots[targetAdminSlotIndex];
+            if (!targetSlot) return;
+            const btn = $('admin-toggle-btn'); const statusTxt = $('admin-target-status');
+            if (targetSlot.mutedByAdmin) {
+                statusTxt.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i> Dibisukan oleh Admin`;
+                statusTxt.className = 'text-[11px] text-purple-400 font-bold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-emerald-600 text-white shadow-lg border border-emerald-400/40';
+                btn.innerHTML = `<i data-lucide="mic" class="w-4 h-4"></i> Aktifkan Suara Peserta`;
+            } else if (targetSlot.isMuted) {
+                statusTxt.textContent = 'Sedang Dibisukan (Mandiri)';
+                statusTxt.className = 'text-[11px] text-rose-400 font-semibold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg border border-rose-400/40';
+                btn.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4"></i> Bisukan Peserta Ini`;
+            } else {
+                statusTxt.textContent = 'Sedang Aktif / Bicara';
+                statusTxt.className = 'text-[11px] text-emerald-400 font-semibold';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 bg-rose-600 text-white shadow-lg border border-rose-400/40';
+                btn.innerHTML = `<i data-lucide="mic-off" class="w-4 h-4"></i> Bisukan Peserta Ini`;
+            }
+            lucide.createIcons();
+        }
+        
+        async function toggleTargetMute() {
+            if (targetAdminSlotIndex === null) return;
+            const targetSlot = voiceSlots[targetAdminSlotIndex];
+            const ref = doc(db, "active_slots", `slot_${targetAdminSlotIndex}`);
+            try {
+                if (targetSlot.mutedByAdmin) {
+                    await setDoc(ref, { mutedByAdmin: false }, { merge: true });
+                    showToast(`Suara ${targetSlot.name} diaktifkan kembali.`);
+                } else {
+                    await setDoc(ref, { mutedByAdmin: true }, { merge: true });
+                    showToast(`${targetSlot.name} dibisukan oleh Admin.`);
+                }
+                closeAdminModal();
+            } catch (e) { alert("Gagal mute: " + e.message); }
+        }
+
+        async function kickTarget() {
+            if (targetAdminSlotIndex === null) return;
+            const targetSlot = voiceSlots[targetAdminSlotIndex];
+            if (!targetSlot) return;
+            try {
+                await deleteDoc(doc(db, "active_slots", `slot_${targetAdminSlotIndex}`));
+                showToast(`${targetSlot.name} telah ditendang.`);
+                closeAdminModal();
+            } catch (e) { alert("Gagal kick: " + e.message); }
+        }
+
+        function openJoinModal(index) {
+            if (joinedSlotIndex !== null) return showToast('Anda sudah terhubung.');
+            if (voiceSlots[index].occupied) return;
+            if (countJoined() >= MAX_SLOTS) return showToast('Ruang suara penuh.');
+            pendingJoinSlotIndex = index;
+            $('user-name-input').value = currentUsername; 
+            $('custom-loc-input').value = '';
+            $('join-modal').classList.remove('hidden');
+            setTimeout(() => $('custom-loc-input').focus(), 300);
+        }
+        function closeJoinModal() { $('join-modal').classList.add('hidden'); $('custom-loc-input').blur(); pendingJoinSlotIndex = null; }
+        function confirmJoin() {
+            primeAudio();
+            const nameVal = $('user-name-input').value.trim();
+            const locVal = $('custom-loc-input').value.trim();
+            const finalName = nameVal || currentUsername || 'Warga';
+            const finalLoc = locVal || 'Ronda Keliling';
+            const index = pendingJoinSlotIndex; closeJoinModal(); executeJoin(index, finalName, finalLoc);
+        }
+
+        async function executeJoin(index, name, location) {
+            if (index === null) return;
+            if (!AGORA_APP_ID) return alert("App ID Agora belum dimasukkan.");
+            if (!AGORA_TOKEN) {
+                await fetchLatestAgoraToken();
+                if (!AGORA_TOKEN) return alert("Token Agora belum diatur oleh Admin.");
+            }
+
+            try {
+                const slotRef = doc(db, "active_slots", `slot_${index}`);
+                
+                let myAgoraUid = Math.floor(Math.random() * 100000000);
+                localAgoraUid = myAgoraUid;
+
+                try {
+                    await runTransaction(db, async (tx) => {
+                        const snap = await tx.get(slotRef);
+                        if (snap.exists() && snap.data().occupied) throw new Error("SLOT_OCCUPIED");
+                        tx.set(slotRef, {
+                            slotId: index, uid: currentUserUid, agoraUid: myAgoraUid,
+                            name, location, isMuted: false, mutedByAdmin: false,
+                            occupied: true, lastSeen: Date.now()
+                        });
+                    });
+                } catch (e) {
+                    if (e.message === "SLOT_OCCUPIED") { showToast("Slot sudah diambil. Coba lain."); return; }
+                    throw e;
+                }
+
+                if (agoraClient) {
+                    try { 
+                        agoraClient.removeAllListeners("user-published");
+                        agoraClient.removeAllListeners("user-unpublished");
+                        agoraClient.removeAllListeners("user-left");
+                        await agoraClient.leave(); 
+                    } catch(e){}
+                    agoraClient = null;
+                }
+
+                agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" }); attachTokenRenewal(agoraClient);
+
+                agoraClient.on("user-published", async (user, mediaType) => {
+                    try {
+                        await agoraClient.subscribe(user, mediaType);
+                        if (mediaType === "audio" && user.audioTrack) {
+                            remoteAudioTracks[user.uid] = user.audioTrack;
+                            try {
+                                if (typeof user.audioTrack.setPlaybackDevice === 'function') await user.audioTrack.setPlaybackDevice('speakerphone');
+                                user.audioTrack.setVolume(100);
+                                await user.audioTrack.play();
+                                hideUnlockBanner();
+                                startAutoRetryPlay(user);
+                            } catch (playErr) { showUnlockBanner(); startAutoRetryPlay(user); }
+                        }
+                    } catch (e) {}
+                });
+
+                agoraClient.on("user-unpublished", (user, mediaType) => {
+                    if (mediaType === "audio" && remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                agoraClient.on("user-left", (user, reason) => {
+                    if (remoteAudioTracks[user.uid]) {
+                        try { remoteAudioTracks[user.uid].stop(); remoteAudioTracks[user.uid].close(); } catch(e) {}
+                        delete remoteAudioTracks[user.uid];
+                    }
+                });
+
+                let retries = 0;
+                while (retries < 3) {
+                    try {
+                        await agoraClient.join(AGORA_APP_ID, AGORA_CHANNEL, AGORA_TOKEN, localAgoraUid);
+                        break; 
+                    } catch (err) {
+                        if (err.message.includes('UID_CONFLICT') || err.code === 'UID_CONFLICT') {
+                            retries++;
+                            console.log("UID conflict, retrying with new UID...");
+                            localAgoraUid = Math.floor(Math.random() * 100000000);
+                            if (agoraClient) { try { await agoraClient.leave(); } catch(e){} }
+                        } else {
+                            throw err;
+                        }
+                    }
+                }
+
+                await agoraClient.setClientRole("host");
+                isAudienceMode = false;
+                $('live-listener-bar').classList.add('hidden');
+
+                try { if (AgoraRTC.setParameter) await AgoraRTC.setParameter('AUDIO_PLAYBACK_DEVICE', 'speakerphone'); } catch(e) {}
+
+                agoraClient.remoteUsers.forEach(async (user) => {
+                    if (user.hasAudio) {
+                        try {
+                            await agoraClient.subscribe(user, "audio");
+                            if (user.audioTrack) {
+                                remoteAudioTracks[user.uid] = user.audioTrack;
+                                try { user.audioTrack.setVolume(100); await user.audioTrack.play(); } catch(e) { showUnlockBanner(); }
+                                startAutoRetryPlay(user);
+                            }
+                        } catch(e) {}
+                    }
+                });
+
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: "speech_standard", AEC: true, AGC: true, ANS: true });
+                await agoraClient.publish([localAudioTrack]);
+
+                startBackgroundKeepAlive();
+
+                agoraClient.enableAudioVolumeIndicator();
+                agoraClient.on("volume-indicator", volumes => {
+                    let needsRender = false;
+                    volumes.forEach(volume => {
+                        const slot = voiceSlots.find(s => s.agoraUid === volume.uid || (s.isSelf && volume.uid === localAgoraUid));
+                        if (slot) {
+                            const wasSpeaking = slot.isSpeaking;
+                            slot.isSpeaking = volume.level > 5;
+                            slot.volumeLevel = volume.level;
+                            if (wasSpeaking !== slot.isSpeaking) needsRender = true;
+                        }
+                        if (volume.uid === localAgoraUid) {
+                            const mm = $('meter-mic');
+                            if (mm) mm.style.width = Math.min(100, volume.level * 5) + '%';
+                        }
+                    });
+                    if (needsRender) renderVoiceGrid();
+                });
+
+                userProfile.name = name; userProfile.location = location;
+                joinedSlotIndex = index;
+                isMicMuted = false; isSpeakerOn = true; wasMutedByAdmin = false;
+
+                $('audio-control-bar').classList.remove('hidden');
+                updateAudioControlUI();
+                sendSystemChat(`👑 ${name} bergabung dari: ${location}.`);
+                showToast(`Terhubung ke Saluran Suara!`);
+                await requestWakeLock();
+
+                setTimeout(() => {
+                    if (Object.keys(remoteAudioTracks).length === 0) showUnlockBanner();
+                    else {
+                        const anyBlocked = Object.values(remoteAudioTracks).some(t => !t.isPlaying);
+                        if (anyBlocked) showUnlockBanner();
+                    }
+                }, 1500);
+
+            } catch (err) {
+                try { await deleteDoc(doc(db, "active_slots", `slot_${index}`)); } catch(e) {}
+                alert("GAGAL SUARA: " + err.message);
+            }
+        }
+
+        function startAutoRetryPlay(user) {
+            let attempts = 0;
+            const interval = setInterval(async () => {
+                attempts++;
+                if (attempts > 30) { clearInterval(interval); return; }
+                if (!user.audioTrack) { clearInterval(interval); return; }
+                if (user.audioTrack.isPlaying) { clearInterval(interval); return; }
+                try { await user.audioTrack.play(); clearInterval(interval); hideUnlockBanner(); } catch(e) {}
+            }, 1000);
+        }
+
+        async function leaveSlot(isKicked = false) {
+            if (joinedSlotIndex === null) return;
+            const prevIndex = joinedSlotIndex;
+            const leavingName = userProfile.name;
+
+            // 1. HAPUS DARI DATABASE DULU (Agar hilang dari layar orang lain seketika)
+            if (!isKicked) {
+                try { await deleteDoc(doc(db, "active_slots", `slot_${prevIndex}`)); } catch(e){}
+            }
+
+            // 2. MATIKAN MIC LOKAL (Sangat penting agar suara tidak nyambung)
+            if (localAudioTrack) { 
+                try {
+                    localAudioTrack.stop(); 
+                    localAudioTrack.close(); 
+                } catch(e){}
+                localAudioTrack = null; 
+            }
+            
+            // 3. TARIK SUARA DARI SERVER & JADIKAN PENDENGAR
+            if (agoraClient) {
+                try {
+                    await agoraClient.unpublish();
+                    await agoraClient.setClientRole("audience");
+                } catch(e) { console.log("Error unpublish:", e); }
+            }
+
+            // 4. Bersihkan UI Lokal
+            hideUnlockBanner();
+            joinedSlotIndex = null;
+            voiceSlots[prevIndex] = { id: prevIndex, occupied: false };
+            $('audio-control-bar').classList.add('hidden');
+            $('live-listener-bar').classList.remove('hidden'); // Tampilkan bar mode pendengar
+            wasMutedByAdmin = false;
+            isAudienceMode = true;
+
+            stopBackgroundKeepAlive();
+            renderVoiceGrid();
+            
+            if (!isKicked) {
+                showToast('Mic mati. Kembali ke mode pendengar.');
+                sendSystemChat(`📴 ${leavingName} keluar dari panggilan.`);
+            }
+            
+            releaseWakeLock();
+        }
+
+        async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+        function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => { wakeLock = null; }); }
+
+        async function toggleMic() {
+            if (joinedSlotIndex === null || !localAudioTrack) return;
+            if (isSosActive) { showToast("Tidak bisa mengubah mic saat darurat SOS."); return; }
+            
+            const mySlot = voiceSlots[joinedSlotIndex];
+            if (mySlot && mySlot.mutedByAdmin) { showToast("Admin membisukan Anda."); return; }
+            isMicMuted = !isMicMuted;
+            localAudioTrack.setEnabled(!isMicMuted);
+            updateAudioControlUI();
+            showToast(isMicMuted ? 'Mikrofon dibisukan' : 'Mikrofon diaktifkan');
+            try { await setDoc(doc(db, "active_slots", `slot_${joinedSlotIndex}`), { isMuted: isMicMuted }, { merge: true }); } catch(e) {}
+        }
+
+        function toggleSpeaker() {
+            if (isSosActive) { showToast("Tidak bisa mengubah speaker saat darurat SOS."); return; }
+            isSpeakerOn = !isSpeakerOn;
+            Object.values(remoteAudioTracks).forEach(track => {
+                try { isSpeakerOn ? track.play() : track.stop(); } catch(e) {}
+            });
+            updateAudioControlUI();
+            showToast(isSpeakerOn ? 'Speaker Aktif' : 'Speaker Dibisukan');
+        }
+
+        function updateAudioControlUI() {
+            const btnMute = $('btn-mute'); const btnSpeaker = $('btn-speaker');
+            const micLabel = $('mic-status-label'); const spkLabel = $('speaker-status-label');
+            const badgeIcon = $('mic-badge-icon'); const badgeBg = $('mic-badge-bg');
+            const mySlot = joinedSlotIndex !== null ? voiceSlots[joinedSlotIndex] : null;
+            const forcedMute = !!(mySlot && mySlot.mutedByAdmin);
+
+            if (isSosActive) {
+                micLabel.textContent = 'Mute (SOS)'; micLabel.className = 'text-xs font-bold text-rose-400 truncate';
+                spkLabel.textContent = 'Mute (SOS)'; spkLabel.className = 'text-[10px] text-rose-400 truncate';
+            } else if (isMicMuted || forcedMute) {
+                btnMute.innerHTML = `<i data-lucide="${forcedMute ? 'shield-alert' : 'mic-off'}" class="w-4 h-4 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}"></i>`;
+                btnMute.disabled = forcedMute;
+                micLabel.textContent = forcedMute ? 'Mute Admin' : 'Mic Mute';
+                micLabel.className = forcedMute ? 'text-xs font-bold text-purple-300 truncate' : 'text-xs font-bold text-rose-300 truncate';
+                badgeIcon.setAttribute('data-lucide', forcedMute ? 'shield-alert' : 'mic-off');
+                badgeIcon.setAttribute('class', `w-3.5 h-3.5 ${forcedMute ? 'text-purple-400' : 'text-rose-400'}`);
+                badgeBg.className = forcedMute
+                    ? 'w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0'
+                    : 'w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0';
+            } else {
+                btnMute.innerHTML = `<i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>`;
+                btnMute.disabled = false;
+                micLabel.textContent = 'Mic Aktif'; micLabel.className = 'text-xs font-bold text-white truncate';
+                badgeIcon.setAttribute('data-lucide', 'mic'); badgeIcon.setAttribute('class', 'w-3.5 h-3.5 text-emerald-400');
+                badgeBg.className = 'w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0';
+            }
+            
+            if (!isSosActive) {
+                if (isSpeakerOn) {
+                    btnSpeaker.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4 text-sky-400"></i>`;
+                    spkLabel.textContent = 'Speaker: Aktif'; spkLabel.className = 'text-[10px] text-emerald-300/80 truncate';
+                } else {
+                    btnSpeaker.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4 text-slate-400"></i>`;
+                    spkLabel.textContent = 'Speaker: Off'; spkLabel.className = 'text-[10px] text-slate-400 truncate';
+                }
+            }
+            lucide.createIcons();
+        }
+
+        let audioPrimed = false;
+        async function primeAudio() {
+            hideUnlockBanner(); // Sembunyikan banner kuning jika layar disentuh
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); } catch (e) {} }
+            if (audioPrimed) return;
+            audioPrimed = true;
+            
+            const sirenAudio = $('siren-audio');
+            if (sirenAudio) {
+                sirenAudio.volume = 0;
+                sirenAudio.play().then(() => {
+                    sirenAudio.pause();
+                    sirenAudio.currentTime = 0;
+                    sirenAudio.volume = 1.0;
+                }).catch(e => console.log("Siren prime error", e));
+            }
+
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -Infinity; synth.triggerAttackRelease("C4", 0.01); } } catch (e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch (e) {}
+        }
+
+        document.addEventListener('pointerdown', primeAudio, { capture: true });
+        document.addEventListener('touchstart', primeAudio, { passive: true, capture: true });
+        document.addEventListener('click', primeAudio, { capture: true });
+        document.addEventListener('keydown', primeAudio, { capture: true });
+
+        if (window.AgoraRTC) { AgoraRTC.onAutoplayFailed = () => { showUnlockBanner(); audioPrimed = false; }; }
+
+        function showUnlockBanner() { $('unlock-audio-banner').classList.remove('hidden'); lucide.createIcons(); }
+        function hideUnlockBanner() { $('unlock-audio-banner').classList.add('hidden'); }
+        
+        async function doUnlockAudio() {
+            hideUnlockBanner();
+            try { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "8n"); setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 200); } catch(e) {}
+            try { if (window.AgoraRTC?.resumeAudioContext) await AgoraRTC.resumeAudioContext(); } catch(e) {}
+            let played = 0;
+            for (const uid in remoteAudioTracks) { try { await remoteAudioTracks[uid].play(); played++; } catch(e) {} }
+            if (played > 0 || Object.keys(remoteAudioTracks).length === 0) hideUnlockBanner();
+            showToast(played > 0 ? `🔊 Audio diaktifkan (${played} peserta)` : '🔊 Audio siap');
+        }
+        window.doUnlockAudio = doUnlockAudio;
+
+        let keepAliveCtx = null;
+        let silentOscillator = null;
+
+        function startBackgroundKeepAlive() {
+            if (keepAliveCtx) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                keepAliveCtx = new AudioContext();
+                silentOscillator = keepAliveCtx.createOscillator();
+                const gainNode = keepAliveCtx.createGain();
+                gainNode.gain.value = 0.0001; 
+                silentOscillator.connect(gainNode);
+                gainNode.connect(keepAliveCtx.destination);
+                silentOscillator.start();
+                if ('mediaSession' in navigator) { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Ronda Nguling RW 13', artist: 'Telulas Gank', album: 'Live Voice' }); }
+            } catch(e) { console.log("KeepAlive error:", e); }
+        }
+
+        function stopBackgroundKeepAlive() {
+            if (silentOscillator) { silentOscillator.stop(); silentOscillator.disconnect(); silentOscillator = null; }
+            if (keepAliveCtx) { keepAliveCtx.close(); keepAliveCtx = null; }
+            if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
+        }
+
+        async function triggerChatNotification() {
+            try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+            try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); synth.volume.value = -10; synth.triggerAttackRelease("C5", "16n"); setTimeout(() => synth.triggerAttackRelease("E5", "16n"), 150); } } catch(e) {}
+        }
+
+        let holdInterval = null; let holdProgressVal = 0; let lastFocusEl = null;
+        function openSosModal() { lastFocusEl = document.activeElement; $('sos-modal').classList.remove('hidden'); resetHoldProgress(); }
+        function closeSosModal() { cancelHoldSos(); $('sos-modal').classList.add('hidden'); if (lastFocusEl) lastFocusEl.focus(); }
+        function selectSosCategory(btn, category) {
+            selectedSosCategory = category;
+            document.querySelectorAll('.sos-cat-btn').forEach(el => { el.className = 'sos-cat-btn p-2.5 rounded-2xl border border-slate-700/80 bg-slate-800/60 text-xs font-medium text-slate-300 flex items-center gap-2 transition'; });
+            btn.className = 'sos-cat-btn p-2.5 rounded-2xl border border-rose-500/60 bg-rose-500/15 text-xs font-semibold text-white flex items-center gap-2 transition';
+        }
+        function startHoldSos(e) { if (e) e.preventDefault(); resetHoldProgress(); const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); labelEl.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Mengirim...`; lucide.createIcons(); const duration = 1500; const step = 30; holdInterval = setInterval(() => { holdProgressVal += (step / duration) * 100; progressEl.style.width = `${Math.min(holdProgressVal, 100)}%`; if (holdProgressVal >= 100) { clearInterval(holdInterval); triggerEmergencyAlert(); } }, step); }
+        function cancelHoldSos() { clearInterval(holdInterval); resetHoldProgress(); }
+        function resetHoldProgress() { holdProgressVal = 0; const progressEl = $('hold-progress'); const labelEl = $('hold-btn-label'); if (progressEl) progressEl.style.width = '0%'; if (labelEl) { labelEl.innerHTML = `<i data-lucide="fingerprint" class="w-4 h-4"></i> Tahan 1.5 Detik`; lucide.createIcons(); } }
+        
+        async function playSirenTone() { try { if (typeof Tone !== 'undefined') { await Tone.start(); const synth = new Tone.Synth().toDestination(); const now = Tone.now(); synth.triggerAttackRelease("A5", "16n", now); synth.triggerAttackRelease("E5", "16n", now + 0.2); } } catch (err) {} }
+        
+        function startSosSiren(isSelf = false) { 
+            if (sosSirenInterval) clearInterval(sosSirenInterval); 
+            const sirenAudio = $('siren-audio');
+            const forceOverlay = $('force-siren-overlay');
+
+            if (!isSelf) {
+                forceOverlay.classList.remove('hidden');
+                const vibrateInterval = setInterval(() => {
+                    try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                }, 3000);
+                try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                
+                if (sirenAudio) {
+                    sirenAudio.volume = 1.0; 
+                    sirenAudio.play().then(() => {
+                        forceOverlay.classList.add('hidden');
+                        clearInterval(vibrateInterval);
+                        sosSirenInterval = setInterval(() => {
+                            sirenAudio.play().catch(()=>{});
+                            try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                        }, 3000);
+                    }).catch(e => {
+                        sosSirenInterval = vibrateInterval; 
+                    });
+                } else {
+                    playSirenTone();
+                    sosSirenInterval = vibrateInterval;
+                }
+            } else {
+                const playAndVibrate = () => {
+                    if (sirenAudio) { 
+                        sirenAudio.volume = 1.0; 
+                        sirenAudio.play().catch(() => playSirenTone()); 
+                    } else { 
+                        playSirenTone(); 
+                    }
+                    try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+                };
+                playAndVibrate();
+                sosSirenInterval = setInterval(playAndVibrate, 3000);
+            }
+        }
+
+        window.unlockAndPlaySiren = () => {
+            primeAudio();
+            $('force-siren-overlay').classList.add('hidden');
+            
+            if (sosSirenInterval) clearInterval(sosSirenInterval);
+            
+            const sirenAudio = $('siren-audio');
+            const playAndVibrate = () => {
+                if (sirenAudio) { 
+                    sirenAudio.volume = 1.0; 
+                    sirenAudio.play().catch(() => playSirenTone()); 
+                } else { 
+                    playSirenTone(); 
+                }
+                try { navigator.vibrate([1000, 500, 1000, 500, 1000]); } catch(e) {}
+            };
+            playAndVibrate();
+            sosSirenInterval = setInterval(playAndVibrate, 3000);
+        }
+
+        function stopSosSiren() { 
+            if (!isSosActive) return;
+            isSosActive = false;
+            clearTimeout(sosTimeout);
+
+            const sirenAudio = $('siren-audio');
+            if (sirenAudio) { sirenAudio.pause(); sirenAudio.currentTime = 0; }
+            if (sosSirenInterval) { clearInterval(sosSirenInterval); sosSirenInterval = null; } 
+            try { navigator.vibrate(0); } catch(e) {}
+            
+            $('force-siren-overlay').classList.add('hidden');
+            $('sos-active-banner').classList.add('hidden');
+            $('push-notification-preview').classList.add('hidden');
+
+            // Mengembalikan suara otomatis JIKA sebelumnya sedang di dalam slot
+            if (localAudioTrack && joinedSlotIndex !== null) {
+                localAudioTrack.setEnabled(!savedMicState);
+            }
+            isSpeakerOn = savedSpeakerState;
+            Object.values(remoteAudioTracks).forEach(track => {
+                try { isSpeakerOn ? track.play() : track.stop(); } catch(e) {}
+            });
+            
+            updateAudioControlUI();
+            $('btn-mute').disabled = false;
+            $('btn-speaker').disabled = false;
+
+            showToast('Sirene SOS dihentikan. Obrolan kembali normal.'); 
+        }
+
+        function showSosBanner(reporter, category, isSelf = false) {
+            $('push-category-text').textContent = category;
+            $('push-reporter-text').textContent = reporter;
+            $('push-notification-preview').classList.remove('hidden');
+            
+            if (!isSosActive) {
+                isSosActive = true;
+                savedMicState = isMicMuted;
+                savedSpeakerState = isSpeakerOn;
+
+                if (localAudioTrack && joinedSlotIndex !== null) {
+                    localAudioTrack.setEnabled(false);
+                }
+                Object.values(remoteAudioTracks).forEach(track => {
+                    try { track.stop(); } catch(e) {}
+                });
+
+                $('sos-active-banner').classList.remove('hidden');
+                
+                $('btn-mute').disabled = true;
+                $('btn-speaker').disabled = true;
+                updateAudioControlUI();
+
+                sosTimeout = setTimeout(() => {
+                    stopSosSiren();
+                    showToast('Sirene SOS berhenti otomatis (Batas waktu).');
+                }, 180000);
+            } else {
+                clearTimeout(sosTimeout);
+                sosTimeout = setTimeout(() => {
+                    stopSosSiren();
+                    showToast('Sirene SOS berhenti otomatis (Batas waktu).');
+                }, 180000);
+            }
+
+            startSosSiren(isSelf);
+            lucide.createIcons();
+        }
+        
+        // ================= FITUR SHARELOC SOS =================
+        async function triggerEmergencyAlert() {
+            closeSosModal();
+            let reporterLabel = currentUsername;
+            if (joinedSlotIndex !== null) reporterLabel = `${userProfile.name} (${userProfile.location})`;
+            
+            showSosBanner(`Anda (${reporterLabel})`, selectedSosCategory, true);
+            showToast("Mengambil titik lokasi...");
+
+            const getLocation = () => {
+                return new Promise((resolve) => {
+                    if (!navigator.geolocation) {
+                        resolve("Lokasi tidak didukung browser.");
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            resolve(`https://maps.google.com/?q=${lat},${lng}`);
+                        },
+                        (error) => {
+                            console.error("Error GPS:", error);
+                            resolve("Lokasi tidak dapat diambil (GPS mati/izin ditolak).");
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                });
+            };
+
+            try {
+                const locationText = await getLocation();
+                const fullMessage = `🚨 DARURAT (${selectedSosCategory}) oleh ${reporterLabel}.\n📍 Lokasi: ${locationText}\nSegera merapat!`;
+
+                await addDoc(collection(db, "sos_alerts"), {
+                    senderUid: currentUserUid, 
+                    reporter: reporterLabel,
+                    category: selectedSosCategory, 
+                    location: locationText, 
+                    timestamp: Date.now(), 
+                    active: true 
+                });
+                
+                await sendChatToDB(fullMessage, { isEmergency: true });
+                showToast("SOS & Lokasi Berhasil Dikirim!");
+            } catch (e) { 
+                alert("Gagal Kirim SOS: " + e.message); 
+            }
+        }
+        
+        function listenIncomingSos() {
+            const q = query(collection(db, "sos_alerts"), orderBy("timestamp", "desc"), limit(10)); 
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type !== "added") return;
+                    const data = change.doc.data();
+                    const docId = change.doc.id;
+                    if (data.senderUid === currentUserUid) return;
+                    if (processedSosIds.includes(docId)) return;
+                    
+                    const getMs = (val) => (typeof val?.toMillis === 'function') ? val.toMillis() : (val || 0);
+                    const timeDiff = Date.now() - getMs(data.timestamp);
+                    
+                    if (timeDiff > 300000) return;
+                    processedSosIds.push(docId);
+                    if (processedSosIds.length > 100) processedSosIds.shift();
+                    showSosBanner(data.reporter, data.category, false);
+                });
+            });
+        }
+
+        function dismissPushBanner() { $('push-notification-preview').classList.add('hidden'); stopSosSiren(); }
+
+        let toastTimer;
+        function showToast(message) {
+            const toast = $('toast'); $('toast-msg').textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-2'); toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }, 2400);
+        }
+        function getCurrentTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+        function escapeHTML(str) { if (!str) return ''; return String(str).replace(/[&<>'"]/g, tag => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[tag])); }
+
+        // ================= DIAGNOSTIC FUNCTIONS =================
+        window.toggleDiag = () => {
+            const overlay = $('diag-overlay');
+            if(!overlay) return;
+            overlay.classList.toggle('hidden');
+            
+            if (!overlay.classList.contains('hidden')) {
+                const chkAgora = $('chk-agora'); const valAgora = $('val-agora');
+                if (agoraClient) { chkAgora.textContent = '✅'; valAgora.textContent = 'Connected'; valAgora.className = 'text-emerald-400 text-xs font-bold'; } 
+                else { chkAgora.textContent = '❌'; valAgora.textContent = 'Disconnected'; valAgora.className = 'text-rose-400 text-xs font-bold'; }
+
+                const chkToken = $('chk-token'); const valToken = $('val-token');
+                if (AGORA_TOKEN) { chkToken.textContent = '✅'; valToken.textContent = 'Tersedia'; } 
+                else { chkToken.textContent = '❌'; valToken.textContent = 'Kosong'; }
+
+                const chkMic = $('chk-mic'); const valMic = $('val-mic');
+                if (localAudioTrack) { chkMic.textContent = '✅'; valMic.textContent = isMicMuted ? 'Muted' : 'Aktif'; } 
+                else { chkMic.textContent = '⏳'; valMic.textContent = 'Belum Join'; }
+
+                const remoteCount = Object.keys(remoteAudioTracks).length;
+                $('chk-remotes').textContent = remoteCount > 0 ? '✅' : '⏳';
+                $('val-remotes').textContent = remoteCount;
+                $('chk-tracks').textContent = remoteCount > 0 ? '✅' : '⏳';
+                $('val-tracks').textContent = remoteCount;
+
+                const log = $('diag-log');
+                log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
+                if (window.lastAgoraError) log.innerHTML = `[ERR] Agora: ${window.lastAgoraError}\n` + log.innerHTML;
+            }
+        };
+
+        window.testSpeakerTone = async () => {
+            try {
+                if (typeof Tone !== 'undefined') {
+                    await Tone.start();
+                    const synth = new Tone.Synth().toDestination();
+                    synth.volume.value = -5;
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.2);
+                    showToast("Memutar nada tes speaker...");
+                    const log = $('diag-log');
+                    log.innerHTML = `[TEST] Memutar nada speaker.\n` + log.innerHTML;
+                } else {
+                    alert("Library Tone.js belum termuat.");
+                }
+            } catch(e) { alert("Gagal memutar suara: " + e.message); }
+        };
+
+        window.testLocalNotif = async () => {
+            try {
+                if (!('serviceWorker' in navigator)) {
+                    return alert("Browser ini tidak mendukung Service Worker.");
+                }
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    return alert("Izin notifikasi ditolak! Buka pengaturan situs di Chrome dan izinkan notifikasi.");
+                }
+                const registration = await navigator.serviceWorker.ready;
+                registration.showNotification('Tes Notifikasi Telulas Gank', {
+                    body: 'Hore! Kalau notif ini muncul, berarti Service Worker (sw.js) sudah bekerja dengan baik.',
+                    icon: 'https://cdn-icons-png.flaticon.com/512/2888/2888407.png',
+                    vibrate: [200, 100, 200, 100, 200],
+                    tag: 'tes-lokal'
+                });
+                showToast("Notifikasi tes dikirim!");
+                const log = $('diag-log');
+                log.innerHTML = `[TEST] Notifikasi lokal dipicu.\n` + log.innerHTML;
+            } catch (error) {
+                alert("Gagal memunculkan notifikasi: " + error.message);
+            }
+        };
+
+        window.forceRepublish = async () => {
+            if (!agoraClient || !localAudioTrack) return alert("Anda belum bergabung ke voice channel.");
+            try {
+                const log = $('diag-log');
+                log.innerHTML = `[FORCE] Re-publishing mic...\n` + log.innerHTML;
+                await agoraClient.unpublish([localAudioTrack]);
+                await new Promise(r => setTimeout(r, 500)); 
+                await agoraClient.publish([localAudioTrack]);
+                showToast("Mic berhasil di-republish ulang.");
+                log.innerHTML = `[FORCE] Berhasil re-publish.\n` + log.innerHTML;
+            } catch(e) { 
+                alert("Gagal republish: " + e.message); 
+                const log = $('diag-log');
+                log.innerHTML = `[ERROR] Re-publish gagal: ${e.message}\n` + log.innerHTML;
+            }
+        };
+        // =======================================================
+
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            const holdBtn = $('hold-sos-btn');
+            holdBtn.addEventListener('touchstart', startHoldSos, { passive: false });
+            holdBtn.addEventListener('touchend', cancelHoldSos);
+            holdBtn.addEventListener('touchcancel', cancelHoldSos);
+            holdBtn.addEventListener('mousedown', startHoldSos);
+            holdBtn.addEventListener('mouseup', cancelHoldSos);
+            holdBtn.addEventListener('mouseleave', cancelHoldSos);
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    if (!$('sos-modal').classList.contains('hidden')) closeSosModal();
+                    if (!$('join-modal').classList.contains('hidden')) closeJoinModal();
+                    if (!$('admin-modal').classList.contains('hidden')) closeAdminModal();
+                    if (!$('admin-token-modal').classList.contains('hidden')) closeAdminTokenModal();
+                    if (!$('diag-overlay').classList.contains('hidden')) toggleDiag();
+                    if (!$('user-list-modal').classList.contains('hidden')) closeUserListModal();
+                }
+            });
+            $('sos-modal').addEventListener('click', e => { if (e.target === $('sos-modal')) closeSosModal(); });
+            $('join-modal').addEventListener('click', e => { if (e.target === $('join-modal')) closeJoinModal(); });
+            $('admin-modal').addEventListener('click', e => { if (e.target === $('admin-modal')) closeAdminModal(); });
+            $('user-list-modal').addEventListener('click', e => { if (e.target === $('user-list-modal')) closeUserListModal(); });
+            
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible') {
+                    if (joinedSlotIndex !== null) {
+                        await requestWakeLock();
+                        try {
+                            if (window.AgoraRTC?.resumeAudioContext) {
+                                await AgoraRTC.resumeAudioContext();
+                            }
+                            for (const uid in remoteAudioTracks) {
+                                try { await remoteAudioTracks[uid].play(); } catch(e) {}
+                            }
+                        } catch(e) {}
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
