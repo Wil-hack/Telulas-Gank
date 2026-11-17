@@ -805,11 +805,11 @@
                     let notifTitle = `Pesan dari ${senderName}`;
                     if (opts.isEmergency) notifTitle = `🚨 DARURAT SOS: ${senderName}`;
                     
-                    fetch(CLOUDFLARE_WORKER_URL, {
+                    auth.currentUser.getIdToken().then(idToken => fetch(CLOUDFLARE_WORKER_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tokens: tokens, title: notifTitle, message: text })
-                    }).catch(e => console.log('Notif error:', e));
+                        body: JSON.stringify({ idToken: idToken, tokens: tokens, title: notifTitle, message: text })
+                    })).catch(e => console.log('Notif error:', e));
                 }
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
