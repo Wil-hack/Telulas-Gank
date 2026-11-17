@@ -843,6 +843,7 @@
                 }
                 let tokens = [...new Set(usersTokenCache.list.filter(u => u.id !== currentUserUid && u.token && u.token !== myFcmToken).map(u => u.token))];
                 
+                window.lastPushInfo = new Date().toLocaleTimeString() + ': ' + tokens.length + ' penerima';
                 if (tokens.length > 0) {
                     let notifTitle = `Pesan dari ${senderName}`;
                     if (opts.isEmergency) notifTitle = `🚨 DARURAT SOS: ${senderName}`;
@@ -851,7 +852,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ idToken: idToken, tokens: tokens, title: notifTitle, message: text })
-                    })).catch(e => console.log('Notif error:', e));
+                    })).then(r => { window.lastPushInfo += ' | Worker HTTP ' + r.status; }).catch(e => { window.lastPushInfo += ' | gagal: ' + e; console.log('Notif error:', e); });
                 }
             } catch (e) { alert("GAGAL KIRIM PESAN: " + e.message); }
         }
@@ -1772,6 +1773,7 @@
                 const log = $('diag-log');
                 log.innerHTML = `[SYS] Diagnostic opened at ${new Date().toLocaleTimeString()}\n` + log.innerHTML;
                 log.innerHTML = `[PUSH] Izin notifikasi: ${typeof Notification !== 'undefined' ? Notification.permission : 'tidak didukung'} | Token HP ini: ${myFcmToken ? 'ADA' : 'BELUM ADA'}\n` + log.innerHTML;
+                log.innerHTML = `[PUSH-KIRIM] ${window.lastPushInfo || 'belum ada pengiriman dari HP ini'}\n` + log.innerHTML;
                 if (window.lastAgoraError) log.innerHTML = `[ERR] Agora: ${window.lastAgoraError}\n` + log.innerHTML;
             }
         };
