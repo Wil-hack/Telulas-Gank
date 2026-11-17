@@ -380,6 +380,7 @@
         
         let lastVisibleChatDoc = null;
         let usersTokenCache = { at: 0, list: [] };
+        let myFcmToken = '';
         let slotsCacheDocs = [];
         const chatStore = new Map();
         let chatNoMore = false;
@@ -406,6 +407,7 @@
                             getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration })
                             .then((currentToken) => {
                                 if (currentToken) {
+                                    myFcmToken = currentToken;
                                     // Tunggu sampai login selesai, lalu simpan token (coba ulang bila gagal)
                                     const saveFcm = (n) => {
                                         if (n > 600) return;
@@ -806,7 +808,7 @@
                     usersTokenCache.list = usersSnap.docs.map(u => ({ id: u.id, token: u.data().fcmToken }));
                     usersTokenCache.at = Date.now();
                 }
-                let tokens = usersTokenCache.list.filter(u => u.id !== currentUserUid && u.token).map(u => u.token);
+                let tokens = [...new Set(usersTokenCache.list.filter(u => u.id !== currentUserUid && u.token && u.token !== myFcmToken).map(u => u.token))];
                 
                 if (tokens.length > 0) {
                     let notifTitle = `Pesan dari ${senderName}`;
