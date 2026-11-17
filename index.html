@@ -365,7 +365,7 @@
         try { messaging = getMessaging(app); } catch (e) { console.log("FCM tidak didukung browser ini"); }
 
         // Isi setelah Worker token dipasang (kosong = pakai token manual seperti biasa)
-        const TOKEN_WORKER_URL = "https://telulas-token.willdan60.workers.dev";
+        const TOKEN_WORKER_URLS = ["https://token.serabimu.my.id", "https://telulas-token.willdan60.workers.dev"];
         let AGORA_TOKEN = ""; 
         let agoraClient = null;
         let localAudioTrack = null;
@@ -915,12 +915,16 @@
             try { await setDoc(doc(db, "config", "agora"), { token: newToken, updatedAt: Date.now() }); AGORA_TOKEN = newToken; showToast("Token diperbarui!"); closeAdminTokenModal(); } catch (e) { alert("Gagal simpan token: " + e.message); }
         }
         async function fetchLatestAgoraToken() {
-            if (TOKEN_WORKER_URL && auth.currentUser) {
-                try {
-                    const idToken = await auth.currentUser.getIdToken();
-                    const r = await fetch(TOKEN_WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken, channel: AGORA_CHANNEL }) });
-                    if (r.ok) { const j = await r.json(); if (j.token) { AGORA_TOKEN = j.token; return true; } }
-                } catch (e) {}
+            if (auth.currentUser) {
+                for (const url of TOKEN_WORKER_URLS) {
+                    try {
+                        const idToken = await auth.currentUser.getIdToken();
+                        const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 8000);
+                        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken, channel: AGORA_CHANNEL }), signal: ctrl.signal });
+                        clearTimeout(tm);
+                        if (r.ok) { const j = await r.json(); if (j.token) { AGORA_TOKEN = j.token; return true; } }
+                    } catch (e) {}
+                }
             }
             try { const docSnap = await getDoc(doc(db, "config", "agora")); if (docSnap.exists() && docSnap.data().token) AGORA_TOKEN = docSnap.data().token; } catch (e) {}
             return false;
