@@ -231,6 +231,7 @@
             </div>
             <div id="admin-token-section" class="hidden flex flex-col gap-4">
                 <button type="button" onclick="openUserListModal()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> Kelola Akun Warga</button>
+                <button type="button" onclick="deleteAllChats()" class="w-full py-3 rounded-xl bg-red-700 hover:bg-red-600 text-white font-bold text-xs shadow-lg flex justify-center items-center gap-1"><i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Semua Pesan Chat</button>
                 <div class="pt-3 border-t border-slate-700/60">
                     <label class="text-[10px] font-bold text-slate-400 mb-1 block">Token Agora Hari Ini:</label>
                     <textarea id="new-agora-token" rows="3" class="w-full input-hole text-xs text-white placeholder-slate-600 px-3 py-2 rounded-xl mb-1 transition" placeholder="Tempel Token Agora yang baru di sini..."></textarea>
@@ -729,6 +730,7 @@
 
         // ================= CHAT =================
         function initFirebaseChat() {
+            listenChatReset();
             const q = query(collection(db, "chats"), orderBy("timestamp", "desc"), limit(20));
             onSnapshot(q, (snapshot) => {
                 const feed = $('chat-feed');
@@ -745,8 +747,41 @@
             });
         }
 
+        window.deleteAllChats = async () => {
+            if (!isAdmin) return;
+            if (!confirm("Hapus SEMUA pesan chat untuk semua warga? Tidak bisa dibatalkan.")) return;
+            if (!confirm("Yakin? Semua riwayat chat akan hilang permanen.")) return;
+            try {
+                showToast("Menghapus pesan...");
+                let total = 0;
+                while (true) {
+                    const snap = await getDocs(query(collection(db, "chats"), limit(400)));
+                    if (snap.empty) break;
+                    const batch = writeBatch(db);
+                    snap.docs.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                    total += snap.size;
+                }
+                await setDoc(doc(db, "config", "chatReset"), { at: Date.now() });
+                $('admin-token-modal').classList.add('hidden');
+                showToast("Selesai: " + total + " pesan dihapus");
+            } catch (e) { showToast("Gagal menghapus: " + (e.code || e.message)); }
+        };
+        let chatResetSeen = null;
+        function listenChatReset() {
+            onSnapshot(doc(db, "config", "chatReset"), (snap) => {
+                const at = snap.exists() ? snap.data().at : 0;
+                if (chatResetSeen !== null && at !== chatResetSeen) {
+                    chatStore.clear(); lastVisibleChatDoc = null; chatNoMore = false;
+                    renderChatFeed();
+                }
+                chatResetSeen = at;
+            }, () => {});
+        }
+
         function renderChatFeed() {
             const feed = $('chat-feed');
+            if (chatStore.size === 0) { feed.innerHTML = '<div class="text-center text-slate-500 text-xs mt-6">Belum ada pesan</div>'; return; }
             feed.innerHTML = `
                     <div class="flex justify-center mb-2">
                         <button id="btn-load-more" onclick="loadMoreChats()" class="text-[10px] font-bold text-slate-400 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700/50 hover:bg-slate-700 transition">Muat Pesan Sebelumnya</button>
